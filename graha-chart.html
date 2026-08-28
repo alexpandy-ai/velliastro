@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ta">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Velliastro — Planets Position</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #050510;
+        --card: rgba(15, 15, 35, 0.85);
+        --border: rgba(255, 255, 255, 0.08);
+        --text: #e8eaf0;
+        --muted: #8b90a8;
+        --accent: #a78bfa;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: "Noto Sans Tamil", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+      .wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+      .header { text-align: center; margin-bottom: 2rem; }
+      .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; font-size: 0.8rem; }
+      h1 { font-size: 2.2rem; margin: 0.4rem 0; }
+      .sub { color: var(--muted); font-size: 0.95rem; }
+      .layout { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; }
+      .panel, .table { background: var(--card); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; }
+      svg { width: 100%; max-width: 560px; display: block; margin: 0 auto; }
+      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+      th, td { padding: 0.6rem 0.35rem; text-align: left; border-bottom: 1px solid var(--border); }
+      th { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; }
+      .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.35rem; }
+      @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="header">
+        <p class="eyebrow">Velliastro</p>
+        <h1>Planets Position</h1>
+        <p class="sub" id="subtitle"></p>
+      </header>
+      <div class="layout">
+        <section class="panel"><svg id="chart" viewBox="0 0 560 560"></svg></section>
+        <aside class="table">
+          <h2>கிரக நிலைகள்</h2>
+          <p class="sub" id="tableDate" style="margin: 0.4rem 0 1rem"></p>
+          <table><thead><tr><th>கிரகம்</th><th>நிலை</th><th>பாகை</th></tr></thead><tbody id="rows"></tbody></table>
+        </aside>
+      </div>
+    </div>
+    <script>
+      try {
+      const SEGMENTS = 16, DEG = 360 / SEGMENTS, J2000 = Date.UTC(2000, 0, 1, 12);
+      const SIGNS = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+      const GRAHAS = [
+        { id:"surya", tamil:"சூரியன்", color:"#ff8c00", symbol:"☉", period:365.256, L0:280.46 },
+        { id:"chandra", tamil:"சந்திரன்", color:"#e8e8f0", symbol:"☽", period:27.321661, L0:218.32 },
+        { id:"sevvai", tamil:"செவ்வாய்", color:"#c1440e", symbol:"♂", period:686.98, L0:355.43 },
+        { id:"budhan", tamil:"புதன்", color:"#4caf50", symbol:"☿", period:87.969, L0:252.25 },
+        { id:"guru", tamil:"குரு", color:"#f5c842", symbol:"♃", period:4332.59, L0:34.35 },
+        { id:"sukran", tamil:"சுக்கிரன்", color:"#f8b4d9", symbol:"♀", period:224.701, L0:181.98 },
+        { id:"sani", tamil:"சனி", color:"#5b7fd4", symbol:"♄", period:10759.22, L0:50.08 },
+        { id:"rahu", tamil:"ராகு", color:"#6b5b7a", symbol:"☊", period:-6793.5, L0:125.04 },
+        { id:"ketu", tamil:"கேது", color:"#9a7b5c", symbol:"☋", period:null, L0:null },
+      ];
+      const date = new Date();
+      const norm = (v) => ((v % 360) + 360) % 360;
+      const days = (date - J2000) / 86400000;
+      const lon = (g) => {
+        if (g.id === "ketu") return norm(lon(GRAHAS.find(x => x.id === "rahu")) + 180);
+        return norm(g.L0 + (360 / g.period) * days);
+      };
+      const zodiac = (L) => {
+        const d = norm(L), i = Math.floor(d / 30), deg = d % 30, m = Math.floor((deg % 1) * 60);
+        return { sign: SIGNS[i], formatted: `${Math.floor(deg)}°${String(m).padStart(2,"0")}'` };
+      };
+      const polar = (a, r, c) => { const rad = ((a + 180) * Math.PI) / 180; return { x: c + r * Math.cos(rad), y: c + r * Math.sin(rad) }; };
+      const sector = (c, ir, or, st, en) => {
+        const sO = polar(st, or, c), eO = polar(en, or, c), sI = polar(en, ir, c), eI = polar(st, ir, c);
+        return `M ${sO.x} ${sO.y} A ${or} ${or} 0 0 1 ${eO.x} ${eO.y} L ${sI.x} ${sI.y} A ${ir} ${ir} 0 0 0 ${eI.x} ${eI.y} Z`;
+      };
+      const size = 560, c = size / 2, outer = 200, inner = 52, pr = 158;
+      const positions = GRAHAS.map((g) => ({ ...g, longitude: lon(g), ...zodiac(lon(g)) }));
+      const dateStr = date.toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+      document.getElementById("subtitle").textContent = `16-part chart · 0° on left · ${dateStr}`;
+      document.getElementById("tableDate").textContent = dateStr;
+      document.getElementById("rows").innerHTML = positions.map((p) =>
+        `<tr><td><span class="dot" style="background:${p.color}"></span>${p.tamil}</td><td>${p.formatted}</td><td>${p.longitude.toFixed(1)}° ${p.sign}</td></tr>`
+      ).join("");
+      let svg = `<circle cx="${c}" cy="${c}" r="${outer}" fill="none" stroke="#a78bfa" stroke-width="2" opacity="0.35"/>`;
+      const z0 = polar(0, outer, c);
+      svg += `<line x1="${c}" y1="${c}" x2="${z0.x}" y2="${z0.y}" stroke="#a78bfa" stroke-width="2" opacity="0.8"/>`;
+      for (let i = 0; i < SEGMENTS; i++) {
+        const a = i * DEG;
+        const o = polar(a, outer, c), n = polar(a, inner, c), lbl = polar(a, outer + 24, c);
+        svg += `<path d="${sector(c, inner, outer, a, a + DEG)}" fill="${i % 2 ? "rgba(167,139,250,0.06)" : "rgba(255,255,255,0.02)"}"/>`;
+        svg += `<line x1="${n.x}" y1="${n.y}" x2="${o.x}" y2="${o.y}" stroke="rgba(255,255,255,0.15)"/>`;
+        svg += `<text x="${lbl.x}" y="${lbl.y}" fill="#a78bfa" font-size="10" text-anchor="middle" dominant-baseline="middle">${a}°</text>`;
+      }
+      positions.forEach((p, i) => {
+        const dot = polar(p.longitude, pr, c);
+        const lab = polar(p.longitude, outer + 38 + (i % 3) * 10, c);
+        const stagger = ((i % 3) - 1) * 4;
+        svg += `<line x1="${dot.x}" y1="${dot.y}" x2="${lab.x}" y2="${lab.y}" stroke="rgba(255,255,255,0.12)"/>`;
+        svg += `<circle cx="${dot.x}" cy="${dot.y}" r="9" fill="${p.color}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>`;
+        svg += `<text x="${dot.x}" y="${dot.y}" fill="#050510" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="middle">${p.symbol}</text>`;
+        svg += `<text x="${lab.x}" y="${lab.y + stagger}" fill="#e8eaf0" font-family="Noto Sans Tamil" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">${p.tamil}</text>`;
+        svg += `<text x="${lab.x}" y="${lab.y + stagger + 14}" fill="#8b90a8" font-size="9" text-anchor="middle" dominant-baseline="middle">${p.longitude.toFixed(1)}°</text>`;
+      });
+      svg += `<circle cx="${c}" cy="${c}" r="${inner}" fill="#050510" stroke="#a78bfa" stroke-width="2"/>`;
+      svg += `<text x="${c}" y="${c - 4}" fill="#e8eaf0" font-family="Noto Sans Tamil" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">நவகிரகம்</text>`;
+      svg += `<text x="${c}" y="${c + 16}" fill="#8b90a8" font-size="10" text-anchor="middle" dominant-baseline="middle">9 grahas</text>`;
+      document.getElementById("chart").innerHTML = svg;
+      } catch (error) {
+        document.body.innerHTML = `<div style="padding:2rem;color:#ff6b6b;font-family:monospace"><h2>Chart failed to load</h2><pre>${error.message}</pre></div>`;
+        console.error(error);
+      }
+    </script>
+  </body>
+</html>
