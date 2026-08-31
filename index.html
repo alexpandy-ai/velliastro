@@ -791,19 +791,35 @@
           svg += "</defs>";
           return svg;
         };
-        const renderPlanetSymbols = (positions, c, sectorFillColors) => {
+        const renderSectorPlanetLabels = (positions, c, inner, outer, sectorFillColors) => {
           let svg = "";
-          for (const p of positions) {
-            const sectorIndex = getSectorIndex(p.longitude);
+          for (const { sectorIndex, planets } of groupPlanetsBySector(positions)) {
+            const layout = layoutSectorPlanetLabel(planets, sectorIndex, c);
+            if (!layout) continue;
             const sectorFill =
               sectorIndex % 2 === 0
                 ? sectorFillColors[sectorIndex].fillAlt
                 : sectorFillColors[sectorIndex].fill;
+            const labelFill = isDarkFill(sectorFill) ? "#f8fafc" : "#1a1a2e";
             const labelStroke = isDarkFill(sectorFill)
               ? "rgba(30,27,75,0.85)"
               : "rgba(255,255,255,0.92)";
-            const pos = polar(p.longitude, PLANET_LABEL_RADIUS, c);
-            svg += `<text x="${pos.x}" y="${pos.y}" text-anchor="middle" dominant-baseline="middle" font-family="serif" fill="${p.color}" font-size="14" font-weight="600" paint-order="stroke fill" stroke="${labelStroke}" stroke-width="3">${p.symbol}</text>`;
+            const rotation = labelRadialRotation(layout.labelAngle);
+            const lineHeight = layout.fontSize * SECTOR_LABEL_LINE_HEIGHT;
+            const blockOffset =
+              layout.lines.length > 1
+                ? -((layout.lines.length - 1) * lineHeight) / 2
+                : 0;
+            const tspans = layout.lines
+              .map((line, lineIndex) => {
+                const dy = lineIndex === 0 ? blockOffset : lineHeight;
+                return `<tspan x="${layout.x}" dy="${dy}">${line}</tspan>`;
+              })
+              .join("");
+            svg += `<g clip-path="url(#sector-clip-${sectorIndex})">`;
+            svg += `<g transform="rotate(${rotation}, ${layout.x}, ${layout.y})">`;
+            svg += `<text x="${layout.x}" y="${layout.y}" text-anchor="middle" dominant-baseline="middle" font-family="Noto Sans Tamil" fill="${labelFill}" font-size="${layout.fontSize}" font-weight="600" paint-order="stroke fill" stroke="${labelStroke}" stroke-width="3">${tspans}</text>`;
+            svg += `</g></g>`;
           }
           return svg;
         };
@@ -1206,7 +1222,8 @@
             const degRot = labelRadialInwardRotation(a);
             svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="8" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})">${formatBoundaryLabel(a, i)}</text>`;
           }
-          svg += renderPlanetSymbols(positions, c, sectorFillColors);
+          svg += renderSectorClipDefs(c, inner, outer);
+          svg += renderSectorPlanetLabels(positions, c, inner, outer, sectorFillColors);
           const lagnamAngle = getLagnamAngle(date, place);
           const lagnamOuter = polar(lagnamAngle, outer, c);
           const lagnamLbl = polar(lagnamAngle, LAGNAM_LABEL_RADIUS, c);
