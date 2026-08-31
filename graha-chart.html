@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Velliastro — Planets Position</title>
+    <title>கிரக நிலைகள் · Planet Positions</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --bg: #050510;
-        --card: rgba(15, 15, 35, 0.85);
-        --border: rgba(255, 255, 255, 0.08);
-        --text: #e8eaf0;
-        --muted: #8b90a8;
+        --bg: #f0f4ff;
+        --card: #ffffff;
+        --border: rgba(26, 26, 46, 0.12);
+        --text: #2d3250;
+        --muted: #6b7190;
         --accent: #a78bfa;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,100 +23,1329 @@
         color: var(--text);
         min-height: 100vh;
       }
-      .wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
-      .header { text-align: center; margin-bottom: 2rem; }
+      .wrap { max-width: 1100px; margin: 0 auto; padding: 1rem 1rem 2rem; }
+      .header { margin-bottom: 1.5rem; }
+      .header-brand {
+        text-align: center;
+        margin-bottom: 1.25rem;
+        padding: 0 0.25rem;
+      }
       .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; font-size: 0.8rem; }
-      h1 { font-size: 2.2rem; margin: 0.4rem 0; }
-      .sub { color: var(--muted); font-size: 0.95rem; }
+      h1 {
+        font-size: clamp(1.5rem, 5vw, 2.2rem);
+        line-height: 1.2;
+        margin: 0;
+      }
+      .bilingual {
+        display: inline-flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: center;
+        gap: 0.35em;
+      }
+      .bilingual-en::before {
+        content: "·";
+        margin-right: 0.35em;
+        color: var(--muted);
+        font-weight: 400;
+      }
+      .bilingual-en {
+        font-size: 0.85em;
+        font-weight: 400;
+        color: var(--muted);
+        font-family: system-ui, sans-serif;
+        text-transform: none;
+        letter-spacing: normal;
+      }
+      h1 .bilingual-en { font-size: 0.55em; }
+      .sub {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+        color: var(--muted);
+        font-size: clamp(0.8rem, 3.2vw, 0.95rem);
+        line-height: 1.5;
+        margin: 0.6rem auto 0;
+        max-width: 36rem;
+        text-align: center;
+      }
+      .sub .bilingual-en { font-size: 0.95em; }
+      .sub-meta { font-size: 0.92em; }
+      .date-form {
+        width: 100%;
+        max-width: 28rem;
+        margin: 0 auto;
+      }
+      .form-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        box-shadow: 0 1px 3px rgba(26, 26, 46, 0.05);
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      .form-group--datetime {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+      .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        min-width: 0;
+      }
+      .form-row {
+        display: contents;
+      }
+      .form-row--location {
+        display: contents;
+      }
+      .date-form label,
+      .location-label {
+        font-size: 0.8rem;
+        color: var(--muted);
+        line-height: 1.2;
+      }
+      .location-label .bilingual-en { font-size: 0.62rem; }
+      .date-form input[type="date"],
+      .date-form input[type="time"],
+      .date-form input[type="text"] {
+        font-family: inherit;
+        font-size: 0.9rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        width: 100%;
+        min-width: 0;
+        color-scheme: light;
+      }
+      .date-form input[type="date"]:focus,
+      .date-form input[type="time"]:focus,
+      .date-form input[type="text"]:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+      }
+      .submit-btn {
+        width: 100%;
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        border: none;
+        background: var(--accent);
+        color: #2d3250;
+        cursor: pointer;
+        transition: opacity 0.15s ease;
+        margin-top: 0.15rem;
+      }
+      .submit-btn:hover { opacity: 0.9; }
+      .submit-btn:active { opacity: 0.8; }
+      .sunrise-display {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: center;
+        gap: 0.45rem;
+        width: 100%;
+        font-size: 0.88rem;
+        color: var(--muted);
+        padding: 0.15rem 0;
+      }
+      .sunrise-value {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--text);
+      }
+      .place-row {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: 100%;
+      }
+      .place-row input[type="text"] { flex: 1; }
+      .place-search-btn {
+        flex-shrink: 0;
+        font-family: inherit;
+        font-size: 0.9rem;
+        padding: 0.6rem 0.7rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        cursor: pointer;
+        line-height: 1;
+        transition: border-color 0.15s ease, opacity 0.15s ease;
+      }
+      .place-search-btn:hover { border-color: var(--accent); opacity: 0.9; }
+      .coords-display {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        font-size: 0.78rem;
+        color: var(--muted);
+        line-height: 1.2;
+      }
+      .coords-display .bilingual { justify-content: flex-start; }
+      .coords-display .bilingual-en { font-size: 0.6rem; }
+      .coords-fields {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        width: 100%;
+      }
+      .coords-input {
+        flex: 1;
+        min-width: 0;
+        width: 12ch;
+        max-width: 12ch;
+        font-family: system-ui, sans-serif;
+        font-size: 0.82rem;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+        padding: 0.55rem 0.6rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+      }
+      .coords-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+      }
+      .coords-input.is-loading { opacity: 0.55; }
+      .coords-sep { color: var(--muted); font-size: 0.82rem; flex-shrink: 0; }
+      @media (min-width: 640px) {
+        .wrap { padding: 1.5rem 1.5rem 2.5rem; }
+        .date-form { max-width: 32rem; }
+        .form-card { padding: 1.15rem 1.25rem; }
+      }
       .layout { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; }
-      .panel, .table { background: var(--card); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; }
+      .panel, .table { background: var(--card); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; box-shadow: 0 1px 3px rgba(26, 26, 46, 0.06); }
+      .panel { background: linear-gradient(145deg, #faf8ff 0%, #ffffff 55%, #fff8f0 100%); }
       svg { width: 100%; max-width: 560px; display: block; margin: 0 auto; }
       table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
       th, td { padding: 0.6rem 0.35rem; text-align: left; border-bottom: 1px solid var(--border); }
-      th { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; }
-      .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.35rem; }
+      th { color: var(--muted); font-size: 0.7rem; vertical-align: bottom; }
+      th .bilingual { font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+      td:first-child { font-family: "Noto Sans Tamil", sans-serif; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; }
+      .table-symbol { display: inline-block; width: 1.25em; font-size: 1.05em; line-height: 1; text-align: center; font-family: serif; flex-shrink: 0; }
+      .table-name { display: inline-flex; flex-direction: column; line-height: 1.25; }
+      .table-name-en { font-size: 0.68rem; font-weight: 400; color: var(--muted); font-family: "DM Sans", sans-serif; }
+      .table-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.2rem;
+      }
+      .table-header h2 { margin: 0; font-size: 1.2rem; }
+      .table-toolbar { display: flex; gap: 0.5rem; flex-shrink: 0; }
+      .table-edit-btn,
+      .table-done-btn {
+        font-family: inherit;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.35rem 0.7rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        cursor: pointer;
+      }
+      .table-done-btn {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #2d3250;
+      }
+      .table-input {
+        width: 100%;
+        min-width: 0;
+        font-family: inherit;
+        font-size: 0.78rem;
+        padding: 0.3rem 0.4rem;
+        border-radius: 0.45rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+      .table-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+      }
       @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+      .lagnam-spoke {
+        stroke: #f59e0b;
+        stroke-width: 4;
+        stroke-linecap: round;
+        opacity: 1;
+      }
+      .lagnam-label {
+        fill: #b45309;
+        font-family: "Noto Sans Tamil", sans-serif;
+        font-size: 8px;
+        font-weight: 700;
+        paint-order: stroke fill;
+        stroke: rgba(255, 255, 255, 0.92);
+        stroke-width: 3;
+      }
     </style>
   </head>
   <body>
     <div class="wrap">
       <header class="header">
-        <p class="eyebrow">Velliastro</p>
-        <h1>Planets Position</h1>
-        <p class="sub" id="subtitle"></p>
+        <div class="header-brand">
+          <h1>
+            <span class="bilingual">
+              <span>கிரக நிலைகள்</span>
+              <span class="bilingual-en">Planet Positions</span>
+            </span>
+          </h1>
+          <p class="sub" id="subtitle">
+            <span class="bilingual">
+              <span>நாள் 16 பாகங்கள் · காலை 6 மணி முதல்</span>
+              <span class="bilingual-en">16 day sections · from 6 AM</span>
+            </span>
+            <span class="sub-meta" id="subtitleMeta"></span>
+          </p>
+        </div>
+        <form class="date-form" id="dateForm">
+          <div class="form-card">
+            <div class="form-group form-group--datetime">
+              <div class="form-field">
+                <label for="dateInput">Select date</label>
+                <input type="date" id="dateInput" required />
+              </div>
+              <div class="form-field">
+                <label for="timeInput">Time</label>
+                <input type="time" id="timeInput" required />
+              </div>
+            </div>
+            <div class="form-group form-group--sunrise">
+              <span class="sunrise-display" id="sunriseDisplay" aria-live="polite">
+                <span class="bilingual">
+                  <span>சூரிய உதயம்</span>
+                  <span class="bilingual-en">Sunrise</span>
+                </span>
+                <span class="sunrise-value" id="sunriseValue"></span>
+              </span>
+            </div>
+            <div class="form-group form-group--place">
+              <label for="placeInput" class="location-label">
+                <span class="bilingual">
+                  <span>இடம்</span>
+                  <span class="bilingual-en">Place</span>
+                </span>
+              </label>
+              <div class="place-row">
+                <input type="text" id="placeInput" list="placePresets" placeholder="Chennai" autocomplete="off" />
+                <button type="button" id="placeSearchBtn" class="place-search-btn" title="Search place" aria-label="Search place">⌕</button>
+              </div>
+            </div>
+            <div class="form-group form-group--coords">
+              <div class="coords-display" id="coordsDisplay">
+                <span class="bilingual">
+                  <span>ஆயத்தொலைவு</span>
+                  <span class="bilingual-en">Coordinates</span>
+                </span>
+                <span class="coords-fields">
+                  <input type="text" class="coords-input" id="latInput" inputmode="decimal" aria-label="Latitude" placeholder="Lat" maxlength="12" />
+                  <span class="coords-sep">,</span>
+                  <input type="text" class="coords-input" id="lonInput" inputmode="decimal" aria-label="Longitude" placeholder="Lon" maxlength="12" />
+                </span>
+              </div>
+            </div>
+            <button type="submit" class="submit-btn">Submit</button>
+          </div>
+        </form>
+        <datalist id="placePresets">
+          <option value="Chennai, Tamil Nadu, India"></option>
+          <option value="Coimbatore, Tamil Nadu, India"></option>
+          <option value="Madurai, Tamil Nadu, India"></option>
+          <option value="Trichy, Tamil Nadu, India"></option>
+          <option value="Salem, Tamil Nadu, India"></option>
+          <option value="Bengaluru, Karnataka, India"></option>
+          <option value="Mumbai, Maharashtra, India"></option>
+          <option value="Delhi, India"></option>
+        </datalist>
       </header>
       <div class="layout">
         <section class="panel"><svg id="chart" viewBox="0 0 560 560"></svg></section>
         <aside class="table">
-          <h2>கிரக நிலைகள்</h2>
+          <div class="table-header">
+            <h2>
+              <span class="bilingual">
+                <span>கிரக நிலைகள்</span>
+                <span class="bilingual-en">Planet Positions</span>
+              </span>
+            </h2>
+            <div class="table-toolbar">
+              <button type="button" id="refreshPositionsBtn" class="table-edit-btn" title="Reset planet positions and degrees">Refresh</button>
+              <button type="button" id="editPositionsBtn" class="table-edit-btn">Edit</button>
+              <button type="button" id="donePositionsBtn" class="table-done-btn" hidden>Done</button>
+            </div>
+          </div>
           <p class="sub" id="tableDate" style="margin: 0.4rem 0 1rem"></p>
-          <table><thead><tr><th>கிரகம்</th><th>நிலை</th><th>பாகை</th></tr></thead><tbody id="rows"></tbody></table>
+          <table><thead><tr>
+            <th><span class="bilingual"><span>கிரகம்</span><span class="bilingual-en">Planet</span></span></th>
+            <th><span class="bilingual"><span>நிலை</span><span class="bilingual-en">Position</span></span></th>
+            <th><span class="bilingual"><span>பாகை</span><span class="bilingual-en">Degree</span></span></th>
+          </tr></thead><tbody id="rows"></tbody></table>
         </aside>
       </div>
     </div>
     <script>
       try {
-      const SEGMENTS = 16, DEG = 360 / SEGMENTS, J2000 = Date.UTC(2000, 0, 1, 12);
-      const SIGNS = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
-      const GRAHAS = [
-        { id:"surya", tamil:"சூரியன்", color:"#ff8c00", symbol:"☉", period:365.256, L0:280.46 },
-        { id:"chandra", tamil:"சந்திரன்", color:"#e8e8f0", symbol:"☽", period:27.321661, L0:218.32 },
-        { id:"sevvai", tamil:"செவ்வாய்", color:"#c1440e", symbol:"♂", period:686.98, L0:355.43 },
-        { id:"budhan", tamil:"புதன்", color:"#4caf50", symbol:"☿", period:87.969, L0:252.25 },
-        { id:"guru", tamil:"குரு", color:"#f5c842", symbol:"♃", period:4332.59, L0:34.35 },
-        { id:"sukran", tamil:"சுக்கிரன்", color:"#f8b4d9", symbol:"♀", period:224.701, L0:181.98 },
-        { id:"sani", tamil:"சனி", color:"#5b7fd4", symbol:"♄", period:10759.22, L0:50.08 },
-        { id:"rahu", tamil:"ராகு", color:"#6b5b7a", symbol:"☊", period:-6793.5, L0:125.04 },
-        { id:"ketu", tamil:"கேது", color:"#9a7b5c", symbol:"☋", period:null, L0:null },
-      ];
-      const date = new Date();
-      const norm = (v) => ((v % 360) + 360) % 360;
-      const days = (date - J2000) / 86400000;
-      const lon = (g) => {
-        if (g.id === "ketu") return norm(lon(GRAHAS.find(x => x.id === "rahu")) + 180);
-        return norm(g.L0 + (360 / g.period) * days);
-      };
-      const zodiac = (L) => {
-        const d = norm(L), i = Math.floor(d / 30), deg = d % 30, m = Math.floor((deg % 1) * 60);
-        return { sign: SIGNS[i], formatted: `${Math.floor(deg)}°${String(m).padStart(2,"0")}'` };
-      };
-      const polar = (a, r, c) => { const rad = ((a + 180) * Math.PI) / 180; return { x: c + r * Math.cos(rad), y: c + r * Math.sin(rad) }; };
-      const sector = (c, ir, or, st, en) => {
-        const sO = polar(st, or, c), eO = polar(en, or, c), sI = polar(en, ir, c), eI = polar(st, ir, c);
-        return `M ${sO.x} ${sO.y} A ${or} ${or} 0 0 1 ${eO.x} ${eO.y} L ${sI.x} ${sI.y} A ${ir} ${ir} 0 0 0 ${eI.x} ${eI.y} Z`;
-      };
-      const size = 560, c = size / 2, outer = 200, inner = 52, pr = 158;
-      const positions = GRAHAS.map((g) => ({ ...g, longitude: lon(g), ...zodiac(lon(g)) }));
-      const dateStr = date.toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
-      document.getElementById("subtitle").textContent = `16-part chart · 0° on left · ${dateStr}`;
-      document.getElementById("tableDate").textContent = dateStr;
-      document.getElementById("rows").innerHTML = positions.map((p) =>
-        `<tr><td><span class="dot" style="background:${p.color}"></span>${p.tamil}</td><td>${p.formatted}</td><td>${p.longitude.toFixed(1)}° ${p.sign}</td></tr>`
-      ).join("");
-      let svg = `<circle cx="${c}" cy="${c}" r="${outer}" fill="none" stroke="#a78bfa" stroke-width="2" opacity="0.35"/>`;
-      const z0 = polar(0, outer, c);
-      svg += `<line x1="${c}" y1="${c}" x2="${z0.x}" y2="${z0.y}" stroke="#a78bfa" stroke-width="2" opacity="0.8"/>`;
-      for (let i = 0; i < SEGMENTS; i++) {
-        const a = i * DEG;
-        const o = polar(a, outer, c), n = polar(a, inner, c), lbl = polar(a, outer + 24, c);
-        svg += `<path d="${sector(c, inner, outer, a, a + DEG)}" fill="${i % 2 ? "rgba(167,139,250,0.06)" : "rgba(255,255,255,0.02)"}"/>`;
-        svg += `<line x1="${n.x}" y1="${n.y}" x2="${o.x}" y2="${o.y}" stroke="rgba(255,255,255,0.15)"/>`;
-        svg += `<text x="${lbl.x}" y="${lbl.y}" fill="#a78bfa" font-size="10" text-anchor="middle" dominant-baseline="middle">${a}°</text>`;
-      }
-      positions.forEach((p, i) => {
-        const dot = polar(p.longitude, pr, c);
-        const lab = polar(p.longitude, outer + 38 + (i % 3) * 10, c);
-        const stagger = ((i % 3) - 1) * 4;
-        svg += `<line x1="${dot.x}" y1="${dot.y}" x2="${lab.x}" y2="${lab.y}" stroke="rgba(255,255,255,0.12)"/>`;
-        svg += `<circle cx="${dot.x}" cy="${dot.y}" r="9" fill="${p.color}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>`;
-        svg += `<text x="${dot.x}" y="${dot.y}" fill="#050510" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="middle">${p.symbol}</text>`;
-        svg += `<text x="${lab.x}" y="${lab.y + stagger}" fill="#e8eaf0" font-family="Noto Sans Tamil" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">${p.tamil}</text>`;
-        svg += `<text x="${lab.x}" y="${lab.y + stagger + 14}" fill="#8b90a8" font-size="9" text-anchor="middle" dominant-baseline="middle">${p.longitude.toFixed(1)}°</text>`;
-      });
-      svg += `<circle cx="${c}" cy="${c}" r="${inner}" fill="#050510" stroke="#a78bfa" stroke-width="2"/>`;
-      svg += `<text x="${c}" y="${c - 4}" fill="#e8eaf0" font-family="Noto Sans Tamil" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">நவகிரகம்</text>`;
-      svg += `<text x="${c}" y="${c + 16}" fill="#8b90a8" font-size="10" text-anchor="middle" dominant-baseline="middle">9 grahas</text>`;
-      document.getElementById("chart").innerHTML = svg;
+        const SEGMENTS = 16, DEG = 360 / SEGMENTS, J2000 = Date.UTC(2000, 0, 1, 12);
+        const DAY_START_HOUR = 6;
+        const MINUTES_PER_SECTOR = (24 * 60) / SEGMENTS;
+        const BOUNDARY_LABEL_OFFSET = 26;
+        const BOUNDARY_LABEL_STAGGER = 10;
+        const formatDegreeLabel = (angle) => {
+          const text = angle % 1 === 0 ? String(angle) : angle.toFixed(1);
+          return `${text}°`;
+        };
+        const labelRadialInwardRotation = (angle) => {
+          let rotation = angle;
+          if (angle >= 90 && angle <= 270) rotation += 180;
+          return rotation;
+        };
+        const formatStartTime = (sectorIndex) => {
+          const sectorStart = DAY_START_HOUR * 60 + sectorIndex * MINUTES_PER_SECTOR;
+          const m = ((sectorStart % (24 * 60)) + 24 * 60) % (24 * 60);
+          const hours = String(Math.floor(m / 60)).padStart(2, "0");
+          const minutes = String(m % 60).padStart(2, "0");
+          return `${hours}:${minutes}`;
+        };
+        const formatBoundaryLabel = (angle, sectorIndex) =>
+          `${formatDegreeLabel(angle)} (${formatStartTime(sectorIndex)})`;
+        const getBoundaryLabelOffset = (sectorIndex) =>
+          BOUNDARY_LABEL_OFFSET + (sectorIndex % 2) * BOUNDARY_LABEL_STAGGER;
+        const labelRadialRotation = (angle) => {
+          let rotation = angle;
+          if (Math.cos((angle * Math.PI) / 180) < 0) rotation += 180;
+          return rotation;
+        };
+        const SIGNS = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+        const GRAHAS = [
+          { id:"surya", tamil:"சூரியன்", english:"Sun", short:"சூ", letter:"ச", color:"#ff8c00", symbol:"☉", period:365.256, L0:280.46 },
+          { id:"chandra", tamil:"சந்திரன்", english:"Moon", short:"ச", letter:"ச", color:"#94a3b8", symbol:"☽", period:27.321661, L0:218.32 },
+          { id:"bhoomi", tamil:"பூமி", english:"Earth", short:"பூ", letter:"ப", color:"#4a90d9", symbol:"♁", period:null, L0:null },
+          { id:"sevvai", tamil:"செவ்வாய்", english:"Mars", short:"செ", letter:"ச", color:"#c1440e", symbol:"♂", period:686.98, L0:355.43 },
+          { id:"budhan", tamil:"புதன்", english:"Mercury", short:"பு", letter:"ப", color:"#4caf50", symbol:"☿", period:87.969, L0:252.25 },
+          { id:"guru", tamil:"வியாழன்", english:"Jupiter", short:"வி", letter:"வ", color:"#f5c842", symbol:"♃", period:4332.59, L0:34.35 },
+          { id:"sukran", tamil:"சுக்கிரன்", english:"Venus", short:"சு", letter:"ச", color:"#f8b4d9", symbol:"♀", period:224.701, L0:181.98 },
+          { id:"sani", tamil:"சனி", english:"Saturn", short:"ச", letter:"ச", color:"#5b7fd4", symbol:"♄", period:10759.22, L0:50.08 },
+          { id:"rahu", tamil:"ராகு", english:"Rahu", short:"ரா", letter:"ர", color:"#6b5b7a", symbol:"☊", period:-6793.5, L0:125.04 },
+          { id:"ketu", tamil:"கேது", english:"Ketu", short:"கே", letter:"க", color:"#9a7b5c", symbol:"☋", period:null, L0:null },
+        ];
+        const norm = (v) => ((v % 360) + 360) % 360;
+        const JD_J2000 = 2451545.0;
+        const DEG_TO_RAD = Math.PI / 180;
+        const RAD_TO_DEG = 180 / Math.PI;
+        const dateToJulianDate = (date) => date.getTime() / 86400000 + 2440587.5;
+        const julianCenturies = (jd) => (jd - JD_J2000) / 36525.0;
+        const getLahiriAyanamsa = (jd) => {
+          const T = julianCenturies(jd);
+          return 22.460148 + 1.396042 * T + 0.000308 * T * T + 0.0000005 * T * T * T;
+        };
+        const tropicalToSidereal = (tropical, jd) => norm(tropical - getLahiriAyanamsa(jd));
+        const getSunTropical = (jd) => {
+          const T = julianCenturies(jd);
+          const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+          const M = 357.52911 + 35999.05029 * T - 0.0001537 * T * T;
+          const Mrad = M * DEG_TO_RAD;
+          const C =
+            (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(Mrad) +
+            (0.019993 - 0.000101 * T) * Math.sin(2 * Mrad) +
+            0.000289 * Math.sin(3 * Mrad);
+          return norm(L0 + C);
+        };
+        const getMoonTropical = (jd) => {
+          const T = julianCenturies(jd);
+          const Lp = 218.3164477 + 481267.88123421 * T - 0.0015786 * T * T;
+          const D = 297.8501921 + 445267.1114034 * T - 0.0018819 * T * T;
+          const M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T * T;
+          const Mp = 134.9633964 + 477198.8675055 * T + 0.0087414 * T * T;
+          const F = 93.272095 + 483202.0175233 * T - 0.0036539 * T * T;
+          const Drad = D * DEG_TO_RAD;
+          const Mrad = M * DEG_TO_RAD;
+          const Mprad = Mp * DEG_TO_RAD;
+          const Frad = F * DEG_TO_RAD;
+          return norm(
+            Lp +
+              6.288774 * Math.sin(Mprad) +
+              1.274027 * Math.sin(2 * Drad - Mprad) +
+              0.658314 * Math.sin(2 * Drad) +
+              0.213618 * Math.sin(2 * Mprad) -
+              0.185116 * Math.sin(Mrad) * Math.sin(Mprad) -
+              0.114332 * Math.sin(2 * Frad)
+          );
+        };
+        const getRahuTropical = (jd) => {
+          const T = julianCenturies(jd);
+          return norm(
+            125.0445479 -
+              1934.1362891 * T +
+              0.0020754 * T * T +
+              (T * T * T) / 467441 -
+              (T * T * T * T) / 60616000
+          );
+        };
+        const PLANET_ORBITS = {
+          sevvai: { L0: 355.433, rate: 360 / 686.98, e: 0.0934, perihelion: 336.06 },
+          budhan: { L0: 252.250906, rate: 360 / 87.969, e: 0.205635, perihelion: 77.456 },
+          guru: { L0: 34.351519, rate: 360 / 4332.59, e: 0.048498, perihelion: 14.331 },
+          sukran: { L0: 181.979801, rate: 360 / 224.701, e: 0.006772, perihelion: 131.533 },
+          sani: { L0: 50.077444, rate: 360 / 10759.22, e: 0.055723, perihelion: 93.057 },
+        };
+        const planetLongitudeFromElements = (jd, L0, rate, e, perihelion) => {
+          const L = norm(L0 + rate * (jd - JD_J2000));
+          const M = norm(L - perihelion);
+          const Mrad = M * DEG_TO_RAD;
+          const C = (360 / Math.PI) * e * Math.sin(Mrad) * (1 + e * Math.cos(Mrad));
+          return norm(L + C);
+        };
+        const getPlanetTropical = (g, jd) => {
+          if (g.id === "surya") return getSunTropical(jd);
+          if (g.id === "chandra") return getMoonTropical(jd);
+          if (g.id === "rahu") return getRahuTropical(jd);
+          const orbit = PLANET_ORBITS[g.id];
+          if (orbit) {
+            return planetLongitudeFromElements(jd, orbit.L0, orbit.rate, orbit.e, orbit.perihelion);
+          }
+          return 0;
+        };
+        const siderealLon = (g, jd) => {
+          if (g.id === "bhoomi" || g.id === "earth") return norm(siderealLon(GRAHAS.find((x) => x.id === "surya"), jd) + 180);
+          if (g.id === "ketu") return norm(siderealLon(GRAHAS.find((x) => x.id === "rahu"), jd) + 180);
+          return tropicalToSidereal(getPlanetTropical(g, jd), jd);
+        };
+        const getAscendantLongitude = (date, place) => {
+          const jd = dateToJulianDate(date);
+          const T = julianCenturies(jd);
+          const eps = (23.439291 - 0.0130042 * T) * DEG_TO_RAD;
+          const gmst = norm(
+            280.46061837 +
+              360.98564736629 * (jd - JD_J2000) +
+              0.000387933 * T * T -
+              (T * T * T) / 38710000.0
+          );
+          const lst = norm(gmst + place.longitude);
+          const lstRad = lst * DEG_TO_RAD;
+          const latRad = place.latitude * DEG_TO_RAD;
+          const y = Math.sin(lstRad);
+          const x = Math.cos(lstRad) * Math.cos(eps) - Math.tan(latRad) * Math.sin(eps);
+          const ascTropical = norm(Math.atan2(y, x) * RAD_TO_DEG);
+          return tropicalToSidereal(ascTropical, jd);
+        };
+        const getLagnamAngle = (date, place) => getAscendantLongitude(date, place);
+        const polar = (a, r, c) => { const rad = ((a + 180) * Math.PI) / 180; return { x: c + r * Math.cos(rad), y: c + r * Math.sin(rad) }; };
+        const sector = (c, ir, or, st, en) => {
+          const sO = polar(st, or, c), eO = polar(en, or, c);
+          if (ir <= 0) {
+            return `M ${c} ${c} L ${sO.x} ${sO.y} A ${or} ${or} 0 0 1 ${eO.x} ${eO.y} Z`;
+          }
+          const sI = polar(en, ir, c), eI = polar(st, ir, c);
+          return `M ${sO.x} ${sO.y} A ${or} ${or} 0 0 1 ${eO.x} ${eO.y} L ${sI.x} ${sI.y} A ${ir} ${ir} 0 0 0 ${eI.x} ${eI.y} Z`;
+        };
+        const formatDateTimeLabel = (date) => {
+          const datePart = date.toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+          const timePart = date.toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit", hour12: true });
+          return `${datePart}, ${timePart}`;
+        };
+        const toInputValue = (date) => {
+          const y = date.getFullYear();
+          const m = String(date.getMonth() + 1).padStart(2, "0");
+          const d = String(date.getDate()).padStart(2, "0");
+          return `${y}-${m}-${d}`;
+        };
+        const toTimeInputValue = (date) => {
+          const h = String(date.getHours()).padStart(2, "0");
+          const m = String(date.getMinutes()).padStart(2, "0");
+          return `${h}:${m}`;
+        };
+        const parseDateTime = (dateValue, timeValue) => {
+          const [y, m, d] = dateValue.split("-").map(Number);
+          const [hours, minutes] = timeValue.split(":").map(Number);
+          return new Date(y, m - 1, d, hours, minutes, 0);
+        };
+        const estimateTimezoneOffsetMinutes = (longitude, latitude) => {
+          if (longitude >= 68 && longitude <= 97 && latitude >= 6 && latitude <= 37.5) {
+            return 5 * 60 + 30;
+          }
+          if (longitude >= 80 && longitude <= 89 && latitude >= 26 && latitude <= 31) {
+            return 5 * 60 + 45;
+          }
+          return Math.round(longitude / 15) * 60;
+        };
+        const chartDateTimeFromLocalInputs = (dateValue, timeValue, place) => {
+          const [year, month, day] = dateValue.split("-").map(Number);
+          const [hours, minutes] = timeValue.split(":").map(Number);
+          const offsetMinutes = estimateTimezoneOffsetMinutes(place.longitude, place.latitude);
+          return new Date(
+            Date.UTC(year, month - 1, day, hours, minutes, 0) - offsetMinutes * 60 * 1000
+          );
+        };
+        const SUNRISE_ALTITUDE = -0.833 * (Math.PI / 180);
+        const sunApparentLongitude = (jd) => {
+          const T = (jd - JD_J2000) / 36525;
+          const L0 = (280.46646 + 36000.76983 * T) * (Math.PI / 180);
+          const M = (357.52911 + 35999.05029 * T) * (Math.PI / 180);
+          const C =
+            (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M) +
+            (0.019993 - 0.000101 * T) * Math.sin(2 * M) +
+            0.000289 * Math.sin(3 * M);
+          return L0 + C * (Math.PI / 180);
+        };
+        const meanObliquity = (jd) => {
+          const T = (jd - JD_J2000) / 36525;
+          return (
+            23.439291 -
+            0.0130042 * T -
+            0.00000016 * T * T +
+            0.000000504 * T * T * T
+          ) * (Math.PI / 180);
+        };
+        const gmstDegreesSun = (jd) => {
+          const T = (jd - JD_J2000) / 36525;
+          return norm(
+            280.46061837 +
+              360.98564736629 * (jd - JD_J2000) +
+              0.000387933 * T * T -
+              (T * T * T) / 38710000,
+          );
+        };
+        const sunAltitudeRad = (jd, latitude, longitude) => {
+          const lambda = sunApparentLongitude(jd);
+          const epsilon = meanObliquity(jd);
+          const decl = Math.asin(Math.sin(epsilon) * Math.sin(lambda));
+          const ra = Math.atan2(
+            Math.cos(epsilon) * Math.sin(lambda),
+            Math.cos(lambda),
+          );
+          const lst = norm(gmstDegreesSun(jd) + longitude) * (Math.PI / 180);
+          const hourAngle = lst - ra;
+          const latRad = latitude * (Math.PI / 180);
+          return Math.asin(
+            Math.sin(latRad) * Math.sin(decl) +
+              Math.cos(latRad) * Math.cos(decl) * Math.cos(hourAngle),
+          );
+        };
+        const getSunriseTime = (date, place) => {
+          const year = date.getFullYear();
+          const month = date.getMonth();
+          const day = date.getDate();
+          const dayStart = new Date(year, month, day, 0, 0, 0, 0).getTime();
+          const solarNoon = new Date(year, month, day, 12, 0, 0, 0).getTime();
+          const altitudeAtNoon = sunAltitudeRad(
+            dateToJulianDate(new Date(solarNoon)),
+            place.latitude,
+            place.longitude,
+          );
+          if (altitudeAtNoon < SUNRISE_ALTITUDE) return null;
+          let low = dayStart;
+          let high = solarNoon;
+          if (
+            sunAltitudeRad(
+              dateToJulianDate(new Date(dayStart)),
+              place.latitude,
+              place.longitude,
+            ) >= SUNRISE_ALTITUDE
+          ) {
+            return new Date(dayStart);
+          }
+          for (let i = 0; i < 48; i++) {
+            const mid = (low + high) / 2;
+            const altitude = sunAltitudeRad(
+              dateToJulianDate(new Date(mid)),
+              place.latitude,
+              place.longitude,
+            );
+            if (altitude < SUNRISE_ALTITUDE) low = mid;
+            else high = mid;
+          }
+          return new Date(high);
+        };
+        const formatSunriseTime = (date) =>
+          date.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
+        const updateSunriseDisplay = (dateValue, place = placeState) => {
+          const sunrise = getSunriseTime(
+            chartDateTimeFromLocalInputs(dateValue, "06:00", place),
+            place,
+          );
+          document.getElementById("sunriseValue").textContent = sunrise
+            ? formatSunriseTime(sunrise)
+            : "—";
+        };
+        const lon = (g, jd) => siderealLon(g, jd);
+        const SECTOR_DEG = 22.5;
+        const PLANET_LABEL_RADIUS = 118;
+        const LAGNAM_LABEL_RADIUS = 105;
+        const PLANET_MIN_FONT = 7;
+        const PLANET_MAX_FONT = 8;
+        const SECTOR_LABEL_RADIAL_MARGIN = 10;
+        const SECTOR_ANGULAR_MARGIN = 1.5;
+        const SECTOR_LABEL_LINE_HEIGHT = 1.15;
+        const getSectorIndex = (lon) => Math.floor(norm(lon) / SECTOR_DEG) % SEGMENTS;
+        const formatPlanetPart = (p) => `${p.tamil} (${p.longitude.toFixed(1)}°)`;
+        const formatSectorPlanetLabel = (planets) =>
+          [...planets].sort((a, b) => a.longitude - b.longitude).map(formatPlanetPart).join(", ");
+        const estimateLabelWidth = (text, fontSize) => {
+          let width = 0;
+          for (const ch of text) width += /[\u0B80-\u0BFF]/.test(ch) ? fontSize * 0.78 : fontSize * 0.52;
+          return width;
+        };
+        const sectorInset = (c, ir, or, st, en) => {
+          return sector(
+            c,
+            ir + SECTOR_LABEL_RADIAL_MARGIN,
+            or - SECTOR_LABEL_RADIAL_MARGIN,
+            st + SECTOR_ANGULAR_MARGIN,
+            en - SECTOR_ANGULAR_MARGIN,
+          );
+        };
+        const getSectorLabelMaxWidth = (radius) => {
+          const halfSpanDeg = SECTOR_DEG / 2 - SECTOR_ANGULAR_MARGIN;
+          return 2 * radius * Math.sin((halfSpanDeg * Math.PI) / 180);
+        };
+        const wrapSectorText = (text, maxWidth, fontSize) => {
+          const parts = text.split(", ");
+          const lines = [];
+          let current = "";
+          for (const part of parts) {
+            const candidate = current ? `${current}, ${part}` : part;
+            if (estimateLabelWidth(candidate, fontSize) <= maxWidth) current = candidate;
+            else {
+              if (current) lines.push(current);
+              current = part;
+            }
+          }
+          if (current) lines.push(current);
+          return lines;
+        };
+        const fitSectorLabelLayout = (text, radius) => {
+          const maxWidth = getSectorLabelMaxWidth(radius);
+          for (let size = PLANET_MAX_FONT; size >= PLANET_MIN_FONT; size -= 0.5) {
+            const lines = wrapSectorText(text, maxWidth, size);
+            const allFit = lines.every((line) => estimateLabelWidth(line, size) <= maxWidth);
+            if (allFit) return { fontSize: size, lines };
+          }
+          const fontSize = PLANET_MIN_FONT;
+          return { fontSize, lines: wrapSectorText(text, maxWidth, fontSize) };
+        };
+        const layoutSectorPlanetLabel = (planets, sectorIndex, c) => {
+          if (!planets.length) return null;
+          const midAngle = sectorIndex * SECTOR_DEG + SECTOR_DEG / 2;
+          const pos = polar(midAngle, PLANET_LABEL_RADIUS, c);
+          const text = formatSectorPlanetLabel(planets);
+          const { fontSize, lines } = fitSectorLabelLayout(text, PLANET_LABEL_RADIUS);
+          return {
+            x: pos.x,
+            y: pos.y,
+            labelAngle: midAngle,
+            fontSize,
+            text,
+            lines,
+          };
+        };
+        const groupPlanetsBySector = (positions) => {
+          const groups = new Map();
+          for (const p of positions) {
+            const idx = getSectorIndex(p.longitude);
+            if (!groups.has(idx)) groups.set(idx, []);
+            groups.get(idx).push(p);
+          }
+          return [...groups.entries()].map(([sectorIndex, planets]) => ({
+            sectorIndex,
+            planets: planets.sort((a, b) => a.longitude - b.longitude),
+          }));
+        };
+        const renderSectorClipDefs = (c, inner, outer) => {
+          let svg = "<defs>";
+          for (let i = 0; i < SEGMENTS; i++) {
+            const a = i * DEG;
+            svg += `<clipPath id="sector-clip-${i}"><path d="${sectorInset(c, inner, outer, a, a + DEG)}"/></clipPath>`;
+          }
+          svg += "</defs>";
+          return svg;
+        };
+        const renderSectorPlanetLabels = (positions, c, inner, outer, sectorFillColors) => {
+          let svg = "";
+          for (const { sectorIndex, planets } of groupPlanetsBySector(positions)) {
+            const layout = layoutSectorPlanetLabel(planets, sectorIndex, c);
+            if (!layout) continue;
+            const sectorFill =
+              sectorIndex % 2 === 0
+                ? sectorFillColors[sectorIndex].fillAlt
+                : sectorFillColors[sectorIndex].fill;
+            const labelFill = isDarkFill(sectorFill) ? "#f8fafc" : "#1a1a2e";
+            const labelStroke = isDarkFill(sectorFill)
+              ? "rgba(30,27,75,0.85)"
+              : "rgba(255,255,255,0.92)";
+            const rotation = labelRadialRotation(layout.labelAngle);
+            const lineHeight = layout.fontSize * SECTOR_LABEL_LINE_HEIGHT;
+            const blockOffset =
+              layout.lines.length > 1
+                ? -((layout.lines.length - 1) * lineHeight) / 2
+                : 0;
+            const tspans = layout.lines
+              .map((line, lineIndex) => {
+                const dy = lineIndex === 0 ? blockOffset : lineHeight;
+                return `<tspan x="${layout.x}" dy="${dy}">${line}</tspan>`;
+              })
+              .join("");
+            svg += `<g clip-path="url(#sector-clip-${sectorIndex})">`;
+            svg += `<g transform="rotate(${rotation}, ${layout.x}, ${layout.y})">`;
+            svg += `<text x="${layout.x}" y="${layout.y}" text-anchor="middle" dominant-baseline="middle" font-family="Noto Sans Tamil" fill="${labelFill}" font-size="${layout.fontSize}" font-weight="600" paint-order="stroke fill" stroke="${labelStroke}" stroke-width="3">${tspans}</text>`;
+            svg += `</g></g>`;
+          }
+          return svg;
+        };
+        const zodiac = (L) => {
+          const d = norm(L), i = Math.floor(d / 30), deg = d % 30, m = Math.floor((deg % 1) * 60);
+          return { sign: SIGNS[i], formatted: `${Math.floor(deg)}°${String(m).padStart(2,"0")}'` };
+        };
+        const parseFormattedPositionInSign = (formatted) => {
+          const trimmed = formatted.trim();
+          const dmsMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*°\s*(\d{1,2})?'?$/);
+          if (dmsMatch) {
+            const degrees = parseFloat(dmsMatch[1]);
+            const minutes = parseInt(dmsMatch[2], 10);
+            const inSign = degrees + minutes / 60;
+            if (inSign >= 0 && inSign < 30) return inSign;
+          }
+          const simple = parseFloat(trimmed.replace(/[°'"]/g, " ").trim());
+          if (Number.isFinite(simple) && simple >= 0 && simple < 30) return simple;
+          return null;
+        };
+        const applyPositionEdit = (position, field, rawValue) => {
+          if (field === "longitude") {
+            const value = parseFloat(String(rawValue).replace(/°$/, "").trim());
+            if (!Number.isFinite(value)) return position;
+            const longitude = norm(value);
+            return { ...position, longitude, ...zodiac(longitude) };
+          }
+          const degreeInSign = parseFormattedPositionInSign(rawValue);
+          if (degreeInSign === null) return position;
+          const signIndex = Math.floor(norm(position.longitude) / 30);
+          const longitude = norm(signIndex * 30 + degreeInSign);
+          return { ...position, longitude, ...zodiac(longitude) };
+        };
+        const buildPositions = (date) => {
+          const jd = dateToJulianDate(date);
+          return GRAHAS.map((g) => ({
+            ...g,
+            longitude: lon(g, jd),
+            ...zodiac(lon(g, jd)),
+          }));
+        };
+        const formatLagnamDegree = (longitude) => `${longitude.toFixed(1)}°`;
+        const DEFAULT_PLACE = { placeName: "Chennai, Tamil Nadu, India", latitude: 13.0827, longitude: 80.2707 };
+        const PLACE_PRESETS = [
+          DEFAULT_PLACE,
+          { placeName: "Coimbatore, Tamil Nadu, India", latitude: 11.0168, longitude: 76.9558 },
+          { placeName: "Madurai, Tamil Nadu, India", latitude: 9.9252, longitude: 78.1198 },
+          { placeName: "Trichy, Tamil Nadu, India", latitude: 10.7905, longitude: 78.7047 },
+          { placeName: "Salem, Tamil Nadu, India", latitude: 11.6643, longitude: 78.146 },
+          { placeName: "Bengaluru, Karnataka, India", latitude: 12.9716, longitude: 77.5946 },
+          { placeName: "Mumbai, Maharashtra, India", latitude: 19.076, longitude: 72.8777 },
+          { placeName: "Delhi, India", latitude: 28.7041, longitude: 77.1025 },
+        ];
+        let placeState = { ...DEFAULT_PLACE };
+        const formatCoordinates = (latitude, longitude) => {
+          const latDir = latitude >= 0 ? "N" : "S";
+          const lonDir = longitude >= 0 ? "E" : "W";
+          return `${Math.abs(latitude).toFixed(4)}° ${latDir}, ${Math.abs(longitude).toFixed(4)}° ${lonDir}`;
+        };
+        const toCoordinateInputValues = (latitude, longitude) => ({
+          latitude: latitude.toFixed(4),
+          longitude: longitude.toFixed(4),
+        });
+        const parseCoordinatePart = (value, kind) => {
+          const trimmed = value.trim().replace(/°/g, "");
+          const match = trimmed.match(/^(-?\d+(?:\.\d+)?)\s*([NnSsEeWw])?$/);
+          if (!match) return null;
+          let num = parseFloat(match[1]);
+          const dir = match[2]?.toUpperCase();
+          if (dir === "S" || dir === "W") num = -Math.abs(num);
+          else if (dir === "N" || dir === "E") num = Math.abs(num);
+          if (!Number.isFinite(num)) return null;
+          if (kind === "lat" && Math.abs(num) > 90) return null;
+          if (kind === "lon" && Math.abs(num) > 180) return null;
+          return num;
+        };
+        const parseCoordinateInputs = (latitudeValue, longitudeValue) => {
+          const latitude = parseCoordinatePart(latitudeValue, "lat");
+          const longitude = parseCoordinatePart(longitudeValue, "lon");
+          if (latitude === null || longitude === null) return null;
+          return { latitude, longitude };
+        };
+        const matchPreset = (query) => {
+          const normalized = query.trim().toLowerCase();
+          if (!normalized) return null;
+          return PLACE_PRESETS.find((preset) => {
+            const city = preset.placeName.split(",")[0].trim().toLowerCase();
+            return preset.placeName.toLowerCase().includes(normalized) || normalized.includes(city) || city.includes(normalized);
+          }) || null;
+        };
+        const updateCoordsDisplay = (isLoading = false) => {
+          const values = toCoordinateInputValues(placeState.latitude, placeState.longitude);
+          latInput.value = values.latitude;
+          lonInput.value = values.longitude;
+          latInput.classList.toggle("is-loading", isLoading);
+          lonInput.classList.toggle("is-loading", isLoading);
+        };
+        const commitCoordsFromInputs = () => {
+          const parsed = parseCoordinateInputs(latInput.value, lonInput.value);
+          if (!parsed) {
+            updateCoordsDisplay(false);
+            return false;
+          }
+          placeState = { ...placeState, latitude: parsed.latitude, longitude: parsed.longitude };
+          updateCoordsDisplay(false);
+          renderChart(
+            chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
+            placeState,
+          );
+          updateSunriseDisplay(dateInput.value);
+          return true;
+        };
+        const escapeAttr = (value) =>
+          String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        const geocodePlace = async (query) => {
+          const trimmed = query.trim();
+          if (!trimmed) return null;
+          const preset = matchPreset(trimmed);
+          if (preset) return { ...preset, placeName: trimmed };
+          try {
+            const url = new URL("https://nominatim.openstreetmap.org/search");
+            url.searchParams.set("format", "json");
+            url.searchParams.set("limit", "1");
+            url.searchParams.set("q", trimmed);
+            const response = await fetch(url.toString(), {
+              headers: { Accept: "application/json", "Accept-Language": "en" },
+            });
+            if (!response.ok) return matchPreset(trimmed);
+            const results = await response.json();
+            if (!results.length) return matchPreset(trimmed);
+            return {
+              placeName: trimmed,
+              latitude: parseFloat(results[0].lat),
+              longitude: parseFloat(results[0].lon),
+            };
+          } catch {
+            return matchPreset(trimmed);
+          }
+        };
+        const lookupCoordinates = async (query) => {
+          const trimmed = query.trim();
+          if (!trimmed) return;
+          updateCoordsDisplay(true);
+          const resolved = await geocodePlace(trimmed);
+          if (resolved) {
+            const values = toCoordinateInputValues(resolved.latitude, resolved.longitude);
+            latInput.value = values.latitude;
+            lonInput.value = values.longitude;
+          }
+          updateCoordsDisplay(false);
+        };
+        const applyPlaceFromForm = async () => {
+          await lookupCoordinates(placeInput.value);
+          const parsed = parseCoordinateInputs(latInput.value, lonInput.value);
+          if (!parsed) {
+            updateCoordsDisplay(false);
+            placeState = {
+              ...placeState,
+              placeName: placeInput.value.trim() || placeState.placeName,
+            };
+            return;
+          }
+          placeState = {
+            placeName: placeInput.value.trim() || placeState.placeName,
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
+          };
+          updateCoordsDisplay(false);
+        };
+        const DAY_COLORS = ["#fff8e7", "#fef3c7", "#fde68a"];
+        const SUNSET_COLORS = ["#fcd34d", "#a78bfa", "#6366f1"];
+        const NIGHT_COLORS = ["#1e1b4b", "#312e81", "#3730a3"];
+        const SUNRISE_COLORS = ["#6366f1", "#fbbf24", "#fff8e7"];
+        const MINUTES_PER_DAY = 24 * 60;
+        const DAY_START_MIN = 6 * 60;
+        const DAY_END_MIN = 17 * 60;
+        const SUNSET_END_MIN = 19 * 60;
+        const SUNRISE_START_MIN = 5 * 60;
+        const normalizeClockMinutes = (minutes) =>
+          ((minutes % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
+        const hexToRgb = (hex) => {
+          const h = hex.replace("#", "");
+          const n = parseInt(h.length === 3 ? h.replace(/./g, (c) => c + c) : h, 16);
+          return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+        };
+        const hexToHsl = (hex) => {
+          const h = hex.replace("#", "");
+          const n = parseInt(h.length === 3 ? h.replace(/./g, (c) => c + c) : h, 16);
+          const r = ((n >> 16) & 255) / 255;
+          const g = ((n >> 8) & 255) / 255;
+          const b = (n & 255) / 255;
+          const max = Math.max(r, g, b);
+          const min = Math.min(r, g, b);
+          const l = (max + min) / 2;
+          let hue = 0;
+          let sat = 0;
+          if (max !== min) {
+            const d = max - min;
+            sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            if (max === r) hue = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+            else if (max === g) hue = ((b - r) / d + 2) * 60;
+            else hue = ((r - g) / d + 4) * 60;
+          }
+          return { h: hue, s: sat * 100, l: l * 100 };
+        };
+        const hslToHex = (h, s, l) => {
+          const sn = s / 100;
+          const ln = l / 100;
+          const c = (1 - Math.abs(2 * ln - 1)) * sn;
+          const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+          const m = ln - c / 2;
+          let r = 0;
+          let g = 0;
+          let b = 0;
+          if (h < 60) [r, g, b] = [c, x, 0];
+          else if (h < 120) [r, g, b] = [x, c, 0];
+          else if (h < 180) [r, g, b] = [0, c, x];
+          else if (h < 240) [r, g, b] = [0, x, c];
+          else if (h < 300) [r, g, b] = [x, 0, c];
+          else [r, g, b] = [c, 0, x];
+          const clamp = (v) => Math.max(0, Math.min(255, Math.round((v + m) * 255)));
+          return `#${[clamp(r), clamp(g), clamp(b)].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+        };
+        const lerpHsl = (a, b, t) => {
+          const ha = hexToHsl(a);
+          const hb = hexToHsl(b);
+          const clamped = Math.max(0, Math.min(1, t));
+          let dh = hb.h - ha.h;
+          if (dh > 180) dh -= 360;
+          if (dh < -180) dh += 360;
+          return hslToHex(
+            ha.h + dh * clamped,
+            ha.s + (hb.s - ha.s) * clamped,
+            ha.l + (hb.l - ha.l) * clamped,
+          );
+        };
+        const lerpPalette = (colors, t) => {
+          if (colors.length <= 1) return colors[0] || "#ffffff";
+          const scaled = t * (colors.length - 1);
+          const i = Math.min(Math.floor(scaled), colors.length - 2);
+          return lerpHsl(colors[i], colors[i + 1], scaled - i);
+        };
+        const getTimeOfDayColor = (clockMinutes) => {
+          const m = normalizeClockMinutes(clockMinutes);
+          if (m >= DAY_START_MIN && m < DAY_END_MIN) {
+            return lerpPalette(DAY_COLORS, (m - DAY_START_MIN) / (DAY_END_MIN - DAY_START_MIN));
+          }
+          if (m >= DAY_END_MIN && m < SUNSET_END_MIN) {
+            return lerpPalette(SUNSET_COLORS, (m - DAY_END_MIN) / (SUNSET_END_MIN - DAY_END_MIN));
+          }
+          if (m >= SUNSET_END_MIN || m < SUNRISE_START_MIN) {
+            const nightSpan = MINUTES_PER_DAY - SUNSET_END_MIN + SUNRISE_START_MIN;
+            const nightElapsed =
+              m >= SUNSET_END_MIN ? m - SUNSET_END_MIN : m + (MINUTES_PER_DAY - SUNSET_END_MIN);
+            return lerpPalette(NIGHT_COLORS, nightElapsed / nightSpan);
+          }
+          return lerpPalette(
+            SUNRISE_COLORS,
+            (m - SUNRISE_START_MIN) / (DAY_START_MIN - SUNRISE_START_MIN),
+          );
+        };
+        const shiftLightness = (hex, delta) => {
+          const { h, s, l } = hexToHsl(hex);
+          return hslToHex(h, s, Math.max(0, Math.min(100, l + delta)));
+        };
+        const getSectorMidpointClockMinutes = (sectorIndex) => {
+          const start = DAY_START_HOUR * 60 + sectorIndex * MINUTES_PER_SECTOR;
+          return normalizeClockMinutes(start + MINUTES_PER_SECTOR / 2);
+        };
+        const getSectorFillColors = (sectorIndex) => {
+          const base = getTimeOfDayColor(getSectorMidpointClockMinutes(sectorIndex));
+          const { l } = hexToHsl(base);
+          const evenDelta = l < 35 ? 4 : 3;
+          const oddDelta = l < 35 ? -3 : -2;
+          return {
+            fill: shiftLightness(base, oddDelta),
+            fillAlt: shiftLightness(base, evenDelta),
+          };
+        };
+        const getAllSectorFillColors = () =>
+          Array.from({ length: SEGMENTS }, (_, i) => getSectorFillColors(i));
+        const relativeLuminance = (hex) => {
+          const { r, g, b } = hexToRgb(hex);
+          const linearize = (c) => {
+            const s = c / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+          };
+          const [rs, gs, bs] = [r, g, b].map(linearize);
+          return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+        };
+        const isDarkFill = (hex) => relativeLuminance(hex) < 0.45;
+        const getSectorDisplayFill = (sectorIndex, sectorFillColors) =>
+          sectorIndex % 2 === 0
+            ? sectorFillColors[sectorIndex].fillAlt
+            : sectorFillColors[sectorIndex].fill;
+        const getSectorTextColors = (sectorIndex, sectorFillColors) => {
+          const sectorFill = getSectorDisplayFill(sectorIndex, sectorFillColors);
+          return {
+            fill: isDarkFill(sectorFill) ? "#f8fafc" : "#1a1a2e",
+            stroke: isDarkFill(sectorFill)
+              ? "rgba(30,27,75,0.85)"
+              : "rgba(255,255,255,0.92)",
+          };
+        };
+        const nightBlend = (minutes) => {
+          const m = normalizeClockMinutes(minutes);
+          if (m >= DAY_START_MIN && m < DAY_END_MIN) return 0;
+          if (m >= DAY_END_MIN && m < SUNSET_END_MIN) return (m - DAY_END_MIN) / (SUNSET_END_MIN - DAY_END_MIN);
+          if (m >= SUNSET_END_MIN || m < SUNRISE_START_MIN) return 1;
+          return 1 - (m - SUNRISE_START_MIN) / (DAY_START_MIN - SUNRISE_START_MIN);
+        };
+        const getChartAccentColors = (clockMinutes) => {
+          const night = nightBlend(clockMinutes);
+          const ring = lerpHsl("#8b5cf6", "#5b5894", night);
+          const spoke = lerpHsl("#c4b5fd", "#4a4678", night * 0.85);
+          const base = getTimeOfDayColor(clockMinutes);
+          const light = shiftLightness(base, 12);
+          const warm = shiftLightness(lerpHsl(base, "#fff8f0", 0.35), 8);
+          return {
+            ring,
+            spoke,
+            panelGradient: `linear-gradient(145deg, ${light} 0%, #ffffff 55%, ${warm} 100%)`,
+          };
+        };
+        let chartPositions = [];
+        let isEditingPositions = false;
+        let editDraft = [];
+        let currentChartDate = new Date();
+        const editPositionsBtn = document.getElementById("editPositionsBtn");
+        const donePositionsBtn = document.getElementById("donePositionsBtn");
+        const refreshPositionsBtn = document.getElementById("refreshPositionsBtn");
+
+        const renderPlanetCell = (p) =>
+          `<span class="table-symbol" style="color:${p.color}">${p.symbol}</span><span class="table-name"><span>${p.tamil}</span><span class="table-name-en">${p.english}</span></span>`;
+
+        const renderTable = () => {
+          const positions = isEditingPositions ? editDraft : chartPositions;
+          const rows = document.getElementById("rows");
+          rows.innerHTML = positions
+            .map((p) => {
+              const positionCell = isEditingPositions
+                ? `<input type="text" class="table-input" data-id="${p.id}" data-field="formatted" value="${escapeAttr(p.formatted)}" aria-label="${escapeAttr(p.english)} position" />`
+                : p.formatted;
+              const degreeCell = isEditingPositions
+                ? `<input type="text" class="table-input" data-id="${p.id}" data-field="longitude" value="${p.longitude.toFixed(1)}" inputmode="decimal" aria-label="${escapeAttr(p.english)} degree" />`
+                : `${p.longitude.toFixed(1)}°`;
+              return `<tr><td>${renderPlanetCell(p)}</td><td>${positionCell}</td><td>${degreeCell}</td></tr>`;
+            })
+            .join("");
+
+          if (isEditingPositions) {
+            rows.querySelectorAll(".table-input").forEach((input) => {
+              input.addEventListener("input", () => {
+                const id = input.dataset.id;
+                const field = input.dataset.field;
+                editDraft = editDraft.map((position) =>
+                  position.id === id
+                    ? applyPositionEdit(position, field, input.value)
+                    : position,
+                );
+                const updated = editDraft.find((position) => position.id === id);
+                if (!updated) return;
+                const row = input.closest("tr");
+                const formattedInput = row.querySelector('[data-field="formatted"]');
+                const longitudeInput = row.querySelector('[data-field="longitude"]');
+                if (formattedInput && formattedInput !== input) {
+                  formattedInput.value = updated.formatted;
+                }
+                if (longitudeInput && longitudeInput !== input) {
+                  longitudeInput.value = updated.longitude.toFixed(1);
+                }
+              });
+            });
+          }
+        };
+
+        const renderChartSvg = (date, place, positions) => {
+          const size = 560, c = size / 2, outer = 200, inner = 0;
+          const clockMinutes = date.getHours() * 60 + date.getMinutes();
+          const sectorFillColors = getAllSectorFillColors();
+          const chartAccents = getChartAccentColors(clockMinutes);
+          const panelEl = document.querySelector(".panel");
+          if (panelEl) panelEl.style.background = chartAccents.panelGradient;
+
+          let svg = "";
+          svg += `<circle cx="${c}" cy="${c}" r="${outer}" fill="none" stroke="${chartAccents.ring}" stroke-width="2.5"/>`;
+          const z0 = polar(0, outer, c);
+          svg += `<line x1="${c}" y1="${c}" x2="${z0.x}" y2="${z0.y}" stroke="${chartAccents.ring}" stroke-width="2" opacity="0.85"/>`;
+          for (let i = 0; i < SEGMENTS; i++) {
+            const a = i * DEG;
+            const o = polar(a, outer, c);
+            const sectorFill = i % 2 ? sectorFillColors[i].fill : sectorFillColors[i].fillAlt;
+            svg += `<path d="${sector(c, inner, outer, a, a + DEG)}" fill="${sectorFill}"/>`;
+            svg += `<line x1="${c}" y1="${c}" x2="${o.x}" y2="${o.y}" stroke="${chartAccents.spoke}" stroke-opacity="0.5" stroke-width="1"/>`;
+            const lblOffset = getBoundaryLabelOffset(i);
+            const degLbl = polar(a, outer + lblOffset, c);
+            const degRot = labelRadialInwardRotation(a);
+            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="8" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})">${formatBoundaryLabel(a, i)}</text>`;
+          }
+          svg += renderSectorClipDefs(c, inner, outer);
+          svg += renderSectorPlanetLabels(positions, c, inner, outer, sectorFillColors);
+          const lagnamAngle = getLagnamAngle(date, place);
+          const lagnamOuter = polar(lagnamAngle, outer, c);
+          const lagnamLbl = polar(lagnamAngle, LAGNAM_LABEL_RADIUS, c);
+          const lagnamRot = labelRadialRotation(lagnamAngle);
+          const lagnamTextColors = getSectorTextColors(getSectorIndex(lagnamAngle), sectorFillColors);
+          svg += `<line x1="${c}" y1="${c}" x2="${lagnamOuter.x}" y2="${lagnamOuter.y}" class="lagnam-spoke"/>`;
+          svg += `<g transform="rotate(${lagnamRot}, ${lagnamLbl.x}, ${lagnamLbl.y})">`;
+          svg += `<text x="${lagnamLbl.x}" y="${lagnamLbl.y}" class="lagnam-label" text-anchor="middle" dominant-baseline="middle" fill="${lagnamTextColors.fill}" stroke="${lagnamTextColors.stroke}">லக்னம் (${formatLagnamDegree(lagnamAngle)})</text>`;
+          svg += `</g>`;
+          document.getElementById("chart").innerHTML = svg;
+        };
+
+        function renderChart(date, place = placeState, resetPositions = false) {
+          currentChartDate = date;
+          if (resetPositions || !chartPositions.length) {
+            chartPositions = buildPositions(date);
+            isEditingPositions = false;
+            editDraft = [];
+            editPositionsBtn.hidden = false;
+            donePositionsBtn.hidden = true;
+          }
+
+          const dateStr = formatDateTimeLabel(date);
+          document.getElementById("subtitleMeta").textContent = ` · 0° on left · ${dateStr}`;
+          document.getElementById("tableDate").textContent = dateStr;
+          renderTable();
+          renderChartSvg(date, place, chartPositions);
+        }
+
+        editPositionsBtn.addEventListener("click", () => {
+          isEditingPositions = true;
+          editDraft = chartPositions.map((position) => ({ ...position }));
+          editPositionsBtn.hidden = true;
+          donePositionsBtn.hidden = false;
+          renderTable();
+        });
+
+        refreshPositionsBtn.addEventListener("click", () => {
+          chartPositions = buildPositions(currentChartDate);
+          isEditingPositions = false;
+          editDraft = [];
+          editPositionsBtn.hidden = false;
+          donePositionsBtn.hidden = true;
+          renderChartSvg(currentChartDate, placeState, chartPositions);
+          renderTable();
+        });
+
+        donePositionsBtn.addEventListener("click", () => {
+          chartPositions = editDraft.map((position) => {
+            const longitude = norm(position.longitude);
+            return { ...position, longitude, ...zodiac(longitude) };
+          });
+          isEditingPositions = false;
+          editDraft = [];
+          editPositionsBtn.hidden = false;
+          donePositionsBtn.hidden = true;
+          renderChartSvg(currentChartDate, placeState, chartPositions);
+          renderTable();
+        });
+
+        const today = new Date();
+        const dateInput = document.getElementById("dateInput");
+        const timeInput = document.getElementById("timeInput");
+        const placeInput = document.getElementById("placeInput");
+        const latInput = document.getElementById("latInput");
+        const lonInput = document.getElementById("lonInput");
+        dateInput.value = toInputValue(today);
+        timeInput.value = toTimeInputValue(today);
+        placeInput.value = placeState.placeName;
+        updateCoordsDisplay(false);
+        updateSunriseDisplay(dateInput.value);
+        renderChart(
+          chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
+          placeState,
+          true,
+        );
+
+        dateInput.addEventListener("change", () => updateSunriseDisplay(dateInput.value));
+        latInput.addEventListener("blur", commitCoordsFromInputs);
+        lonInput.addEventListener("blur", commitCoordsFromInputs);
+        latInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commitCoordsFromInputs();
+          }
+        });
+        lonInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commitCoordsFromInputs();
+          }
+        });
+
+        let geocodeTimer = null;
+        const scheduleGeocode = (query) => {
+          if (geocodeTimer) clearTimeout(geocodeTimer);
+          geocodeTimer = setTimeout(() => { void lookupCoordinates(query); }, 500);
+        };
+
+        placeInput.addEventListener("input", () => scheduleGeocode(placeInput.value));
+        placeInput.addEventListener("blur", () => {
+          if (geocodeTimer) clearTimeout(geocodeTimer);
+          void lookupCoordinates(placeInput.value);
+        });
+        document.getElementById("placeSearchBtn").addEventListener("click", () => {
+          if (geocodeTimer) clearTimeout(geocodeTimer);
+          void lookupCoordinates(placeInput.value);
+        });
+
+        document.getElementById("dateForm").addEventListener("submit", (e) => {
+          e.preventDefault();
+          if (geocodeTimer) clearTimeout(geocodeTimer);
+          void applyPlaceFromForm().then(() => {
+            const chartDate = chartDateTimeFromLocalInputs(
+              dateInput.value,
+              timeInput.value,
+              placeState,
+            );
+            renderChart(chartDate, placeState, true);
+            updateSunriseDisplay(dateInput.value);
+          });
+        });
       } catch (error) {
         document.body.innerHTML = `<div style="padding:2rem;color:#ff6b6b;font-family:monospace"><h2>Chart failed to load</h2><pre>${error.message}</pre></div>`;
         console.error(error);
