@@ -416,8 +416,8 @@
         const SEGMENTS = 16, DEG = 360 / SEGMENTS, J2000 = Date.UTC(2000, 0, 1, 12);
         const DAY_START_HOUR = 6;
         const MINUTES_PER_SECTOR = (24 * 60) / SEGMENTS;
-        const BOUNDARY_LABEL_OFFSET = 26;
-        const BOUNDARY_LABEL_STAGGER = 10;
+        const BOUNDARY_LABEL_OFFSET = 28;
+        const BOUNDARY_LABEL_STAGGER = 11;
         const formatDegreeLabel = (angle) => {
           const text = angle % 1 === 0 ? String(angle) : angle.toFixed(1);
           return `${text}°`;
@@ -701,8 +701,8 @@
         };
         const lon = (g, jd) => siderealLon(g, jd);
         const SECTOR_DEG = 22.5;
-        const PLANET_LABEL_RADIUS = 118;
-        const LAGNAM_LABEL_RADIUS = 105;
+        const PLANET_LABEL_RADIUS = 127;
+        const LAGNAM_LABEL_RADIUS = 113;
         const PLANET_MIN_FONT = 7;
         const PLANET_MAX_FONT = 8;
         const SECTOR_LABEL_RADIAL_MARGIN = 10;
@@ -1200,7 +1200,7 @@
         };
 
         const renderChartSvg = (date, place, positions) => {
-          const size = 560, c = size / 2, outer = 200, inner = 0;
+          const size = 560, c = size / 2, outer = 215, inner = 0;
           const clockMinutes = date.getHours() * 60 + date.getMinutes();
           const sectorFillColors = getAllSectorFillColors();
           const chartAccents = getChartAccentColors(clockMinutes);
@@ -1220,7 +1220,7 @@
             const lblOffset = getBoundaryLabelOffset(i);
             const degLbl = polar(a, outer + lblOffset, c);
             const degRot = labelRadialInwardRotation(a);
-            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="8" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})">${formatBoundaryLabel(a, i)}</text>`;
+            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="8" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(a)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatStartTime(i)}</tspan></text>`;
           }
           svg += renderSectorClipDefs(c, inner, outer);
           svg += renderSectorPlanetLabels(positions, c, inner, outer, sectorFillColors);
