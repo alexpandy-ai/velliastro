@@ -1,0 +1,16 @@
+---
+description: Auto commit, push, and Harvis deploy after chart changes
+alwaysApply: true
+---
+
+# Auto publish
+
+After editing the graha chart, keep `graha-chart.html` as the source of truth and sync it to `index.html`.
+
+Do not manually run git commit, git push, or Harvis deploy unless the user asks. A `stop` hook runs `.cursor/hooks/post-agent.ps1` when an agent turn completes; it:
+
+1. Commits and pushes `graha-chart.html` and `index.html` when either changed
+2. Syncs `graha-chart.html` → `index.html` → `deploy/index.html`
+3. Deploys to https://velliastro.harvis.page via `npx harvis` in `deploy/`
+
+Hook logs: `.cursor/hooks/post-agent.log`
