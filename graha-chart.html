@@ -973,46 +973,10 @@
           const el = document.getElementById("positionConsistency");
           if (el) el.hidden = true;
         };
-        const formatTimezoneOffsetLabel = (offsetMinutes) => {
-          const sign = offsetMinutes >= 0 ? "+" : "-";
-          const abs = Math.abs(offsetMinutes);
-          const hours = Math.floor(abs / 60);
-          const mins = abs % 60;
-          return mins === 0
-            ? `UTC${sign}${hours}`
-            : `UTC${sign}${hours}:${String(mins).padStart(2, "0")}`;
-        };
-        const formatUtcInstantLabel = (utcDate) =>
-          utcDate.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, " UTC");
-        const formatInputDateLabel = (dateValue) => {
-          const [year, month, day] = dateValue.split("-").map(Number);
-          const local = new Date(Date.UTC(year, month - 1, day));
-          return local.toLocaleDateString("en-IN", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            timeZone: "UTC",
-          });
-        };
-        const formatInputTimeLabel = (timeValue) => {
-          const [hours, minutes] = timeValue.split(":").map(Number);
-          const local = new Date(Date.UTC(2000, 0, 1, hours, minutes));
-          return local.toLocaleTimeString("en-IN", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-            timeZone: "UTC",
-          });
-        };
-        const updateCalcInputsLabelBox = (utcDate, place = placeState) => {
+        const updateCalcInputsLabelBox = (place = placeState) => {
           const el = document.getElementById("calcInputsLabel");
           if (!el) return;
-          const dateValue = dateInput.value;
-          const timeValue = timeInput.value;
-          const offsetMinutes = estimateTimezoneOffsetMinutes(place.longitude, place.latitude);
           const placeName = place.placeName || placeInput.value.trim() || "—";
-          const dateTimeLabel = `${formatInputDateLabel(dateValue)}, ${formatInputTimeLabel(timeValue)}`;
           el.hidden = false;
           el.innerHTML =
             `<div class="label-box__row">` +
@@ -1020,20 +984,8 @@
             `<span class="label-box__value">${escapeHtml(placeName)}</span>` +
             `</div>` +
             `<div class="label-box__row">` +
-            `<span class="label-box__key"><span class="bilingual"><span>தேதி &amp; நேரம்</span><span class="bilingual-en">Date &amp; time</span></span></span>` +
-            `<span class="label-box__value">${escapeHtml(dateTimeLabel)}</span>` +
-            `</div>` +
-            `<div class="label-box__row">` +
             `<span class="label-box__key"><span class="bilingual"><span>ஆள்கூறு</span><span class="bilingual-en">Coordinates</span></span></span>` +
             `<span class="label-box__value">${escapeHtml(formatCoordinates(place.latitude, place.longitude))}</span>` +
-            `</div>` +
-            `<div class="label-box__row">` +
-            `<span class="label-box__key"><span class="bilingual"><span>நேர மண்டலம்</span><span class="bilingual-en">Timezone</span></span></span>` +
-            `<span class="label-box__value">${escapeHtml(formatTimezoneOffsetLabel(offsetMinutes))}</span>` +
-            `</div>` +
-            `<div class="label-box__row">` +
-            `<span class="label-box__key"><span class="bilingual"><span>UTC</span><span class="bilingual-en">UTC instant</span></span></span>` +
-            `<span class="label-box__value">${escapeHtml(formatUtcInstantLabel(utcDate))}</span>` +
             `</div>`;
         };
         const groupPlanetsBySector = (positions) => {
@@ -1741,7 +1693,7 @@
           const finishRender = () => {
             const zeroLeft = currentLang === "ta" ? "0° இடது புறம்" : "0° on left";
             document.getElementById("subtitleMeta").textContent = ` · ${zeroLeft} · ${formatDateTimeLabel(date, place)}`;
-            updateCalcInputsLabelBox(date, place);
+            updateCalcInputsLabelBox(place);
             renderTable();
             renderChartSvg(date, place, chartPositions);
           };
