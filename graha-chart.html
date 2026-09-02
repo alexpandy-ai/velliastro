@@ -1366,7 +1366,12 @@
             timeInput.value = toTimeInputValueForPlace(now, placeState);
             updateCoordsDisplay(false);
             updateSunriseDisplay(dateInput.value);
-            renderChart(now, placeState, true);
+            const chartDate = chartDateTimeFromLocalInputs(
+              dateInput.value,
+              timeInput.value,
+              placeState,
+            );
+            renderChart(chartDate, placeState, true);
           } catch {
             renderChart(
               chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
@@ -1660,6 +1665,16 @@
           document.getElementById("chart").innerHTML = svg;
         };
 
+        const renderChartFromFormInputs = () => {
+          if (!chartInitialized || isEditingPositions) return;
+          const chartDate = chartDateTimeFromLocalInputs(
+            dateInput.value,
+            timeInput.value,
+            placeState,
+          );
+          renderChart(chartDate, placeState, true);
+        };
+
         function renderChart(date, place = placeState, resetPositions = false) {
           currentChartDate = date;
           const finishRender = () => {
@@ -1757,7 +1772,11 @@
         chartInitialized = true;
         void showNowAtCurrentLocation();
 
-        dateInput.addEventListener("change", () => updateSunriseDisplay(dateInput.value));
+        dateInput.addEventListener("change", () => {
+          updateSunriseDisplay(dateInput.value);
+          renderChartFromFormInputs();
+        });
+        timeInput.addEventListener("change", renderChartFromFormInputs);
         latInput.addEventListener("blur", commitCoordsFromInputs);
         lonInput.addEventListener("blur", commitCoordsFromInputs);
         latInput.addEventListener("keydown", (e) => {
@@ -1796,12 +1815,7 @@
           e.preventDefault();
           if (geocodeTimer) clearTimeout(geocodeTimer);
           void applyPlaceFromForm().then(() => {
-            const chartDate = chartDateTimeFromLocalInputs(
-              dateInput.value,
-              timeInput.value,
-              placeState,
-            );
-            renderChart(chartDate, placeState, true);
+            renderChartFromFormInputs();
             updateSunriseDisplay(dateInput.value);
           });
         });

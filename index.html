@@ -568,7 +568,6 @@
         const GRAHAS = [
           { id:"surya", tamil:"சூரியன்", english:"Sun", short:"சூ", letter:"ச", color:"#ff8c00", symbol:"☉", period:365.256, L0:280.46 },
           { id:"chandra", tamil:"சந்திரன்", english:"Moon", short:"ச", letter:"ச", color:"#94a3b8", symbol:"☽", period:27.321661, L0:218.32 },
-          { id:"bhoomi", tamil:"பூமி", english:"Earth", short:"பூ", letter:"ப", color:"#4a90d9", symbol:"♁", period:null, L0:null },
           { id:"sevvai", tamil:"செவ்வாய்", english:"Mars", short:"செ", letter:"ச", color:"#c1440e", symbol:"♂", period:686.98, L0:355.43 },
           { id:"budhan", tamil:"புதன்", english:"Mercury", short:"பு", letter:"ப", color:"#4caf50", symbol:"☿", period:87.969, L0:252.25 },
           { id:"guru", tamil:"வியாழன்", english:"Jupiter", short:"வி", letter:"வ", color:"#f5c842", symbol:"♃", period:4332.59, L0:34.35 },
@@ -1367,7 +1366,12 @@
             timeInput.value = toTimeInputValueForPlace(now, placeState);
             updateCoordsDisplay(false);
             updateSunriseDisplay(dateInput.value);
-            renderChart(now, placeState, true);
+            const chartDate = chartDateTimeFromLocalInputs(
+              dateInput.value,
+              timeInput.value,
+              placeState,
+            );
+            renderChart(chartDate, placeState, true);
           } catch {
             renderChart(
               chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
@@ -1661,6 +1665,16 @@
           document.getElementById("chart").innerHTML = svg;
         };
 
+        const renderChartFromFormInputs = () => {
+          if (!chartInitialized || isEditingPositions) return;
+          const chartDate = chartDateTimeFromLocalInputs(
+            dateInput.value,
+            timeInput.value,
+            placeState,
+          );
+          renderChart(chartDate, placeState, true);
+        };
+
         function renderChart(date, place = placeState, resetPositions = false) {
           currentChartDate = date;
           const finishRender = () => {
@@ -1758,7 +1772,11 @@
         chartInitialized = true;
         void showNowAtCurrentLocation();
 
-        dateInput.addEventListener("change", () => updateSunriseDisplay(dateInput.value));
+        dateInput.addEventListener("change", () => {
+          updateSunriseDisplay(dateInput.value);
+          renderChartFromFormInputs();
+        });
+        timeInput.addEventListener("change", renderChartFromFormInputs);
         latInput.addEventListener("blur", commitCoordsFromInputs);
         lonInput.addEventListener("blur", commitCoordsFromInputs);
         latInput.addEventListener("keydown", (e) => {
@@ -1797,12 +1815,7 @@
           e.preventDefault();
           if (geocodeTimer) clearTimeout(geocodeTimer);
           void applyPlaceFromForm().then(() => {
-            const chartDate = chartDateTimeFromLocalInputs(
-              dateInput.value,
-              timeInput.value,
-              placeState,
-            );
-            renderChart(chartDate, placeState, true);
+            renderChartFromFormInputs();
             updateSunriseDisplay(dateInput.value);
           });
         });
