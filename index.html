@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ta">
+<html lang="ta" class="lang-ta">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -333,6 +333,48 @@
         stroke: rgba(255, 255, 255, 0.92);
         stroke-width: 3;
       }
+      .lang-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin: 0 0 1.25rem;
+      }
+      .lang-tab {
+        padding: 0.4rem 1.1rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--card);
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        font-family: inherit;
+      }
+      .lang-tab:hover { border-color: var(--accent); color: var(--text); }
+      .lang-tab.is-active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      html.lang-ta .bilingual-en,
+      html.lang-ta .table-name-en { display: none !important; }
+      html.lang-en .bilingual > span:first-child:not(.bilingual-en),
+      html.lang-en .table-name > span:first-child { display: none !important; }
+      html.lang-en .bilingual-en::before { content: none; margin: 0; }
+      html.lang-en .bilingual-en,
+      html.lang-en .table-name-en {
+        color: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        font-family: system-ui, sans-serif;
+      }
+      html.lang-en h1 .bilingual-en { font-size: 1em; font-weight: 700; }
+      html.lang-en .sub .bilingual-en { font-size: inherit; }
+      html.lang-en th .bilingual-en { font-size: inherit; }
+      html.lang-en body { font-family: system-ui, sans-serif; }
+      html.lang-en .location-label .bilingual-en { font-size: inherit; }
+      html.lang-en .coords-display .bilingual-en { font-size: inherit; }
     </style>
   </head>
   <body>
@@ -353,15 +395,19 @@
             <span class="sub-meta" id="subtitleMeta"></span>
           </p>
         </div>
+        <nav class="lang-tabs" role="tablist" aria-label="Language">
+          <button type="button" class="lang-tab is-active" id="langTabTa" role="tab" aria-selected="true">தமிழ்</button>
+          <button type="button" class="lang-tab" id="langTabEn" role="tab" aria-selected="false">English</button>
+        </nav>
         <form class="date-form" id="dateForm">
           <div class="form-card">
             <div class="form-group form-group--datetime">
               <div class="form-field">
-                <label for="dateInput">Select date</label>
+                <label for="dateInput"><span class="bilingual"><span>தேதி</span><span class="bilingual-en">Select date</span></span></label>
                 <input type="date" id="dateInput" required />
               </div>
               <div class="form-field">
-                <label for="timeInput">Time</label>
+                <label for="timeInput"><span class="bilingual"><span>நேரம்</span><span class="bilingual-en">Time</span></span></label>
                 <input type="time" id="timeInput" required />
               </div>
             </div>
@@ -399,7 +445,7 @@
                 </span>
               </div>
             </div>
-            <button type="submit" class="submit-btn">Submit</button>
+            <button type="submit" class="submit-btn"><span class="bilingual"><span>சமர்ப்பி</span><span class="bilingual-en">Submit</span></span></button>
           </div>
         </form>
         <datalist id="placePresets">
@@ -424,9 +470,9 @@
               </span>
             </h2>
             <div class="table-toolbar">
-              <button type="button" id="refreshPositionsBtn" class="table-edit-btn" title="Reset planet positions and degrees">Refresh</button>
-              <button type="button" id="editPositionsBtn" class="table-edit-btn">Edit</button>
-              <button type="button" id="donePositionsBtn" class="table-done-btn" hidden>Done</button>
+              <button type="button" id="refreshPositionsBtn" class="table-edit-btn" title="Reset planet positions and degrees"><span class="bilingual"><span>புதுப்பி</span><span class="bilingual-en">Refresh</span></span></button>
+              <button type="button" id="editPositionsBtn" class="table-edit-btn"><span class="bilingual"><span>திருத்து</span><span class="bilingual-en">Edit</span></span></button>
+              <button type="button" id="donePositionsBtn" class="table-done-btn" hidden><span class="bilingual"><span>முடிந்தது</span><span class="bilingual-en">Done</span></span></button>
             </div>
           </div>
           <p class="sub" id="tableDate" style="margin: 0.4rem 0 1rem"></p>
@@ -752,7 +798,11 @@
         const SECTOR_ANGULAR_MARGIN = 1.5;
         const SECTOR_LABEL_LINE_HEIGHT = 1.15;
         const getSectorIndex = (lon) => Math.floor(norm(lon) / SECTOR_DEG) % SEGMENTS;
-        const formatPlanetPart = (p) => `${p.tamil} (${p.longitude.toFixed(1)}°)`;
+        let currentLang = localStorage.getItem("velliastro-lang") === "en" ? "en" : "ta";
+        const formatPlanetPart = (p) => {
+          const name = currentLang === "ta" ? p.tamil : p.english;
+          return `${name} (${p.longitude.toFixed(1)}°)`;
+        };
         const formatSectorPlanetLabel = (planets) =>
           [...planets].sort((a, b) => a.longitude - b.longitude).map(formatPlanetPart).join(", ");
         const estimateLabelWidth = (text, fontSize) => {
@@ -1334,7 +1384,7 @@
           const lagnamTextColors = getSectorTextColors(getSectorIndex(lagnamAngle), sectorFillColors);
           svg += `<line x1="${c}" y1="${c}" x2="${lagnamOuter.x}" y2="${lagnamOuter.y}" class="lagnam-spoke"/>`;
           svg += `<g transform="rotate(${lagnamRot}, ${lagnamLbl.x}, ${lagnamLbl.y})">`;
-          svg += `<text x="${lagnamLbl.x}" y="${lagnamLbl.y}" class="lagnam-label" text-anchor="middle" dominant-baseline="middle" fill="${lagnamTextColors.fill}" stroke="${lagnamTextColors.stroke}">லக்னம் (${formatLagnamDegree(lagnamAngle)})</text>`;
+          svg += `<text x="${lagnamLbl.x}" y="${lagnamLbl.y}" class="lagnam-label" text-anchor="middle" dominant-baseline="middle" fill="${lagnamTextColors.fill}" stroke="${lagnamTextColors.stroke}">${currentLang === "ta" ? "லக்னம்" : "Lagnam"} (${formatLagnamDegree(lagnamAngle)})</text>`;
           svg += `</g>`;
           document.getElementById("chart").innerHTML = svg;
         };
@@ -1350,7 +1400,8 @@
           }
 
           const dateStr = formatDateTimeLabel(date);
-          document.getElementById("subtitleMeta").textContent = ` · 0° on left · ${dateStr}`;
+          const zeroLeft = currentLang === "ta" ? "0° இடது புறம்" : "0° on left";
+          document.getElementById("subtitleMeta").textContent = ` · ${zeroLeft} · ${dateStr}`;
           document.getElementById("tableDate").textContent = dateStr;
           renderTable();
           renderChartSvg(date, place, chartPositions);
@@ -1387,6 +1438,30 @@
           renderTable();
         });
 
+        const langTabTa = document.getElementById("langTabTa");
+        const langTabEn = document.getElementById("langTabEn");
+        let chartInitialized = false;
+
+        const setLanguage = (lang, rerender = true) => {
+          currentLang = lang;
+          localStorage.setItem("velliastro-lang", lang);
+          document.documentElement.classList.remove("lang-ta", "lang-en");
+          document.documentElement.classList.add(lang === "ta" ? "lang-ta" : "lang-en");
+          document.documentElement.lang = lang === "ta" ? "ta" : "en";
+          document.title = lang === "ta" ? "கிரக நிலைகள் · Planet Positions" : "Planet Positions";
+          langTabTa.classList.toggle("is-active", lang === "ta");
+          langTabEn.classList.toggle("is-active", lang === "en");
+          langTabTa.setAttribute("aria-selected", lang === "ta" ? "true" : "false");
+          langTabEn.setAttribute("aria-selected", lang === "en" ? "true" : "false");
+          if (rerender && chartInitialized) {
+            renderChart(currentChartDate, placeState, false);
+          }
+        };
+
+        langTabTa.addEventListener("click", () => setLanguage("ta"));
+        langTabEn.addEventListener("click", () => setLanguage("en"));
+        setLanguage(currentLang, false);
+
         const today = new Date();
         const dateInput = document.getElementById("dateInput");
         const timeInput = document.getElementById("timeInput");
@@ -1403,6 +1478,7 @@
           placeState,
           true,
         );
+        chartInitialized = true;
 
         dateInput.addEventListener("change", () => updateSunriseDisplay(dateInput.value));
         latInput.addEventListener("blur", commitCoordsFromInputs);
