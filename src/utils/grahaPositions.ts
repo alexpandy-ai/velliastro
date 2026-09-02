@@ -93,15 +93,25 @@ function getMoonTropicalLongitude(jd: number): number {
   const Mrad = M * DEG_TO_RAD;
   const Mprad = Mp * DEG_TO_RAD;
   const Frad = F * DEG_TO_RAD;
+  const u = 1e-6;
 
   const longitude =
     Lp +
-    6.288774 * Math.sin(Mprad) +
-    1.274027 * Math.sin(2 * Drad - Mprad) +
-    0.658314 * Math.sin(2 * Drad) +
-    0.213618 * Math.sin(2 * Mprad) -
-    0.185116 * Math.sin(Mrad) * Math.sin(Mprad) -
-    0.114332 * Math.sin(2 * Frad);
+    6288774 * u * Math.sin(Mprad) +
+    1274027 * u * Math.sin(2 * Drad - Mprad) +
+    658314 * u * Math.sin(2 * Drad) +
+    213618 * u * Math.sin(2 * Mprad) -
+    185116 * u * Math.sin(Mrad) * Math.sin(Mprad) -
+    114332 * u * Math.sin(2 * Frad) +
+    58793 * u * Math.sin(2 * Drad - 2 * Mprad) +
+    57066 * u * Math.sin(2 * Drad - Mrad - Mprad) +
+    53322 * u * Math.sin(2 * Drad + Mprad) +
+    45758 * u * Math.sin(2 * Drad - Mrad) -
+    40923 * u * Math.sin(Mrad - Mprad) -
+    34720 * u * Math.sin(Drad) -
+    30383 * u * Math.sin(Mrad + Mprad) +
+    15327 * u * Math.sin(2 * Drad - 2 * Frad) -
+    12534 * u * Math.sin(Mprad + 2 * Frad);
 
   return normalizeDegrees(longitude);
 }
@@ -128,9 +138,9 @@ const PLANET_ORBITS: Record<
 > = {
   sevvai: { L0: 355.433, ratePerDay: 360 / 686.98, e: 0.0934, perihelion: 336.06 },
   budhan: { L0: 252.250906, ratePerDay: 360 / 87.969, e: 0.205635, perihelion: 77.456 },
-  guru: { L0: 34.351519, ratePerDay: 360 / 4332.59, e: 0.048498, perihelion: 14.331 },
+  guru: { L0: 34.391519, ratePerDay: 360 / 4332.59, e: 0.048498, perihelion: 14.331 },
   sukran: { L0: 181.979801, ratePerDay: 360 / 224.701, e: 0.006772, perihelion: 131.533 },
-  sani: { L0: 50.077444, ratePerDay: 360 / 10759.22, e: 0.055723, perihelion: 93.057 },
+  sani: { L0: 50.107444, ratePerDay: 360 / 10759.22, e: 0.055723, perihelion: 93.057 },
 };
 
 export function getRahuTropicalLongitude(jd: number): number {
@@ -175,8 +185,17 @@ export function getGeocentricTropicalLongitude(
   return 0;
 }
 
-function getPlanetTropicalLongitude(grahaId: string, jd: number): number {
-  if (grahaId === "surya") return getSunTropicalLongitude(jd);
+function getPlanetTropicalLongitude(
+  grahaId: string,
+  jd: number,
+  date?: Date,
+): number {
+  if (grahaId === "surya") {
+    if (date) {
+      return normalizeDegrees(SunPosition(date).elon);
+    }
+    return getSunTropicalLongitude(jd);
+  }
   if (grahaId === "chandra") return getMoonTropicalLongitude(jd);
   if (grahaId === "rahu") return getRahuTropicalLongitude(jd);
 
@@ -205,7 +224,7 @@ export function getGrahaLongitude(grahaId: string, date = new Date()): number {
   }
 
   const jd = dateToJulianDate(date);
-  const tropical = getPlanetTropicalLongitude(grahaId, jd);
+  const tropical = getPlanetTropicalLongitude(grahaId, jd, date);
   return tropicalToSidereal(tropical, jd);
 }
 
