@@ -273,6 +273,33 @@
         background: var(--accent);
         color: #2d3250;
       }
+      .position-consistency {
+        font-size: 0.8rem;
+        line-height: 1.45;
+        padding: 0.5rem 0.65rem;
+        border-radius: 0.5rem;
+        margin: 0 0 0.75rem;
+      }
+      .position-consistency ul {
+        margin: 0.35rem 0 0;
+        padding-left: 1.1rem;
+      }
+      .position-consistency li { margin: 0.15rem 0; }
+      .position-consistency--ok {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+      }
+      .position-consistency--warn {
+        background: #fff7ed;
+        color: #c2410c;
+        border: 1px solid #fed7aa;
+      }
+      .position-consistency--edit {
+        background: #f0f4ff;
+        color: #5b21b6;
+        border: 1px solid #ddd6fe;
+      }
       .table-input {
         width: 100%;
         min-width: 0;
@@ -403,6 +430,7 @@
             </div>
           </div>
           <p class="sub" id="tableDate" style="margin: 0.4rem 0 1rem"></p>
+          <div id="positionConsistency" class="position-consistency" role="status" aria-live="polite" hidden></div>
           <table><thead><tr>
             <th><span class="bilingual"><span>கிரகம்</span><span class="bilingual-en">Planet</span></span></th>
             <th><span class="bilingual"><span>நிலை</span><span class="bilingual-en">Position</span></span></th>
@@ -782,6 +810,47 @@
           }
           return issues;
         };
+        const escapeHtml = (value) =>
+          String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        const updatePositionConsistencyStatus = (positions) => {
+          const el = document.getElementById("positionConsistency");
+          if (!el) return;
+
+          const issues = verifyGrahaPositions(positions);
+          if (isEditingPositions) {
+            el.hidden = false;
+            if (issues.length === 0) {
+              el.className = "position-consistency position-consistency--edit";
+              el.innerHTML =
+                '<span class="bilingual"><span>திருத்தம் — நிலை மற்றும் பாகை பொருந்துகின்றன</span><span class="bilingual-en">Editing — position and degree match</span></span>';
+              return;
+            }
+            el.className = "position-consistency position-consistency--warn";
+            el.innerHTML =
+              '<strong><span class="bilingual"><span>பொருந்தாத மதிப்புகள்</span><span class="bilingual-en">Mismatched values</span></span></strong><ul>' +
+              issues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("") +
+              "</ul>";
+            return;
+          }
+
+          if (issues.length === 0) {
+            el.hidden = false;
+            el.className = "position-consistency position-consistency--ok";
+            el.innerHTML =
+              '<span class="bilingual"><span>✓ நிலை மற்றும் பாகை பொருந்துகின்றன</span><span class="bilingual-en">✓ Position and degree values match</span></span>';
+            return;
+          }
+
+          el.hidden = false;
+          el.className = "position-consistency position-consistency--warn";
+          el.innerHTML =
+            '<strong><span class="bilingual"><span>பொருந்தாத மதிப்புகள்</span><span class="bilingual-en">Mismatched values</span></span></strong><ul>' +
+            issues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("") +
+            "</ul>";
+        };
         const groupPlanetsBySector = (positions) => {
           const groups = new Map();
           for (const p of positions) {
@@ -804,9 +873,6 @@
           return svg;
         };
         const renderSectorPlanetLabels = (positions, c, inner, outer, sectorFillColors) => {
-          const issues = verifyGrahaPositions(positions);
-          if (issues.length) console.warn("Planet degree mismatch:", issues);
-
           let svg = "";
           for (const position of positions) {
             const layout = layoutPlanetLabelAtLongitude(position, c);
@@ -1209,9 +1275,12 @@
                 if (longitudeInput && longitudeInput !== input) {
                   longitudeInput.value = updated.longitude.toFixed(1);
                 }
+                updatePositionConsistencyStatus(editDraft);
               });
             });
           }
+
+          updatePositionConsistencyStatus(positions);
         };
 
         const renderChartSvg = (date, place, positions) => {
