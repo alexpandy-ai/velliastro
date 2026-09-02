@@ -433,6 +433,7 @@
           <div id="positionConsistency" class="position-consistency" role="status" aria-live="polite" hidden></div>
           <table><thead><tr>
             <th><span class="bilingual"><span>கிரகம்</span><span class="bilingual-en">Planet</span></span></th>
+            <th><span class="bilingual"><span>ராசி</span><span class="bilingual-en">Rasi</span></span></th>
             <th><span class="bilingual"><span>நிலை</span><span class="bilingual-en">Position</span></span></th>
             <th><span class="bilingual"><span>பாகை</span><span class="bilingual-en">Degree</span></span></th>
           </tr></thead><tbody id="rows"></tbody></table>
@@ -472,6 +473,20 @@
           return rotation;
         };
         const SIGNS = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+        const RASI_TAMIL = {
+          Aries: "மேஷம்",
+          Taurus: "ரிஷபம்",
+          Gemini: "மிதுனம்",
+          Cancer: "கடகம்",
+          Leo: "சிம்மம்",
+          Virgo: "கன்னி",
+          Libra: "துலாம்",
+          Scorpio: "விருச்சிகம்",
+          Sagittarius: "தனுசு",
+          Capricorn: "மகரம்",
+          Aquarius: "கும்பம்",
+          Pisces: "மீனம்",
+        };
         const GRAHAS = [
           { id:"surya", tamil:"சூரியன்", english:"Sun", short:"சூ", letter:"ச", color:"#ff8c00", symbol:"☉", period:365.256, L0:280.46 },
           { id:"chandra", tamil:"சந்திரன்", english:"Moon", short:"ச", letter:"ச", color:"#94a3b8", symbol:"☽", period:27.321661, L0:218.32 },
@@ -1238,6 +1253,8 @@
 
         const renderPlanetCell = (p) =>
           `<span class="table-symbol" style="color:${p.color}">${p.symbol}</span><span class="table-name"><span>${p.tamil}</span><span class="table-name-en">${p.english}</span></span>`;
+        const renderRasiCell = (p) =>
+          `<span class="table-name"><span>${RASI_TAMIL[p.sign] || p.sign}</span><span class="table-name-en">${p.sign}</span></span>`;
 
         const renderTable = () => {
           const positions = isEditingPositions ? editDraft : chartPositions;
@@ -1250,7 +1267,7 @@
               const degreeCell = isEditingPositions
                 ? `<input type="text" class="table-input" data-id="${p.id}" data-field="longitude" value="${p.longitude.toFixed(1)}" inputmode="decimal" aria-label="${escapeAttr(p.english)} degree" />`
                 : `${p.longitude.toFixed(1)}°`;
-              return `<tr><td>${renderPlanetCell(p)}</td><td>${positionCell}</td><td>${degreeCell}</td></tr>`;
+              return `<tr><td>${renderPlanetCell(p)}</td><td data-field="rasi">${renderRasiCell(p)}</td><td>${positionCell}</td><td>${degreeCell}</td></tr>`;
             })
             .join("");
 
@@ -1275,6 +1292,8 @@
                 if (longitudeInput && longitudeInput !== input) {
                   longitudeInput.value = updated.longitude.toFixed(1);
                 }
+                const rasiCell = row.querySelector('[data-field="rasi"]');
+                if (rasiCell) rasiCell.innerHTML = renderRasiCell(updated);
                 updatePositionConsistencyStatus(editDraft);
               });
             });
