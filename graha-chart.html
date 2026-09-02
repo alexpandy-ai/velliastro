@@ -192,6 +192,21 @@
         transition: border-color 0.15s ease, opacity 0.15s ease;
       }
       .place-search-btn:hover { border-color: var(--accent); opacity: 0.9; }
+      .place-location-btn {
+        flex-shrink: 0;
+        font-family: inherit;
+        font-size: 0.9rem;
+        padding: 0.6rem 0.7rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        cursor: pointer;
+        line-height: 1;
+        transition: border-color 0.15s ease, opacity 0.15s ease;
+      }
+      .place-location-btn:hover:not(:disabled) { border-color: var(--accent); opacity: 0.9; }
+      .place-location-btn:disabled { opacity: 0.55; cursor: wait; }
       .coords-display {
         display: flex;
         flex-direction: column;
@@ -299,6 +314,21 @@
         background: #f0f4ff;
         color: #5b21b6;
         border: 1px solid #ddd6fe;
+      }
+      .consistency-note {
+        margin: 0.35rem 0 0;
+        font-size: 0.75rem;
+        opacity: 0.92;
+      }
+      .ephemeris-select {
+        width: 100%;
+        font-family: inherit;
+        font-size: 0.85rem;
+        padding: 0.55rem 0.65rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
       }
       .table-input {
         width: 100%;
@@ -429,6 +459,7 @@
               </label>
               <div class="place-row">
                 <input type="text" id="placeInput" list="placePresets" placeholder="Chennai" autocomplete="off" />
+                <button type="button" id="placeLocationBtn" class="place-location-btn" title="Use current location and time" aria-label="Use current location and time">⌖</button>
                 <button type="button" id="placeSearchBtn" class="place-search-btn" title="Search place" aria-label="Search place">⌕</button>
               </div>
             </div>
@@ -444,6 +475,19 @@
                   <input type="text" class="coords-input" id="lonInput" inputmode="decimal" aria-label="Longitude" placeholder="Lon" maxlength="12" />
                 </span>
               </div>
+            </div>
+            <div class="form-group form-group--ephemeris">
+              <label for="ephemerisSource" class="location-label">
+                <span class="bilingual">
+                  <span>கிரக கணக்கீடு</span>
+                  <span class="bilingual-en">Planet calculation</span>
+                </span>
+              </label>
+              <select id="ephemerisSource" class="ephemeris-select">
+                <option value="builtin">Built-in formulas</option>
+                <option value="reference">Reference (VSOP87 / astronomy-engine)</option>
+                <option value="api">Bharat Ephemeris API</option>
+              </select>
             </div>
             <button type="submit" class="submit-btn"><span class="bilingual"><span>சமர்ப்பி</span><span class="bilingual-en">Submit</span></span></button>
           </div>
@@ -486,6 +530,7 @@
         </aside>
       </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <script>
       try {
         const SEGMENTS = 16, DEG = 360 / SEGMENTS, J2000 = Date.UTC(2000, 0, 1, 12);
@@ -880,14 +925,46 @@
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;");
-        const updatePositionConsistencyStatus = (positions) => {
+        const updatePositionConsistencyStatus = async (positions) => {
           const el = document.getElementById("positionConsistency");
           if (!el) return;
 
           const issues = verifyGrahaPositions(positions);
+          let externalIssues = [];
+
+          if (!isEditingPositions && ephemerisSource === "builtin") {
+            const referenceLongitudes = {};
+            for (const position of positions) {
+              referenceLongitudes[position.id] = getReferenceLongitude(position.id, currentChartDate);
+            }
+            externalIssues = externalIssues.concat(
+              comparePositionsToLongitudes(positions, referenceLongitudes, "Reference (VSOP87)"),
+            );
+
+            const apiLongitudes = await fetchBharatLongitudes(
+              dateInput.value,
+              timeInput.value,
+              placeState,
+            );
+            if (apiLongitudes) {
+              apiCheckStatus = "ok";
+              externalIssues = externalIssues.concat(
+                comparePositionsToLongitudes(positions, apiLongitudes, "Bharat API"),
+              );
+            } else {
+              apiCheckStatus = "unavailable";
+            }
+          } else if (!isEditingPositions && ephemerisSource === "api") {
+            apiCheckStatus = (await fetchBharatLongitudes(dateInput.value, timeInput.value, placeState))
+              ? "ok"
+              : "unavailable";
+          }
+
+          const allIssues = [...issues, ...externalIssues];
+
           if (isEditingPositions) {
             el.hidden = false;
-            if (issues.length === 0) {
+            if (allIssues.length === 0) {
               el.className = "position-consistency position-consistency--edit";
               el.innerHTML =
                 '<span class="bilingual"><span>திருத்தம் — நிலை மற்றும் பாகை பொருந்துகின்றன</span><span class="bilingual-en">Editing — position and degree match</span></span>';
@@ -896,16 +973,42 @@
             el.className = "position-consistency position-consistency--warn";
             el.innerHTML =
               '<strong><span class="bilingual"><span>பொருந்தாத மதிப்புகள்</span><span class="bilingual-en">Mismatched values</span></span></strong><ul>' +
-              issues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("") +
+              allIssues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("") +
               "</ul>";
             return;
           }
 
-          if (issues.length === 0) {
+          if (allIssues.length === 0) {
             el.hidden = false;
             el.className = "position-consistency position-consistency--ok";
+            let noteHtml = "";
+            if (ephemerisSource === "reference") {
+              noteHtml =
+                '<p class="consistency-note"><span class="bilingual"><span>குறிப்பு: VSOP87 குறிப்பு கணக்கீடு பயன்படுத்தப்படுகிறது</span><span class="bilingual-en">Using reference VSOP87 ephemeris</span></span></p>';
+            } else if (ephemerisSource === "api") {
+              const apiNote =
+                apiCheckStatus === "unavailable"
+                  ? {
+                      ta: "API கிடைக்கவில்லை — உள்ளமைவு கணக்கீடு பயன்படுத்தப்படுகிறது",
+                      en: "API unavailable — using built-in formulas",
+                    }
+                  : {
+                      ta: "Bharat Ephemeris API பயன்படுத்தப்படுகிறது",
+                      en: "Using Bharat Ephemeris API",
+                    };
+              noteHtml = `<p class="consistency-note"><span class="bilingual"><span>${apiNote.ta}</span><span class="bilingual-en">${apiNote.en}</span></span></p>`;
+            } else if (ephemerisSource === "builtin") {
+              if (apiCheckStatus === "ok") {
+                noteHtml =
+                  '<p class="consistency-note"><span class="bilingual"><span>✓ Bharat API மற்றும் VSOP87 குறிப்புடன் பொருந்துகிறது</span><span class="bilingual-en">✓ Matches Bharat API and VSOP87 reference</span></span></p>';
+              } else {
+                noteHtml =
+                  '<p class="consistency-note"><span class="bilingual"><span>VSOP87 குறிப்புடன் ஒப்பிடப்பட்டது (API சரிபார்ப்பு கிடைக்கவில்லை)</span><span class="bilingual-en">Compared with VSOP87 reference (API check unavailable)</span></span></p>';
+              }
+            }
             el.innerHTML =
-              '<span class="bilingual"><span>✓ நிலை மற்றும் பாகை பொருந்துகின்றன</span><span class="bilingual-en">✓ Position and degree values match</span></span>';
+              '<span class="bilingual"><span>✓ நிலை மற்றும் பாகை பொருந்துகின்றன</span><span class="bilingual-en">✓ Position and degree values match</span></span>' +
+              noteHtml;
             return;
           }
 
@@ -913,7 +1016,7 @@
           el.className = "position-consistency position-consistency--warn";
           el.innerHTML =
             '<strong><span class="bilingual"><span>பொருந்தாத மதிப்புகள்</span><span class="bilingual-en">Mismatched values</span></span></strong><ul>' +
-            issues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("") +
+            allIssues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("") +
             "</ul>";
         };
         const groupPlanetsBySector = (positions) => {
@@ -1006,6 +1109,145 @@
             longitude: lon(g, jd),
             ...zodiac(lon(g, jd)),
           }));
+        };
+        const EPHEMERIS_COMPARE_TOLERANCE_DEG = 1;
+        const REFERENCE_BODY = {
+          surya: "Sun",
+          chandra: "Moon",
+          sevvai: "Mars",
+          budhan: "Mercury",
+          guru: "Jupiter",
+          sukran: "Venus",
+          sani: "Saturn",
+        };
+        const BHARAT_API_PROXY_PATH = "/api/bharat/chart";
+        const BHARAT_GRAHA_KEYS = {
+          surya: "sun",
+          chandra: "moon",
+          sevvai: "mangala",
+          budhan: "budha",
+          guru: "guru",
+          sukran: "shukra",
+          sani: "shani",
+          rahu: "rahu",
+          ketu: "ketu",
+        };
+        let ephemerisSource = localStorage.getItem("velliastro-ephemeris") || "builtin";
+        let apiCheckStatus = "idle";
+        const angularDistanceDegrees = (a, b) => {
+          const delta = Math.abs(norm(a) - norm(b));
+          return delta > 180 ? 360 - delta : delta;
+        };
+        const getReferenceLongitude = (grahaId, date) => {
+          if (grahaId === "bhoomi" || grahaId === "earth") {
+            return norm(getReferenceLongitude("surya", date) + 180);
+          }
+          if (grahaId === "ketu") {
+            return norm(getReferenceLongitude("rahu", date) + 180);
+          }
+          if (grahaId === "rahu") {
+            const jd = dateToJulianDate(date);
+            return tropicalToSidereal(getRahuTropical(jd), jd);
+          }
+          const bodyName = REFERENCE_BODY[grahaId];
+          if (!bodyName || !window.Astronomy) {
+            const jd = dateToJulianDate(date);
+            const graha = GRAHAS.find((g) => g.id === grahaId);
+            return graha ? lon(graha, jd) : 0;
+          }
+          const jd = dateToJulianDate(date);
+          const tropical = window.Astronomy.EclipticLongitude(window.Astronomy.Body[bodyName], date);
+          return tropicalToSidereal(tropical, jd);
+        };
+        const buildReferencePositions = (date) =>
+          GRAHAS.map((g) => {
+            const longitude = getReferenceLongitude(g.id, date);
+            return { ...g, longitude, ...zodiac(longitude) };
+          });
+        const getTimezoneId = (place) => {
+          if (
+            place.longitude >= 68 &&
+            place.longitude <= 97 &&
+            place.latitude >= 6 &&
+            place.latitude <= 37.5
+          ) {
+            return "Asia/Kolkata";
+          }
+          if (
+            place.longitude >= 80 &&
+            place.longitude <= 89 &&
+            place.latitude >= 26 &&
+            place.latitude <= 31
+          ) {
+            return "Asia/Kathmandu";
+          }
+          return "UTC";
+        };
+        const fetchBharatLongitudes = async (dateValue, timeValue, place) => {
+          try {
+            const birthTime = /^\d{2}:\d{2}:\d{2}$/.test(timeValue) ? timeValue : `${timeValue}:00`;
+            const response = await fetch(BHARAT_API_PROXY_PATH, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Accept: "application/json" },
+              body: JSON.stringify({
+                birthDate: dateValue,
+                birthTime,
+                birthPlace: {
+                  lat: place.latitude,
+                  lon: place.longitude,
+                  tz: getTimezoneId(place),
+                },
+                ayanamsa: "lahiri",
+              }),
+            });
+            if (!response.ok) return null;
+            const data = await response.json();
+            if (!data.ok || !data.nirayana) return null;
+            const longitudes = {};
+            for (const [grahaId, key] of Object.entries(BHARAT_GRAHA_KEYS)) {
+              const value = data.nirayana[key];
+              if (typeof value === "number" && Number.isFinite(value)) {
+                longitudes[grahaId] = norm(value);
+              }
+            }
+            if (typeof longitudes.surya === "number") {
+              longitudes.bhoomi = norm(longitudes.surya + 180);
+            }
+            return longitudes;
+          } catch {
+            return null;
+          }
+        };
+        const buildApiPositions = async (dateValue, timeValue, place) => {
+          const longitudes = await fetchBharatLongitudes(dateValue, timeValue, place);
+          if (!longitudes) return null;
+          return GRAHAS.map((g) => {
+            const longitude = longitudes[g.id] ?? 0;
+            return { ...g, longitude, ...zodiac(longitude) };
+          });
+        };
+        const comparePositionsToLongitudes = (positions, longitudes, sourceLabel) => {
+          const issues = [];
+          for (const position of positions) {
+            const referenceLongitude = longitudes[position.id];
+            if (typeof referenceLongitude !== "number" || !Number.isFinite(referenceLongitude)) continue;
+            const delta = angularDistanceDegrees(position.longitude, referenceLongitude);
+            if (delta > EPHEMERIS_COMPARE_TOLERANCE_DEG) {
+              issues.push(
+                `${position.english}: chart ${position.longitude.toFixed(1)}° vs ${sourceLabel} ${referenceLongitude.toFixed(1)}° (Δ ${delta.toFixed(1)}°)`,
+              );
+            }
+          }
+          return issues;
+        };
+        const loadChartPositions = async (date, dateValue, timeValue, place, source) => {
+          if (source === "reference") return buildReferencePositions(date);
+          if (source === "api") {
+            const apiPositions = await buildApiPositions(dateValue, timeValue, place);
+            if (apiPositions) return apiPositions;
+            return buildPositions(date);
+          }
+          return buildPositions(date);
         };
         const formatLagnamDegree = (longitude) => `${longitude.toFixed(1)}°`;
         const DEFAULT_PLACE = { placeName: "Chennai, Tamil Nadu, India", latitude: 13.0827, longitude: 80.2707 };
@@ -1106,6 +1348,66 @@
             };
           } catch {
             return matchPreset(trimmed);
+          }
+        };
+        const reverseGeocodeCoordinates = async (latitude, longitude) => {
+          try {
+            const url = new URL("https://nominatim.openstreetmap.org/reverse");
+            url.searchParams.set("format", "json");
+            url.searchParams.set("lat", String(latitude));
+            url.searchParams.set("lon", String(longitude));
+            const response = await fetch(url.toString(), {
+              headers: { Accept: "application/json", "Accept-Language": "en" },
+            });
+            if (!response.ok) return formatCoordinates(latitude, longitude);
+            const data = await response.json();
+            return data.display_name || formatCoordinates(latitude, longitude);
+          } catch {
+            return formatCoordinates(latitude, longitude);
+          }
+        };
+        const resolveCurrentLocationPlace = () =>
+          new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+              reject(new Error("Geolocation not supported"));
+              return;
+            }
+            navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                const { latitude, longitude } = position.coords;
+                const placeName = await reverseGeocodeCoordinates(latitude, longitude);
+                resolve({ placeName, latitude, longitude });
+              },
+              reject,
+              { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
+            );
+          });
+        let isLocating = false;
+        const showNowAtCurrentLocation = async () => {
+          if (isLocating) return;
+          isLocating = true;
+          placeLocationBtn.disabled = true;
+          placeLocationBtn.textContent = "…";
+          try {
+            const resolved = await resolveCurrentLocationPlace();
+            placeState = resolved;
+            placeInput.value = placeState.placeName;
+            const now = new Date();
+            dateInput.value = toInputValue(now);
+            timeInput.value = toTimeInputValue(now);
+            updateCoordsDisplay(false);
+            updateSunriseDisplay(dateInput.value);
+            renderChart(now, placeState, true);
+          } catch {
+            renderChart(
+              chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
+              placeState,
+              true,
+            );
+          } finally {
+            isLocating = false;
+            placeLocationBtn.disabled = false;
+            placeLocationBtn.textContent = "⌖";
           }
         };
         const lookupCoordinates = async (query) => {
@@ -1391,20 +1693,34 @@
 
         function renderChart(date, place = placeState, resetPositions = false) {
           currentChartDate = date;
+          const finishRender = () => {
+            const dateStr = formatDateTimeLabel(date);
+            const zeroLeft = currentLang === "ta" ? "0° இடது புறம்" : "0° on left";
+            document.getElementById("subtitleMeta").textContent = ` · ${zeroLeft} · ${dateStr}`;
+            document.getElementById("tableDate").textContent = dateStr;
+            renderTable();
+            renderChartSvg(date, place, chartPositions);
+          };
+
           if (resetPositions || !chartPositions.length) {
-            chartPositions = buildPositions(date);
-            isEditingPositions = false;
-            editDraft = [];
-            editPositionsBtn.hidden = false;
-            donePositionsBtn.hidden = true;
+            void loadChartPositions(
+              date,
+              dateInput.value,
+              timeInput.value,
+              place,
+              ephemerisSource,
+            ).then((positions) => {
+              chartPositions = positions;
+              isEditingPositions = false;
+              editDraft = [];
+              editPositionsBtn.hidden = false;
+              donePositionsBtn.hidden = true;
+              finishRender();
+            });
+            return;
           }
 
-          const dateStr = formatDateTimeLabel(date);
-          const zeroLeft = currentLang === "ta" ? "0° இடது புறம்" : "0° on left";
-          document.getElementById("subtitleMeta").textContent = ` · ${zeroLeft} · ${dateStr}`;
-          document.getElementById("tableDate").textContent = dateStr;
-          renderTable();
-          renderChartSvg(date, place, chartPositions);
+          finishRender();
         }
 
         editPositionsBtn.addEventListener("click", () => {
@@ -1416,13 +1732,21 @@
         });
 
         refreshPositionsBtn.addEventListener("click", () => {
-          chartPositions = buildPositions(currentChartDate);
-          isEditingPositions = false;
-          editDraft = [];
-          editPositionsBtn.hidden = false;
-          donePositionsBtn.hidden = true;
-          renderChartSvg(currentChartDate, placeState, chartPositions);
-          renderTable();
+          void loadChartPositions(
+            currentChartDate,
+            dateInput.value,
+            timeInput.value,
+            placeState,
+            ephemerisSource,
+          ).then((positions) => {
+            chartPositions = positions;
+            isEditingPositions = false;
+            editDraft = [];
+            editPositionsBtn.hidden = false;
+            donePositionsBtn.hidden = true;
+            renderChartSvg(currentChartDate, placeState, chartPositions);
+            renderTable();
+          });
         });
 
         donePositionsBtn.addEventListener("click", () => {
@@ -1465,22 +1789,37 @@
         const today = new Date();
         const dateInput = document.getElementById("dateInput");
         const timeInput = document.getElementById("timeInput");
+        const ephemerisSourceInput = document.getElementById("ephemerisSource");
         const placeInput = document.getElementById("placeInput");
+        const placeLocationBtn = document.getElementById("placeLocationBtn");
         const latInput = document.getElementById("latInput");
         const lonInput = document.getElementById("lonInput");
         dateInput.value = toInputValue(today);
         timeInput.value = toTimeInputValue(today);
+        ephemerisSourceInput.value = ephemerisSource;
         placeInput.value = placeState.placeName;
         updateCoordsDisplay(false);
         updateSunriseDisplay(dateInput.value);
-        renderChart(
-          chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
-          placeState,
-          true,
-        );
         chartInitialized = true;
+        void showNowAtCurrentLocation();
 
         dateInput.addEventListener("change", () => updateSunriseDisplay(dateInput.value));
+        ephemerisSourceInput.addEventListener("change", () => {
+          ephemerisSource = ephemerisSourceInput.value;
+          localStorage.setItem("velliastro-ephemeris", ephemerisSource);
+          if (isEditingPositions) return;
+          void loadChartPositions(
+            currentChartDate,
+            dateInput.value,
+            timeInput.value,
+            placeState,
+            ephemerisSource,
+          ).then((positions) => {
+            chartPositions = positions;
+            renderChartSvg(currentChartDate, placeState, chartPositions);
+            renderTable();
+          });
+        });
         latInput.addEventListener("blur", commitCoordsFromInputs);
         lonInput.addEventListener("blur", commitCoordsFromInputs);
         latInput.addEventListener("keydown", (e) => {
@@ -1510,6 +1849,9 @@
         document.getElementById("placeSearchBtn").addEventListener("click", () => {
           if (geocodeTimer) clearTimeout(geocodeTimer);
           void lookupCoordinates(placeInput.value);
+        });
+        placeLocationBtn.addEventListener("click", () => {
+          void showNowAtCurrentLocation();
         });
 
         document.getElementById("dateForm").addEventListener("submit", (e) => {
