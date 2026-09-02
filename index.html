@@ -613,9 +613,10 @@
         const RAD_TO_DEG = 180 / Math.PI;
         const dateToJulianDate = (date) => date.getTime() / 86400000 + 2440587.5;
         const julianCenturies = (jd) => (jd - JD_J2000) / 36525.0;
+        // ICRC 1956 Lahiri (Chitrapaksha) — matches AstroSage / Indian Ephemeris at J2000 ≈ 23°51′41″
         const getLahiriAyanamsa = (jd) => {
           const T = julianCenturies(jd);
-          return 22.460148 + 1.396042 * T + 0.000308 * T * T + 0.0000005 * T * T * T;
+          return 23.860974 + 1.395524 * T + 0.000308 * T * T + 0.0000005 * T * T * T;
         };
         const tropicalToSidereal = (tropical, jd) => norm(tropical - getLahiriAyanamsa(jd));
         const getSunTropical = (jd) => {
@@ -684,9 +685,30 @@
           }
           return 0;
         };
-        const siderealLon = (g, jd) => {
-          if (g.id === "bhoomi" || g.id === "earth") return norm(siderealLon(GRAHAS.find((x) => x.id === "surya"), jd) + 180);
-          if (g.id === "ketu") return norm(siderealLon(GRAHAS.find((x) => x.id === "rahu"), jd) + 180);
+        const GRAHA_BODY = {
+          chandra: "Moon",
+          sevvai: "Mars",
+          budhan: "Mercury",
+          guru: "Jupiter",
+          sukran: "Venus",
+          sani: "Saturn",
+        };
+        const getGeocentricTropical = (grahaId, date) => {
+          const A = window.Astronomy;
+          if (!A) return null;
+          if (grahaId === "surya") return A.SunPosition(date).elon;
+          const bodyName = GRAHA_BODY[grahaId];
+          if (!bodyName) return null;
+          return A.Ecliptic(A.GeoVector(A.Body[bodyName], date, true)).elon;
+        };
+        const siderealLon = (g, date) => {
+          const jd = dateToJulianDate(date);
+          if (g.id === "bhoomi" || g.id === "earth") return norm(siderealLon(GRAHAS.find((x) => x.id === "surya"), date) + 180);
+          if (g.id === "ketu") return norm(siderealLon(GRAHAS.find((x) => x.id === "rahu"), date) + 180);
+          if (g.id === "rahu") return tropicalToSidereal(getRahuTropical(jd), jd);
+          const tropical = getGeocentricTropical(g.id, date);
+          if (tropical != null) return tropicalToSidereal(tropical, jd);
+          console.warn(`velliastro: astronomy-engine unavailable for ${g.english}; using mean-element fallback`);
           return tropicalToSidereal(getPlanetTropical(g, jd), jd);
         };
         const getAscendantLongitude = (date, place) => {
@@ -937,7 +959,7 @@
             ? formatSunriseTime(sunrise, place)
             : "—";
         };
-        const lon = (g, jd) => siderealLon(g, jd);
+        const lon = (g, date) => siderealLon(g, date);
         const SECTOR_DEG = 22.5;
         const PLANET_LABEL_RADIUS = 139;
         const LAGNAM_LABEL_RADIUS = 124;
@@ -1143,24 +1165,13 @@
           const longitude = norm(signIndex * 30 + degreeInSign);
           return { ...position, longitude, ...zodiac(longitude) };
         };
-        const buildPositions = (date) => {
-          const jd = dateToJulianDate(date);
-          return GRAHAS.map((g) => ({
+        const buildPositions = (date) =>
+          GRAHAS.map((g) => ({
             ...g,
-            longitude: lon(g, jd),
-            ...zodiac(lon(g, jd)),
+            longitude: lon(g, date),
+            ...zodiac(lon(g, date)),
           }));
-        };
         const EPHEMERIS_COMPARE_TOLERANCE_DEG = 1;
-        const REFERENCE_BODY = {
-          surya: "Sun",
-          chandra: "Moon",
-          sevvai: "Mars",
-          budhan: "Mercury",
-          guru: "Jupiter",
-          sukran: "Venus",
-          sani: "Saturn",
-        };
         const BHARAT_GRAHA_KEYS = {
           surya: "sun",
           chandra: "moon",
@@ -1172,38 +1183,14 @@
           rahu: "rahu",
           ketu: "ketu",
         };
-        localStorage.setItem("velliastro-ephemeris", "builtin");
+        localStorage.setItem("velliastro-ephemeris", "astronomy-engine");
         const angularDistanceDegrees = (a, b) => {
           const delta = Math.abs(norm(a) - norm(b));
           return delta > 180 ? 360 - delta : delta;
         };
         const getReferenceLongitude = (grahaId, date) => {
-          if (grahaId === "bhoomi" || grahaId === "earth") {
-            return norm(getReferenceLongitude("surya", date) + 180);
-          }
-          if (grahaId === "ketu") {
-            return norm(getReferenceLongitude("rahu", date) + 180);
-          }
-          if (grahaId === "rahu") {
-            const jd = dateToJulianDate(date);
-            return tropicalToSidereal(getRahuTropical(jd), jd);
-          }
-          const getGeocentricTropical = (id) => {
-            if (!window.Astronomy) return null;
-            const A = window.Astronomy;
-            if (id === "surya") return A.SunPosition(date).elon;
-            const bodyName = REFERENCE_BODY[id];
-            if (!bodyName) return null;
-            return A.Ecliptic(A.GeoVector(A.Body[bodyName], date, true)).elon;
-          };
-          const tropical = getGeocentricTropical(grahaId);
-          if (tropical == null) {
-            const jd = dateToJulianDate(date);
-            const graha = GRAHAS.find((g) => g.id === grahaId);
-            return graha ? lon(graha, jd) : 0;
-          }
-          const jd = dateToJulianDate(date);
-          return tropicalToSidereal(tropical, jd);
+          const graha = GRAHAS.find((g) => g.id === grahaId);
+          return graha ? siderealLon(graha, date) : 0;
         };
         const buildReferencePositions = (date) =>
           GRAHAS.map((g) => {
@@ -1302,7 +1289,6 @@
           }
           return issues;
         };
-        // Inner planets (Mercury, Venus, Mars) use mean orbital elements — not astronomy-engine geocentric.
         const loadChartPositions = async (date) => buildPositions(date);
         const formatLagnamDegree = (longitude) => `${longitude.toFixed(1)}°`;
         const DEFAULT_PLACE = { placeName: "Chennai, Tamil Nadu, India", latitude: 13.0827, longitude: 80.2707 };
