@@ -476,19 +476,6 @@
                 </span>
               </div>
             </div>
-            <div class="form-group form-group--ephemeris">
-              <label for="ephemerisSource" class="location-label">
-                <span class="bilingual">
-                  <span>கிரக கணக்கீடு</span>
-                  <span class="bilingual-en">Planet calculation</span>
-                </span>
-              </label>
-              <select id="ephemerisSource" class="ephemeris-select">
-                <option value="builtin">Built-in formulas</option>
-                <option value="reference">Reference (VSOP87 / astronomy-engine)</option>
-                <option value="api">Bharat Ephemeris API</option>
-              </select>
-            </div>
             <button type="submit" class="submit-btn"><span class="bilingual"><span>சமர்ப்பி</span><span class="bilingual-en">Submit</span></span></button>
           </div>
         </form>
@@ -930,41 +917,10 @@
           if (!el) return;
 
           const issues = verifyGrahaPositions(positions);
-          let externalIssues = [];
-
-          if (!isEditingPositions && ephemerisSource === "builtin") {
-            const referenceLongitudes = {};
-            for (const position of positions) {
-              referenceLongitudes[position.id] = getReferenceLongitude(position.id, currentChartDate);
-            }
-            externalIssues = externalIssues.concat(
-              comparePositionsToLongitudes(positions, referenceLongitudes, "Reference (VSOP87)"),
-            );
-
-            const apiLongitudes = await fetchBharatLongitudes(
-              dateInput.value,
-              timeInput.value,
-              placeState,
-            );
-            if (apiLongitudes) {
-              apiCheckStatus = "ok";
-              externalIssues = externalIssues.concat(
-                comparePositionsToLongitudes(positions, apiLongitudes, "Bharat API"),
-              );
-            } else {
-              apiCheckStatus = "unavailable";
-            }
-          } else if (!isEditingPositions && ephemerisSource === "api") {
-            apiCheckStatus = (await fetchBharatLongitudes(dateInput.value, timeInput.value, placeState))
-              ? "ok"
-              : "unavailable";
-          }
-
-          const allIssues = [...issues, ...externalIssues];
 
           if (isEditingPositions) {
             el.hidden = false;
-            if (allIssues.length === 0) {
+            if (issues.length === 0) {
               el.className = "position-consistency position-consistency--edit";
               el.innerHTML =
                 '<span class="bilingual"><span>திருத்தம் — நிலை மற்றும் பாகை பொருந்துகின்றன</span><span class="bilingual-en">Editing — position and degree match</span></span>';
@@ -973,42 +929,16 @@
             el.className = "position-consistency position-consistency--warn";
             el.innerHTML =
               '<strong><span class="bilingual"><span>பொருந்தாத மதிப்புகள்</span><span class="bilingual-en">Mismatched values</span></span></strong><ul>' +
-              allIssues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("") +
+              issues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("") +
               "</ul>";
             return;
           }
 
-          if (allIssues.length === 0) {
+          if (issues.length === 0) {
             el.hidden = false;
             el.className = "position-consistency position-consistency--ok";
-            let noteHtml = "";
-            if (ephemerisSource === "reference") {
-              noteHtml =
-                '<p class="consistency-note"><span class="bilingual"><span>குறிப்பு: VSOP87 குறிப்பு கணக்கீடு பயன்படுத்தப்படுகிறது</span><span class="bilingual-en">Using reference VSOP87 ephemeris</span></span></p>';
-            } else if (ephemerisSource === "api") {
-              const apiNote =
-                apiCheckStatus === "unavailable"
-                  ? {
-                      ta: "API கிடைக்கவில்லை — உள்ளமைவு கணக்கீடு பயன்படுத்தப்படுகிறது",
-                      en: "API unavailable — using built-in formulas",
-                    }
-                  : {
-                      ta: "Bharat Ephemeris API பயன்படுத்தப்படுகிறது",
-                      en: "Using Bharat Ephemeris API",
-                    };
-              noteHtml = `<p class="consistency-note"><span class="bilingual"><span>${apiNote.ta}</span><span class="bilingual-en">${apiNote.en}</span></span></p>`;
-            } else if (ephemerisSource === "builtin") {
-              if (apiCheckStatus === "ok") {
-                noteHtml =
-                  '<p class="consistency-note"><span class="bilingual"><span>✓ Bharat API மற்றும் VSOP87 குறிப்புடன் பொருந்துகிறது</span><span class="bilingual-en">✓ Matches Bharat API and VSOP87 reference</span></span></p>';
-              } else {
-                noteHtml =
-                  '<p class="consistency-note"><span class="bilingual"><span>VSOP87 குறிப்புடன் ஒப்பிடப்பட்டது (API சரிபார்ப்பு கிடைக்கவில்லை)</span><span class="bilingual-en">Compared with VSOP87 reference (API check unavailable)</span></span></p>';
-              }
-            }
             el.innerHTML =
-              '<span class="bilingual"><span>✓ நிலை மற்றும் பாகை பொருந்துகின்றன</span><span class="bilingual-en">✓ Position and degree values match</span></span>' +
-              noteHtml;
+              '<span class="bilingual"><span>✓ நிலை மற்றும் பாகை பொருந்துகின்றன</span><span class="bilingual-en">✓ Position and degree values match</span></span>';
             return;
           }
 
@@ -1016,7 +946,7 @@
           el.className = "position-consistency position-consistency--warn";
           el.innerHTML =
             '<strong><span class="bilingual"><span>பொருந்தாத மதிப்புகள்</span><span class="bilingual-en">Mismatched values</span></span></strong><ul>' +
-            allIssues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("") +
+            issues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("") +
             "</ul>";
         };
         const groupPlanetsBySector = (positions) => {
@@ -1131,8 +1061,7 @@
           rahu: "rahu",
           ketu: "ketu",
         };
-        let ephemerisSource = localStorage.getItem("velliastro-ephemeris") || "builtin";
-        let apiCheckStatus = "idle";
+        localStorage.setItem("velliastro-ephemeris", "builtin");
         const angularDistanceDegrees = (a, b) => {
           const delta = Math.abs(norm(a) - norm(b));
           return delta > 180 ? 360 - delta : delta;
@@ -1148,14 +1077,21 @@
             const jd = dateToJulianDate(date);
             return tropicalToSidereal(getRahuTropical(jd), jd);
           }
-          const bodyName = REFERENCE_BODY[grahaId];
-          if (!bodyName || !window.Astronomy) {
+          const getGeocentricTropical = (id) => {
+            if (!window.Astronomy) return null;
+            const A = window.Astronomy;
+            if (id === "surya") return A.SunPosition(date).elon;
+            const bodyName = REFERENCE_BODY[id];
+            if (!bodyName) return null;
+            return A.Ecliptic(A.GeoVector(A.Body[bodyName], date, true)).elon;
+          };
+          const tropical = getGeocentricTropical(grahaId);
+          if (tropical == null) {
             const jd = dateToJulianDate(date);
             const graha = GRAHAS.find((g) => g.id === grahaId);
             return graha ? lon(graha, jd) : 0;
           }
           const jd = dateToJulianDate(date);
-          const tropical = window.Astronomy.EclipticLongitude(window.Astronomy.Body[bodyName], date);
           return tropicalToSidereal(tropical, jd);
         };
         const buildReferencePositions = (date) =>
@@ -1255,15 +1191,7 @@
           }
           return issues;
         };
-        const loadChartPositions = async (date, dateValue, timeValue, place, source) => {
-          if (source === "reference") return buildReferencePositions(date);
-          if (source === "api") {
-            const apiPositions = await buildApiPositions(dateValue, timeValue, place);
-            if (apiPositions) return apiPositions;
-            return buildPositions(date);
-          }
-          return buildPositions(date);
-        };
+        const loadChartPositions = async (date) => buildPositions(date);
         const formatLagnamDegree = (longitude) => `${longitude.toFixed(1)}°`;
         const DEFAULT_PLACE = { placeName: "Chennai, Tamil Nadu, India", latitude: 13.0827, longitude: 80.2707 };
         const PLACE_PRESETS = [
@@ -1412,7 +1340,12 @@
             timeInput.value = toTimeInputValue(now);
             updateCoordsDisplay(false);
             updateSunriseDisplay(dateInput.value);
-            renderChart(now, placeState, true);
+            const chartDate = chartDateTimeFromLocalInputs(
+              dateInput.value,
+              timeInput.value,
+              placeState,
+            );
+            renderChart(chartDate, placeState, true);
           } catch {
             renderChart(
               chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
@@ -1718,13 +1651,7 @@
           };
 
           if (resetPositions || !chartPositions.length) {
-            void loadChartPositions(
-              date,
-              dateInput.value,
-              timeInput.value,
-              place,
-              ephemerisSource,
-            ).then((positions) => {
+            void loadChartPositions(date).then((positions) => {
               chartPositions = positions;
               isEditingPositions = false;
               editDraft = [];
@@ -1747,13 +1674,7 @@
         });
 
         refreshPositionsBtn.addEventListener("click", () => {
-          void loadChartPositions(
-            currentChartDate,
-            dateInput.value,
-            timeInput.value,
-            placeState,
-            ephemerisSource,
-          ).then((positions) => {
+          void loadChartPositions(currentChartDate).then((positions) => {
             chartPositions = positions;
             isEditingPositions = false;
             editDraft = [];
@@ -1804,14 +1725,12 @@
         const today = new Date();
         const dateInput = document.getElementById("dateInput");
         const timeInput = document.getElementById("timeInput");
-        const ephemerisSourceInput = document.getElementById("ephemerisSource");
         const placeInput = document.getElementById("placeInput");
         const placeLocationBtn = document.getElementById("placeLocationBtn");
         const latInput = document.getElementById("latInput");
         const lonInput = document.getElementById("lonInput");
         dateInput.value = toInputValue(today);
         timeInput.value = toTimeInputValue(today);
-        ephemerisSourceInput.value = ephemerisSource;
         placeInput.value = placeState.placeName;
         updateCoordsDisplay(false);
         updateSunriseDisplay(dateInput.value);
@@ -1819,22 +1738,6 @@
         void showNowAtCurrentLocation();
 
         dateInput.addEventListener("change", () => updateSunriseDisplay(dateInput.value));
-        ephemerisSourceInput.addEventListener("change", () => {
-          ephemerisSource = ephemerisSourceInput.value;
-          localStorage.setItem("velliastro-ephemeris", ephemerisSource);
-          if (isEditingPositions) return;
-          void loadChartPositions(
-            currentChartDate,
-            dateInput.value,
-            timeInput.value,
-            placeState,
-            ephemerisSource,
-          ).then((positions) => {
-            chartPositions = positions;
-            renderChartSvg(currentChartDate, placeState, chartPositions);
-            renderTable();
-          });
-        });
         latInput.addEventListener("blur", commitCoordsFromInputs);
         lonInput.addEventListener("blur", commitCoordsFromInputs);
         latInput.addEventListener("keydown", (e) => {
