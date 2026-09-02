@@ -697,6 +697,9 @@
           const A = window.Astronomy;
           if (!A) return null;
           if (grahaId === "surya") return A.SunPosition(date).elon;
+          if (grahaId === "chandra" && typeof A.EclipticGeoMoon === "function") {
+            return A.EclipticGeoMoon(date).lon;
+          }
           const bodyName = GRAHA_BODY[grahaId];
           if (!bodyName) return null;
           return A.Ecliptic(A.GeoVector(A.Body[bodyName], date, true)).elon;
