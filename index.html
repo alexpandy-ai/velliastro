@@ -1120,7 +1120,6 @@
           sukran: "Venus",
           sani: "Saturn",
         };
-        const BHARAT_API_PROXY_PATH = "/api/bharat/chart";
         const BHARAT_GRAHA_KEYS = {
           surya: "sun",
           chandra: "moon",
@@ -1183,40 +1182,56 @@
           }
           return "UTC";
         };
-        const fetchBharatLongitudes = async (dateValue, timeValue, place) => {
-          try {
-            const birthTime = /^\d{2}:\d{2}:\d{2}$/.test(timeValue) ? timeValue : `${timeValue}:00`;
-            const response = await fetch(BHARAT_API_PROXY_PATH, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Accept: "application/json" },
-              body: JSON.stringify({
-                birthDate: dateValue,
-                birthTime,
-                birthPlace: {
-                  lat: place.latitude,
-                  lon: place.longitude,
-                  tz: getTimezoneId(place),
-                },
-                ayanamsa: "lahiri",
-              }),
-            });
-            if (!response.ok) return null;
-            const data = await response.json();
-            if (!data.ok || !data.nirayana) return null;
-            const longitudes = {};
-            for (const [grahaId, key] of Object.entries(BHARAT_GRAHA_KEYS)) {
-              const value = data.nirayana[key];
-              if (typeof value === "number" && Number.isFinite(value)) {
-                longitudes[grahaId] = norm(value);
-              }
-            }
-            if (typeof longitudes.surya === "number") {
-              longitudes.bhoomi = norm(longitudes.surya + 180);
-            }
-            return longitudes;
-          } catch {
-            return null;
+        const BHARAT_API_PROXY_PATH = "/api/bharat/chart";
+        const BHARAT_API_CORS_PROXY_URL =
+          "https://velliastro-ephemeris.lead-fire.workers.dev/api/bharat/chart";
+        const BHARAT_API_NETLIFY_PROXY_URL =
+          "https://velliastro-ephemeris.netlify.app/api/bharat/chart";
+        const getBharatApiUrls = () => {
+          const host = window.location.hostname;
+          if (host === "localhost" || host === "127.0.0.1") {
+            return [BHARAT_API_PROXY_PATH];
           }
+          return [BHARAT_API_CORS_PROXY_URL, BHARAT_API_NETLIFY_PROXY_URL, BHARAT_API_PROXY_PATH];
+        };
+        const fetchBharatLongitudes = async (dateValue, timeValue, place) => {
+          const birthTime = /^\d{2}:\d{2}:\d{2}$/.test(timeValue) ? timeValue : `${timeValue}:00`;
+          const requestBody = JSON.stringify({
+            birthDate: dateValue,
+            birthTime,
+            birthPlace: {
+              lat: place.latitude,
+              lon: place.longitude,
+              tz: getTimezoneId(place),
+            },
+            ayanamsa: "lahiri",
+          });
+          for (const apiUrl of getBharatApiUrls()) {
+            try {
+              const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Accept: "application/json" },
+                body: requestBody,
+              });
+              if (!response.ok) continue;
+              const data = await response.json();
+              if (!data.ok || !data.nirayana) continue;
+              const longitudes = {};
+              for (const [grahaId, key] of Object.entries(BHARAT_GRAHA_KEYS)) {
+                const value = data.nirayana[key];
+                if (typeof value === "number" && Number.isFinite(value)) {
+                  longitudes[grahaId] = norm(value);
+                }
+              }
+              if (typeof longitudes.surya === "number") {
+                longitudes.bhoomi = norm(longitudes.surya + 180);
+              }
+              return longitudes;
+            } catch {
+              continue;
+            }
+          }
+          return null;
         };
         const buildApiPositions = async (dateValue, timeValue, place) => {
           const longitudes = await fetchBharatLongitudes(dateValue, timeValue, place);

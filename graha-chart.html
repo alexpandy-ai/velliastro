@@ -1183,6 +1183,8 @@
           return "UTC";
         };
         const BHARAT_API_PROXY_PATH = "/api/bharat/chart";
+        const BHARAT_API_CORS_PROXY_URL =
+          "https://velliastro-ephemeris.lead-fire.workers.dev/api/bharat/chart";
         const BHARAT_API_NETLIFY_PROXY_URL =
           "https://velliastro-ephemeris.netlify.app/api/bharat/chart";
         const getBharatApiUrls = () => {
@@ -1190,7 +1192,7 @@
           if (host === "localhost" || host === "127.0.0.1") {
             return [BHARAT_API_PROXY_PATH];
           }
-          return [BHARAT_API_NETLIFY_PROXY_URL, BHARAT_API_PROXY_PATH];
+          return [BHARAT_API_CORS_PROXY_URL, BHARAT_API_NETLIFY_PROXY_URL, BHARAT_API_PROXY_PATH];
         };
         const fetchBharatLongitudes = async (dateValue, timeValue, place) => {
           const birthTime = /^\d{2}:\d{2}:\d{2}$/.test(timeValue) ? timeValue : `${timeValue}:00`;
