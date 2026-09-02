@@ -947,6 +947,23 @@ body {
   font-size: inherit;
 }
 
+.graha-chart__ephemeris-select {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+}
+
+.graha-chart__consistency-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  opacity: 0.92;
+}
+
 .graha-chart__subtitle {
   display: flex;
   flex-direction: column;
@@ -1087,21 +1104,28 @@ body {
   flex: 1;
 }
 
-.graha-chart__place-search-btn {
+.graha-chart__place-search-btn,
+.graha-chart__place-location-btn {
   flex-shrink: 0;
-  font-family: var(--font-body);
+  font-family: inherit;
   font-size: 0.9rem;
   padding: 0.6rem 0.7rem;
   border-radius: 0.65rem;
   border: 1px solid var(--border);
-  background: var(--bg-card);
+  background: var(--card);
   color: var(--text);
   cursor: pointer;
   line-height: 1;
   transition: border-color 0.15s ease, opacity 0.15s ease;
 }
 
-.graha-chart__place-search-btn:hover {
+.graha-chart__place-location-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.graha-chart__place-search-btn:hover,
+.graha-chart__place-location-btn:hover:not(:disabled) {
   border-color: var(--accent);
   opacity: 0.9;
 }
@@ -1391,6 +1415,45 @@ body {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+}
+
+.graha-chart__calc-inputs {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.65rem;
+  margin: 0.35rem 0 0.85rem;
+  background: #f8f9fc;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.graha-chart__calc-inputs .label-box__row {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 38%) 1fr;
+  gap: 0.35rem 0.5rem;
+  align-items: baseline;
+  padding: 0.2rem 0;
+}
+
+.graha-chart__calc-inputs .label-box__row + .label-box__row {
+  border-top: 1px solid rgba(26, 26, 46, 0.06);
+  margin-top: 0.15rem;
+  padding-top: 0.35rem;
+}
+
+.graha-chart__calc-inputs .label-box__key {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.graha-chart__calc-inputs .label-box__key .graha-chart__bilingual-en {
+  font-size: 0.62rem;
+}
+
+.graha-chart__calc-inputs .label-box__value {
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
 }
 
 .graha-chart__table-date {

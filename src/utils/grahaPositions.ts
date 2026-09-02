@@ -1,3 +1,4 @@
+import { Body, Ecliptic, GeoVector, SunPosition } from "astronomy-engine";
 import { grahas, type Graha } from "../data/grahas";
 import { longitudeToZodiac, normalizeDegrees } from "./positions";
 
@@ -132,7 +133,7 @@ const PLANET_ORBITS: Record<
   sani: { L0: 50.077444, ratePerDay: 360 / 10759.22, e: 0.055723, perihelion: 93.057 },
 };
 
-function getRahuTropicalLongitude(jd: number): number {
+export function getRahuTropicalLongitude(jd: number): number {
   const T = julianCenturies(jd);
   return normalizeDegrees(
     125.0445479 -
@@ -141,6 +142,37 @@ function getRahuTropicalLongitude(jd: number): number {
       (T * T * T) / 467441 -
       (T * T * T * T) / 60616000,
   );
+}
+
+const GRAHA_BODY: Partial<Record<string, Body>> = {
+  chandra: Body.Moon,
+  sevvai: Body.Mars,
+  budhan: Body.Mercury,
+  guru: Body.Jupiter,
+  sukran: Body.Venus,
+  sani: Body.Saturn,
+};
+
+/** Apparent geocentric tropical ecliptic longitude (degrees). */
+export function getGeocentricTropicalLongitude(
+  grahaId: string,
+  date: Date,
+): number {
+  if (grahaId === "surya") {
+    return normalizeDegrees(SunPosition(date).elon);
+  }
+
+  if (grahaId === "chandra" || grahaId in GRAHA_BODY) {
+    const body = GRAHA_BODY[grahaId] ?? Body.Moon;
+    const vector = GeoVector(body, date, true);
+    return normalizeDegrees(Ecliptic(vector).elon);
+  }
+
+  if (grahaId === "rahu") {
+    return getRahuTropicalLongitude(dateToJulianDate(date));
+  }
+
+  return 0;
 }
 
 function getPlanetTropicalLongitude(grahaId: string, jd: number): number {

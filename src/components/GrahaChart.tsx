@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   describeInsetSectorWedge,
   describeSectorWedge,
@@ -17,14 +17,26 @@ import {
   LAGNAM_LABEL_RADIUS,
   layoutSectorPlanetLabel,
   polarToChart,
-  verifyGrahaPositions,
   SECTOR_COUNT,
   SECTOR_DEGREES,
   updateGrahaPositionField,
   type GrahaPosition,
   type ChartLang,
 } from "../utils/grahaPositions";
+import {
+  chartDateTimeFromLocalInputs,
+  estimateTimezoneOffsetMinutes,
+  formatDateInputForPlace,
+  formatDateTimeLabelForPlace,
+  formatLocalInputDateTimeLabel,
+  formatPlaceLabel,
+  formatTimeInputForPlace,
+  formatTimezoneOffsetLabel,
+  formatUtcInstantLabel,
+} from "../utils/chartDateTime";
+import { PLACE_PRESETS, formatCoordinates } from "../utils/geocode";
 import { getTamilRasi, type ZodiacSign } from "../utils/positions";
+import { formatSunriseLabel } from "../utils/sunrise";
 import { usePlaceGeocode } from "../hooks/usePlaceGeocode";
 import {
   getAllSectorFillColors,
@@ -55,19 +67,8 @@ function parseDateTime(dateValue: string, timeValue: string): Date {
   return new Date(y, m - 1, d, hours, minutes, 0);
 }
 
-function formatDateTimeLabel(date: Date): string {
-  const datePart = date.toLocaleDateString("en-IN", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const timePart = date.toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-  return `${datePart}, ${timePart}`;
+function formatDateTimeLabel(date: Date, place: { latitude: number; longitude: number }): string {
+  return formatDateTimeLabelForPlace(date, place);
 }
 
 export function GrahaChart() {
@@ -86,50 +87,41 @@ export function GrahaChart() {
     latitudeInput,
     longitudeInput,
     isGeocoding,
+    isLocating,
     handlePlaceInputChange,
     handlePlaceBlur,
     handlePlaceSearch,
     applyPlaceFromForm,
+    applyCurrentLocation,
     handleLatitudeInputChange,
     handleLongitudeInputChange,
     handleCoordinateBlur,
+    commitCoordinateInputs,
   } = usePlaceGeocode();
 
   const chartPlace = {
     latitude: place.latitude,
     longitude: place.longitude,
   };
-  const computedPositions = useMemo(
-    () => getGrahaPositions(selectedDate, chartPlace),
-    [selectedDate, chartPlace.latitude, chartPlace.longitude],
+  const [chartPositions, setChartPositions] = useState<GrahaPosition[]>(() =>
+    getGrahaPositions(now, { latitude: place.latitude, longitude: place.longitude }),
   );
-  const [chartPositions, setChartPositions] =
-    useState<GrahaPosition[]>(computedPositions);
   const [isEditingPositions, setIsEditingPositions] = useState(false);
   const [draftPositions, setDraftPositions] = useState<GrahaPosition[]>([]);
   const [lang, setLang] = useState<ChartLang>(() => {
     if (typeof window === "undefined") return "ta";
     return localStorage.getItem("velliastro-lang") === "en" ? "en" : "ta";
   });
-
   useEffect(() => {
     localStorage.setItem("velliastro-lang", lang);
+    localStorage.setItem("velliastro-ephemeris", "builtin");
     document.documentElement.lang = lang === "ta" ? "ta" : "en";
     document.title =
       lang === "ta" ? "கிரக நிலைகள் · Planet Positions" : "Planet Positions";
   }, [lang]);
 
-  useEffect(() => {
-    setChartPositions(computedPositions);
-    setIsEditingPositions(false);
-  }, [computedPositions]);
-
   const tablePositions = isEditingPositions ? draftPositions : chartPositions;
   const sectorPlanetGroups = groupPlanetsBySector(chartPositions);
-  const positionConsistencyIssues = useMemo(
-    () => verifyGrahaPositions(tablePositions),
-    [tablePositions],
-  );
 
   const lagnamAngle = getLagnamAngle(selectedDate, chartPlace);
   const lagnamDegree = formatLagnamDegree(lagnamAngle);
@@ -143,7 +135,18 @@ export function GrahaChart() {
     (_, i) => i * DEGREES_PER_SEGMENT,
   );
 
-  const dateLabel = formatDateTimeLabel(selectedDate);
+  const dateLabel = formatDateTimeLabel(selectedDate, chartPlace);
+  const timezoneOffsetMinutes = estimateTimezoneOffsetMinutes(
+    chartPlace.longitude,
+    chartPlace.latitude,
+  );
+  const calcInputsSummary = {
+    placeName: formatPlaceLabel(placeInput.trim() || place.placeName),
+    dateTimeLabel: formatLocalInputDateTimeLabel(inputDate, inputTime),
+    coordinatesLabel: formatCoordinates(chartPlace.latitude, chartPlace.longitude),
+    timezoneLabel: formatTimezoneOffsetLabel(timezoneOffsetMinutes),
+    utcInstantLabel: formatUtcInstantLabel(selectedDate),
+  };
   const zeroLeftLabel = lang === "ta" ? "0° இடது புறம்" : "0° on left";
   const sectorFillColors = getAllSectorFillColors();
   const chartAccents = getChartAccentColors(getClockMinutesFromDate(selectedDate));
@@ -190,11 +193,43 @@ export function GrahaChart() {
   };
 
   const refreshPositions = () => {
-    const nextPositions = getGrahaPositions(selectedDate, chartPlace);
-    setChartPositions(nextPositions);
+    setChartPositions(getGrahaPositions(selectedDate, chartPlace));
     setIsEditingPositions(false);
     setDraftPositions([]);
   };
+
+  const showNowAtCurrentLocation = useCallback(async () => {
+    const nextPlace = await applyCurrentLocation();
+    if (!nextPlace) return;
+
+    const chartNow = new Date();
+    const dateValue = formatDateInputForPlace(chartNow, nextPlace);
+    const timeValue = formatTimeInputForPlace(chartNow, nextPlace);
+    const chartDate = chartDateTimeFromLocalInputs(dateValue, timeValue, nextPlace);
+    setInputDate(dateValue);
+    setInputTime(timeValue);
+    setSelectedDate(chartDate);
+    setChartPositions(getGrahaPositions(chartDate, nextPlace));
+    setIsEditingPositions(false);
+    setDraftPositions([]);
+  }, [applyCurrentLocation]);
+
+  const locationRequestedRef = useRef(false);
+  const autoRecalcReadyRef = useRef(false);
+  useEffect(() => {
+    if (locationRequestedRef.current) return;
+    locationRequestedRef.current = true;
+    void showNowAtCurrentLocation().finally(() => {
+      autoRecalcReadyRef.current = true;
+    });
+  }, [showNowAtCurrentLocation]);
+
+  useEffect(() => {
+    if (!autoRecalcReadyRef.current || isEditingPositions) return;
+    const nextDate = chartDateTimeFromLocalInputs(inputDate, inputTime, chartPlace);
+    setSelectedDate(nextDate);
+    setChartPositions(getGrahaPositions(nextDate, chartPlace));
+  }, [inputDate, inputTime, chartPlace, isEditingPositions]);
 
   return (
     <div className={`graha-chart graha-chart--bright lang-${lang}`}>
@@ -303,6 +338,16 @@ export function GrahaChart() {
                   placeholder="Chennai"
                   autoComplete="off"
                 />
+                <button
+                  type="button"
+                  className="graha-chart__place-location-btn"
+                  onClick={() => void showNowAtCurrentLocation()}
+                  disabled={isLocating}
+                  title="Use current location and time"
+                  aria-label="Use current location and time"
+                >
+                  {isLocating ? "…" : "⌖"}
+                </button>
                 <button
                   type="button"
                   className="graha-chart__place-search-btn"
@@ -607,47 +652,52 @@ export function GrahaChart() {
               )}
             </div>
           </div>
-          <p className="graha-chart__table-date">{dateLabel}</p>
-          <div
-            className={`graha-chart__position-consistency${
-              positionConsistencyIssues.length === 0
-                ? isEditingPositions
-                  ? " graha-chart__position-consistency--edit"
-                  : " graha-chart__position-consistency--ok"
-                : " graha-chart__position-consistency--warn"
-            }`}
-            role="status"
-            aria-live="polite"
-          >
-            {positionConsistencyIssues.length === 0 ? (
-              isEditingPositions ? (
+          <div className="graha-chart__calc-inputs label-box">
+            <div className="label-box__row">
+              <span className="label-box__key">
                 <span className="graha-chart__bilingual">
-                  <span>திருத்தம் — நிலை மற்றும் பாகை பொருந்துகின்றன</span>
-                  <span className="graha-chart__bilingual-en">
-                    Editing — position and degree match
-                  </span>
+                  <span>இடம்</span>
+                  <span className="graha-chart__bilingual-en">Place</span>
                 </span>
-              ) : (
+              </span>
+              <span className="label-box__value">{calcInputsSummary.placeName}</span>
+            </div>
+            <div className="label-box__row">
+              <span className="label-box__key">
                 <span className="graha-chart__bilingual">
-                  <span>✓ நிலை மற்றும் பாகை பொருந்துகின்றன</span>
-                  <span className="graha-chart__bilingual-en">
-                    ✓ Position and degree values match
-                  </span>
+                  <span>தேதி & நேரம்</span>
+                  <span className="graha-chart__bilingual-en">Date & time</span>
                 </span>
-              )
-            ) : (
-              <>
-                <strong className="graha-chart__bilingual">
-                  <span>பொருந்தாத மதிப்புகள்</span>
-                  <span className="graha-chart__bilingual-en">Mismatched values</span>
-                </strong>
-                <ul>
-                  {positionConsistencyIssues.map((issue) => (
-                    <li key={issue}>{issue}</li>
-                  ))}
-                </ul>
-              </>
-            )}
+              </span>
+              <span className="label-box__value">{calcInputsSummary.dateTimeLabel}</span>
+            </div>
+            <div className="label-box__row">
+              <span className="label-box__key">
+                <span className="graha-chart__bilingual">
+                  <span>ஆள்கூறு</span>
+                  <span className="graha-chart__bilingual-en">Coordinates</span>
+                </span>
+              </span>
+              <span className="label-box__value">{calcInputsSummary.coordinatesLabel}</span>
+            </div>
+            <div className="label-box__row">
+              <span className="label-box__key">
+                <span className="graha-chart__bilingual">
+                  <span>நேர மண்டலம்</span>
+                  <span className="graha-chart__bilingual-en">Timezone</span>
+                </span>
+              </span>
+              <span className="label-box__value">{calcInputsSummary.timezoneLabel}</span>
+            </div>
+            <div className="label-box__row">
+              <span className="label-box__key">
+                <span className="graha-chart__bilingual">
+                  <span>UTC</span>
+                  <span className="graha-chart__bilingual-en">UTC instant</span>
+                </span>
+              </span>
+              <span className="label-box__value">{calcInputsSummary.utcInstantLabel}</span>
+            </div>
           </div>
           <table>
             <thead>
