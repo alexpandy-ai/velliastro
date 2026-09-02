@@ -315,6 +315,37 @@
         color: #5b21b6;
         border: 1px solid #ddd6fe;
       }
+      .label-box {
+        font-size: 0.78rem;
+        line-height: 1.45;
+        padding: 0.65rem 0.75rem;
+        border-radius: 0.65rem;
+        margin: 0.35rem 0 0.85rem;
+        background: #f8f9fc;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .label-box__row {
+        display: grid;
+        grid-template-columns: minmax(5.5rem, 38%) 1fr;
+        gap: 0.35rem 0.5rem;
+        align-items: baseline;
+        padding: 0.2rem 0;
+      }
+      .label-box__row + .label-box__row {
+        border-top: 1px solid rgba(26, 26, 46, 0.06);
+        margin-top: 0.15rem;
+        padding-top: 0.35rem;
+      }
+      .label-box__key {
+        color: var(--muted);
+        font-size: 0.72rem;
+      }
+      .label-box__key .bilingual-en { font-size: 0.62rem; }
+      .label-box__value {
+        font-variant-numeric: tabular-nums;
+        word-break: break-word;
+      }
       .consistency-note {
         margin: 0.35rem 0 0;
         font-size: 0.75rem;
@@ -506,7 +537,7 @@
               <button type="button" id="donePositionsBtn" class="table-done-btn" hidden><span class="bilingual"><span>முடிந்தது</span><span class="bilingual-en">Done</span></span></button>
             </div>
           </div>
-          <p class="sub" id="tableDate" style="margin: 0.4rem 0 1rem"></p>
+          <div id="calcInputsLabel" class="label-box" hidden></div>
           <div id="positionConsistency" class="position-consistency" role="status" aria-live="polite" hidden></div>
           <table><thead><tr>
             <th><span class="bilingual"><span>கிரகம்</span><span class="bilingual-en">Planet</span></span></th>
@@ -938,42 +969,72 @@
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;");
-        const updatePositionConsistencyStatus = async (positions) => {
+        const updatePositionConsistencyStatus = async (_positions) => {
           const el = document.getElementById("positionConsistency");
+          if (el) el.hidden = true;
+        };
+        const formatTimezoneOffsetLabel = (offsetMinutes) => {
+          const sign = offsetMinutes >= 0 ? "+" : "-";
+          const abs = Math.abs(offsetMinutes);
+          const hours = Math.floor(abs / 60);
+          const mins = abs % 60;
+          return mins === 0
+            ? `UTC${sign}${hours}`
+            : `UTC${sign}${hours}:${String(mins).padStart(2, "0")}`;
+        };
+        const formatUtcInstantLabel = (utcDate) =>
+          utcDate.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, " UTC");
+        const formatInputDateLabel = (dateValue) => {
+          const [year, month, day] = dateValue.split("-").map(Number);
+          const local = new Date(Date.UTC(year, month - 1, day));
+          return local.toLocaleDateString("en-IN", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            timeZone: "UTC",
+          });
+        };
+        const formatInputTimeLabel = (timeValue) => {
+          const [hours, minutes] = timeValue.split(":").map(Number);
+          const local = new Date(Date.UTC(2000, 0, 1, hours, minutes));
+          return local.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+            timeZone: "UTC",
+          });
+        };
+        const updateCalcInputsLabelBox = (utcDate, place = placeState) => {
+          const el = document.getElementById("calcInputsLabel");
           if (!el) return;
-
-          const issues = verifyGrahaPositions(positions);
-
-          if (isEditingPositions) {
-            el.hidden = false;
-            if (issues.length === 0) {
-              el.className = "position-consistency position-consistency--edit";
-              el.innerHTML =
-                '<span class="bilingual"><span>திருத்தம் — நிலை மற்றும் பாகை பொருந்துகின்றன</span><span class="bilingual-en">Editing — position and degree match</span></span>';
-              return;
-            }
-            el.className = "position-consistency position-consistency--warn";
-            el.innerHTML =
-              '<strong><span class="bilingual"><span>பொருந்தாத மதிப்புகள்</span><span class="bilingual-en">Mismatched values</span></span></strong><ul>' +
-              issues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("") +
-              "</ul>";
-            return;
-          }
-
-          if (issues.length === 0) {
-            el.hidden = false;
-            el.className = "position-consistency position-consistency--ok";
-            el.innerHTML =
-              '<span class="bilingual"><span>✓ நிலை மற்றும் பாகை பொருந்துகின்றன</span><span class="bilingual-en">✓ Position and degree values match</span></span>';
-            return;
-          }
-
+          const dateValue = dateInput.value;
+          const timeValue = timeInput.value;
+          const offsetMinutes = estimateTimezoneOffsetMinutes(place.longitude, place.latitude);
+          const placeName = place.placeName || placeInput.value.trim() || "—";
+          const dateTimeLabel = `${formatInputDateLabel(dateValue)}, ${formatInputTimeLabel(timeValue)}`;
           el.hidden = false;
-          el.className = "position-consistency position-consistency--warn";
           el.innerHTML =
-            '<strong><span class="bilingual"><span>பொருந்தாத மதிப்புகள்</span><span class="bilingual-en">Mismatched values</span></span></strong><ul>' +
-            issues.map((issue) => `<li>${escapeHtml(issue)}</li>`).join("") +
-            "</ul>";
+            `<div class="label-box__row">` +
+            `<span class="label-box__key"><span class="bilingual"><span>இடம்</span><span class="bilingual-en">Place</span></span></span>` +
+            `<span class="label-box__value">${escapeHtml(placeName)}</span>` +
+            `</div>` +
+            `<div class="label-box__row">` +
+            `<span class="label-box__key"><span class="bilingual"><span>தேதி &amp; நேரம்</span><span class="bilingual-en">Date &amp; time</span></span></span>` +
+            `<span class="label-box__value">${escapeHtml(dateTimeLabel)}</span>` +
+            `</div>` +
+            `<div class="label-box__row">` +
+            `<span class="label-box__key"><span class="bilingual"><span>ஆள்கூறு</span><span class="bilingual-en">Coordinates</span></span></span>` +
+            `<span class="label-box__value">${escapeHtml(formatCoordinates(place.latitude, place.longitude))}</span>` +
+            `</div>` +
+            `<div class="label-box__row">` +
+            `<span class="label-box__key"><span class="bilingual"><span>நேர மண்டலம்</span><span class="bilingual-en">Timezone</span></span></span>` +
+            `<span class="label-box__value">${escapeHtml(formatTimezoneOffsetLabel(offsetMinutes))}</span>` +
+            `</div>` +
+            `<div class="label-box__row">` +
+            `<span class="label-box__key"><span class="bilingual"><span>UTC</span><span class="bilingual-en">UTC instant</span></span></span>` +
+            `<span class="label-box__value">${escapeHtml(formatUtcInstantLabel(utcDate))}</span>` +
+            `</div>`;
         };
         const groupPlanetsBySector = (positions) => {
           const groups = new Map();
@@ -1680,7 +1741,7 @@
           const finishRender = () => {
             const zeroLeft = currentLang === "ta" ? "0° இடது புறம்" : "0° on left";
             document.getElementById("subtitleMeta").textContent = ` · ${zeroLeft} · ${formatDateTimeLabel(date, place)}`;
-            document.getElementById("tableDate").textContent = formatDateTimeLabel(date, place);
+            updateCalcInputsLabelBox(date, place);
             renderTable();
             renderChartSvg(date, place, chartPositions);
           };
