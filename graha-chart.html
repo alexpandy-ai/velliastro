@@ -1132,6 +1132,10 @@
           ketu: "ketu",
         };
         let ephemerisSource = localStorage.getItem("velliastro-ephemeris") || "builtin";
+        if (ephemerisSource === "api") {
+          ephemerisSource = "builtin";
+          localStorage.setItem("velliastro-ephemeris", "builtin");
+        }
         let apiCheckStatus = "idle";
         const angularDistanceDegrees = (a, b) => {
           const delta = Math.abs(norm(a) - norm(b));
@@ -1148,14 +1152,21 @@
             const jd = dateToJulianDate(date);
             return tropicalToSidereal(getRahuTropical(jd), jd);
           }
-          const bodyName = REFERENCE_BODY[grahaId];
-          if (!bodyName || !window.Astronomy) {
+          const getGeocentricTropical = (id) => {
+            if (!window.Astronomy) return null;
+            const A = window.Astronomy;
+            if (id === "surya") return A.SunPosition(date).elon;
+            const bodyName = REFERENCE_BODY[id];
+            if (!bodyName) return null;
+            return A.Ecliptic(A.GeoVector(A.Body[bodyName], date, true)).elon;
+          };
+          const tropical = getGeocentricTropical(grahaId);
+          if (tropical == null) {
             const jd = dateToJulianDate(date);
             const graha = GRAHAS.find((g) => g.id === grahaId);
             return graha ? lon(graha, jd) : 0;
           }
           const jd = dateToJulianDate(date);
-          const tropical = window.Astronomy.EclipticLongitude(window.Astronomy.Body[bodyName], date);
           return tropicalToSidereal(tropical, jd);
         };
         const buildReferencePositions = (date) =>
@@ -1412,7 +1423,12 @@
             timeInput.value = toTimeInputValue(now);
             updateCoordsDisplay(false);
             updateSunriseDisplay(dateInput.value);
-            renderChart(now, placeState, true);
+            const chartDate = chartDateTimeFromLocalInputs(
+              dateInput.value,
+              timeInput.value,
+              placeState,
+            );
+            renderChart(chartDate, placeState, true);
           } catch {
             renderChart(
               chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
