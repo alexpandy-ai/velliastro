@@ -687,22 +687,46 @@
           const sI = polar(en, ir, c), eI = polar(st, ir, c);
           return `M ${sO.x} ${sO.y} A ${or} ${or} 0 0 1 ${eO.x} ${eO.y} L ${sI.x} ${sI.y} A ${ir} ${ir} 0 0 0 ${eI.x} ${eI.y} Z`;
         };
-        const formatDateTimeLabel = (date) => {
-          const datePart = date.toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
-          const timePart = date.toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit", hour12: true });
+        const formatDateTimeLabel = (date, place = placeState) => {
+          const offsetMinutes = estimateTimezoneOffsetMinutes(place.longitude, place.latitude);
+          const placeMs = date.getTime() + offsetMinutes * 60 * 1000;
+          const shifted = new Date(placeMs);
+          const datePart = shifted.toLocaleDateString("en-IN", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            timeZone: "UTC",
+          });
+          const timePart = shifted.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+            timeZone: "UTC",
+          });
           return `${datePart}, ${timePart}`;
         };
-        const toInputValue = (date) => {
-          const y = date.getFullYear();
-          const m = String(date.getMonth() + 1).padStart(2, "0");
-          const d = String(date.getDate()).padStart(2, "0");
-          return `${y}-${m}-${d}`;
+        const placeLocalParts = (utcDate, place) => {
+          const offsetMinutes = estimateTimezoneOffsetMinutes(place.longitude, place.latitude);
+          const shifted = new Date(utcDate.getTime() + offsetMinutes * 60 * 1000);
+          return {
+            year: shifted.getUTCFullYear(),
+            month: shifted.getUTCMonth() + 1,
+            day: shifted.getUTCDate(),
+            hours: shifted.getUTCHours(),
+            minutes: shifted.getUTCMinutes(),
+          };
         };
-        const toTimeInputValue = (date) => {
-          const h = String(date.getHours()).padStart(2, "0");
-          const m = String(date.getMinutes()).padStart(2, "0");
-          return `${h}:${m}`;
+        const toInputValueForPlace = (utcDate, place) => {
+          const parts = placeLocalParts(utcDate, place);
+          return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
         };
+        const toTimeInputValueForPlace = (utcDate, place) => {
+          const parts = placeLocalParts(utcDate, place);
+          return `${String(parts.hours).padStart(2, "0")}:${String(parts.minutes).padStart(2, "0")}`;
+        };
+        const toInputValue = (date) => toInputValueForPlace(date, placeState);
+        const toTimeInputValue = (date) => toTimeInputValueForPlace(date, placeState);
         const parseDateTime = (dateValue, timeValue) => {
           const [y, m, d] = dateValue.split("-").map(Number);
           const [hours, minutes] = timeValue.split(":").map(Number);
@@ -714,6 +738,9 @@
           }
           if (longitude >= 80 && longitude <= 89 && latitude >= 26 && latitude <= 31) {
             return 5 * 60 + 45;
+          }
+          if (longitude >= 16 && longitude <= 33 && latitude >= -35 && latitude <= -22) {
+            return 2 * 60;
           }
           return Math.round(longitude / 15) * 60;
         };
@@ -1336,16 +1363,11 @@
             placeState = resolved;
             placeInput.value = placeState.placeName;
             const now = new Date();
-            dateInput.value = toInputValue(now);
-            timeInput.value = toTimeInputValue(now);
+            dateInput.value = toInputValueForPlace(now, placeState);
+            timeInput.value = toTimeInputValueForPlace(now, placeState);
             updateCoordsDisplay(false);
             updateSunriseDisplay(dateInput.value);
-            const chartDate = chartDateTimeFromLocalInputs(
-              dateInput.value,
-              timeInput.value,
-              placeState,
-            );
-            renderChart(chartDate, placeState, true);
+            renderChart(now, placeState, true);
           } catch {
             renderChart(
               chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
@@ -1642,10 +1664,9 @@
         function renderChart(date, place = placeState, resetPositions = false) {
           currentChartDate = date;
           const finishRender = () => {
-            const dateStr = formatDateTimeLabel(date);
             const zeroLeft = currentLang === "ta" ? "0° இடது புறம்" : "0° on left";
-            document.getElementById("subtitleMeta").textContent = ` · ${zeroLeft} · ${dateStr}`;
-            document.getElementById("tableDate").textContent = dateStr;
+            document.getElementById("subtitleMeta").textContent = ` · ${zeroLeft} · ${formatDateTimeLabel(date, place)}`;
+            document.getElementById("tableDate").textContent = formatDateTimeLabel(date, place);
             renderTable();
             renderChartSvg(date, place, chartPositions);
           };
