@@ -783,19 +783,19 @@
           const fontSize = PLANET_MIN_FONT;
           return { fontSize, lines: wrapSectorText(text, maxWidth, fontSize) };
         };
-        const layoutPlanetLabelAtLongitude = (position, c) => {
-          const angle = norm(position.longitude);
-          const pos = polar(angle, PLANET_LABEL_RADIUS, c);
-          const text = formatPlanetPart(position);
+        const layoutSectorPlanetLabel = (planets, sectorIndex, c) => {
+          if (!planets.length) return null;
+          const midAngle = sectorIndex * SECTOR_DEG + SECTOR_DEG / 2;
+          const pos = polar(midAngle, PLANET_LABEL_RADIUS, c);
+          const text = formatSectorPlanetLabel(planets);
           const { fontSize, lines } = fitSectorLabelLayout(text, PLANET_LABEL_RADIUS);
           return {
             x: pos.x,
             y: pos.y,
-            labelAngle: angle,
+            labelAngle: midAngle,
             fontSize,
             text,
             lines,
-            sectorIndex: getSectorIndex(angle),
           };
         };
         const verifyGrahaPositions = (positions) => {
@@ -874,9 +874,9 @@
         };
         const renderSectorPlanetLabels = (positions, c, inner, outer, sectorFillColors) => {
           let svg = "";
-          for (const position of positions) {
-            const layout = layoutPlanetLabelAtLongitude(position, c);
-            const sectorIndex = layout.sectorIndex;
+          for (const { sectorIndex, planets } of groupPlanetsBySector(positions)) {
+            const layout = layoutSectorPlanetLabel(planets, sectorIndex, c);
+            if (!layout) continue;
             const sectorFill =
               sectorIndex % 2 === 0
                 ? sectorFillColors[sectorIndex].fillAlt
