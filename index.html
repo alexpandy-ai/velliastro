@@ -2108,17 +2108,14 @@
               ? `${formatDateTimeLabel(date, place)} · ${formatCoordinates(place.latitude, place.longitude)}`
               : `${formatDateTimeLabel(date, place)} · ${formatCoordinates(place.latitude, place.longitude)}`;
 
-          refPositionsHead.innerHTML = `<tr><th><span class="bilingual"><span>குறிப்பு</span><span class="bilingual-en">Reference</span></span></th>${GRAHAS.map(
-            (g) =>
-              `<th><span class="ref-col-symbol">${g.symbol}</span><span class="ref-col-name ref-col-name-ta">${g.tamil}</span><span class="ref-col-name ref-col-name-en">${g.english}</span></th>`,
+          refPositionsHead.innerHTML = `<tr><th><span class="bilingual"><span>கிரகம்</span><span class="bilingual-en">Planet</span></span></th>${REFERENCE_FRAMES.map(
+            (frame) =>
+              `<th><span class="ref-col-name ref-col-name-ta">${frame.tamil}</span><span class="ref-col-name ref-col-name-en">${frame.english}</span></th>`,
           ).join("")}</tr>`;
 
-          refPositionsBody.innerHTML = REFERENCE_FRAMES.map((frame) => {
-            const label =
-              currentLang === "ta"
-                ? `${frame.tamil} · ${frame.english}`
-                : frame.english;
-            const cells = GRAHAS.map((g) => {
+          refPositionsBody.innerHTML = GRAHAS.map((g) => {
+            const label = `<span class="ref-col-symbol">${g.symbol}</span><span class="ref-col-name ref-col-name-ta">${g.tamil}</span><span class="ref-col-name ref-col-name-en">${g.english}</span>`;
+            const cells = REFERENCE_FRAMES.map((frame) => {
               const longitude = siderealLonForFrame(g, date, frame.id, place);
               return `<td>${formatRefDegree(longitude)}</td>`;
             }).join("");
