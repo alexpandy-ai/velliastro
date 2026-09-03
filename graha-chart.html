@@ -436,10 +436,158 @@
       html.lang-en body { font-family: system-ui, sans-serif; }
       html.lang-en .location-label .bilingual-en { font-size: inherit; }
       html.lang-en .coords-display .bilingual-en { font-size: inherit; }
+      .header-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin-bottom: 0.75rem;
+      }
+      .menu-wrap { position: relative; }
+      .menu-btn {
+        font-family: inherit;
+        font-size: 1.35rem;
+        line-height: 1;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.15s ease, background 0.15s ease;
+      }
+      .menu-btn:hover,
+      .menu-btn[aria-expanded="true"] {
+        border-color: var(--accent);
+        background: #faf8ff;
+      }
+      .list-menu {
+        position: absolute;
+        top: calc(100% + 0.35rem);
+        left: 0;
+        min-width: 11rem;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 24px rgba(26, 26, 46, 0.12);
+        padding: 0.35rem;
+        z-index: 40;
+      }
+      .list-menu-item {
+        display: block;
+        width: 100%;
+        text-align: left;
+        font-family: inherit;
+        font-size: 0.88rem;
+        font-weight: 600;
+        padding: 0.55rem 0.75rem;
+        border: none;
+        border-radius: 0.5rem;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+      }
+      .list-menu-item:hover { background: #f0f4ff; color: #5b21b6; }
+      .ref-positions-panel {
+        margin: 0 0 1.25rem;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 1.25rem;
+        padding: 1rem 1.15rem 1.15rem;
+        box-shadow: 0 4px 16px rgba(26, 26, 46, 0.08);
+      }
+      .ref-positions-panel__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.35rem;
+      }
+      .ref-positions-panel__header h2 { margin: 0; font-size: 1.05rem; }
+      .ref-positions-close {
+        flex-shrink: 0;
+        font-family: inherit;
+        font-size: 1.25rem;
+        line-height: 1;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .ref-positions-close:hover { border-color: var(--accent); color: var(--text); }
+      .ref-positions-meta {
+        font-size: 0.75rem;
+        color: var(--muted);
+        line-height: 1.45;
+        margin: 0 0 0.75rem;
+      }
+      .ref-positions-status {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin: 0 0 0.65rem;
+      }
+      .ref-positions-status.is-error { color: #c2410c; }
+      .ref-positions-table-wrap { overflow-x: auto; }
+      .ref-positions-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.72rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .ref-positions-table th,
+      .ref-positions-table td {
+        padding: 0.45rem 0.35rem;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      .ref-positions-table th:first-child,
+      .ref-positions-table td:first-child {
+        text-align: left;
+        font-weight: 600;
+        position: sticky;
+        left: 0;
+        background: var(--card);
+        min-width: 6.5rem;
+      }
+      .ref-positions-table thead th {
+        color: var(--muted);
+        font-size: 0.65rem;
+        vertical-align: bottom;
+      }
+      .ref-positions-table .ref-col-symbol {
+        display: block;
+        font-size: 0.95rem;
+        line-height: 1.1;
+      }
+      .ref-positions-table .ref-col-name {
+        display: block;
+        font-size: 0.58rem;
+        font-weight: 400;
+        color: var(--muted);
+      }
+      html.lang-ta .ref-positions-table .ref-col-name-en { display: none; }
+      html.lang-en .ref-positions-table .ref-col-name-ta { display: none; }
     </style>
   </head>
   <body>
     <div class="wrap">
+      <div class="header-top-bar">
+        <div class="menu-wrap">
+          <button type="button" id="menuBtn" class="menu-btn" aria-label="Menu" aria-expanded="false" aria-haspopup="true" title="Menu">☰</button>
+          <div id="listMenu" class="list-menu" hidden>
+            <button type="button" id="menuPositionsBtn" class="list-menu-item">
+              <span class="bilingual"><span>நிலைகள்</span><span class="bilingual-en">Positions</span></span>
+            </button>
+          </div>
+        </div>
+      </div>
       <header class="header">
         <div class="header-brand">
           <h1>
@@ -521,6 +669,30 @@
           <option value="Delhi, India"></option>
         </datalist>
       </header>
+      <section id="refPositionsPanel" class="ref-positions-panel" hidden aria-labelledby="refPositionsTitle">
+        <div class="ref-positions-panel__header">
+          <h2 id="refPositionsTitle">
+            <span class="bilingual">
+              <span>கிரக நிலைகள் · குறிப்பு</span>
+              <span class="bilingual-en">Planet Positions · Reference</span>
+            </span>
+          </h2>
+          <button type="button" id="refPositionsClose" class="ref-positions-close" aria-label="Close">×</button>
+        </div>
+        <p class="ref-positions-meta">
+          <span class="bilingual">
+            <span>Swiss Ephemeris–compatible · Lahiri (ICRC 1956) · 360° சைதிர</span>
+            <span class="bilingual-en">Swiss Ephemeris–compatible · Lahiri (ICRC 1956) · 360° sidereal</span>
+          </span>
+        </p>
+        <div id="refPositionsStatus" class="ref-positions-status" aria-live="polite"></div>
+        <div class="ref-positions-table-wrap">
+          <table class="ref-positions-table">
+            <thead id="refPositionsHead"></thead>
+            <tbody id="refPositionsBody"></tbody>
+          </table>
+        </div>
+      </section>
       <div class="layout">
         <section class="panel"><svg id="chart" viewBox="0 0 560 560"></svg></section>
         <aside class="table">
@@ -704,6 +876,53 @@
           if (!bodyName) return null;
           return A.Ecliptic(A.GeoVector(A.Body[bodyName], date, true)).elon;
         };
+        const tropicalFromEquator = (bodyName, date, place) => {
+          const A = window.Astronomy;
+          if (!A) return null;
+          const observer = new A.Observer(place.latitude, place.longitude, 0);
+          const body = A.Body[bodyName];
+          const equ = A.Equator(body, date, observer, true, true);
+          const eclVec = A.RotateVector(A.Rotation_EQD_ECL(date), equ.vec);
+          return norm(A.SphereFromVector(eclVec).lon);
+        };
+        const getTopocentricTropical = (grahaId, date, place) => {
+          const A = window.Astronomy;
+          if (!A) return null;
+          if (grahaId === "ketu") {
+            const rahu = getTopocentricTropical("rahu", date, place);
+            return rahu == null ? null : norm(rahu + 180);
+          }
+          if (grahaId === "rahu") return getRahuTropical(dateToJulianDate(date));
+          if (grahaId === "surya") return tropicalFromEquator("Sun", date, place);
+          if (grahaId === "chandra") return tropicalFromEquator("Moon", date, place);
+          const bodyName = GRAHA_BODY[grahaId];
+          if (!bodyName) return null;
+          return tropicalFromEquator(bodyName, date, place);
+        };
+        const getHeliocentricTropical = (grahaId, date) => {
+          const A = window.Astronomy;
+          if (!A) return null;
+          if (grahaId === "surya" || grahaId === "rahu" || grahaId === "ketu") return null;
+          const bodyName = GRAHA_BODY[grahaId];
+          if (!bodyName) return null;
+          const helio = A.HelioVector(A.Body[bodyName], date);
+          return norm(A.Ecliptic(helio).elon);
+        };
+        const siderealLonForFrame = (g, date, frame, place) => {
+          const jd = dateToJulianDate(date);
+          if (frame === "geocentric") return siderealLon(g, date);
+          if (frame === "topocentric") {
+            const tropical = getTopocentricTropical(g.id, date, place);
+            return tropical == null ? null : tropicalToSidereal(tropical, jd);
+          }
+          const tropical = getHeliocentricTropical(g.id, date);
+          return tropical == null ? null : tropicalToSidereal(tropical, jd);
+        };
+        const REFERENCE_FRAMES = [
+          { id: "geocentric", tamil: "புவி மைய", english: "GeoCentric" },
+          { id: "topocentric", tamil: "இட மைய", english: "TopCentric" },
+          { id: "heliocentric", tamil: "சூரிய மைய", english: "HelioCentric" },
+        ];
         const siderealLon = (g, date) => {
           const jd = dateToJulianDate(date);
           if (g.id === "bhoomi" || g.id === "earth") return norm(siderealLon(GRAHAS.find((x) => x.id === "surya"), date) + 180);
@@ -1771,6 +1990,7 @@
             updateCalcInputsLabelBox(place);
             renderTable();
             renderChartSvg(date, place, chartPositions);
+            renderReferencePositionsTable(date, place);
           };
 
           if (resetPositions || !chartPositions.length) {
@@ -1838,12 +2058,106 @@
           langTabEn.setAttribute("aria-selected", lang === "en" ? "true" : "false");
           if (rerender && chartInitialized) {
             renderChart(currentChartDate, placeState, false);
+            renderReferencePositionsTable(currentChartDate, placeState);
           }
         };
 
         langTabTa.addEventListener("click", () => setLanguage("ta"));
         langTabEn.addEventListener("click", () => setLanguage("en"));
         setLanguage(currentLang, false);
+
+        const menuBtn = document.getElementById("menuBtn");
+        const listMenu = document.getElementById("listMenu");
+        const menuPositionsBtn = document.getElementById("menuPositionsBtn");
+        const refPositionsPanel = document.getElementById("refPositionsPanel");
+        const refPositionsClose = document.getElementById("refPositionsClose");
+        const refPositionsHead = document.getElementById("refPositionsHead");
+        const refPositionsBody = document.getElementById("refPositionsBody");
+        const refPositionsStatus = document.getElementById("refPositionsStatus");
+        let refPositionsOpen = false;
+
+        const closeListMenu = () => {
+          listMenu.hidden = true;
+          menuBtn.setAttribute("aria-expanded", "false");
+        };
+
+        const formatRefDegree = (value) =>
+          typeof value === "number" && Number.isFinite(value) ? `${value.toFixed(2)}°` : "—";
+
+        const renderReferencePositionsTable = (date, place) => {
+          if (!refPositionsOpen) return;
+          if (!window.Astronomy) {
+            refPositionsStatus.textContent =
+              currentLang === "ta"
+                ? "Swiss Ephemeris engine ஏற்றப்படவில்லை."
+                : "Swiss Ephemeris engine failed to load.";
+            refPositionsStatus.classList.add("is-error");
+            return;
+          }
+          refPositionsStatus.classList.remove("is-error");
+          refPositionsStatus.textContent =
+            currentLang === "ta"
+              ? `${formatDateTimeLabel(date, place)} · ${formatCoordinates(place.latitude, place.longitude)}`
+              : `${formatDateTimeLabel(date, place)} · ${formatCoordinates(place.latitude, place.longitude)}`;
+
+          refPositionsHead.innerHTML = `<tr><th><span class="bilingual"><span>குறிப்பு</span><span class="bilingual-en">Reference</span></span></th>${GRAHAS.map(
+            (g) =>
+              `<th><span class="ref-col-symbol">${g.symbol}</span><span class="ref-col-name ref-col-name-ta">${g.tamil}</span><span class="ref-col-name ref-col-name-en">${g.english}</span></th>`,
+          ).join("")}</tr>`;
+
+          refPositionsBody.innerHTML = REFERENCE_FRAMES.map((frame) => {
+            const label =
+              currentLang === "ta"
+                ? `${frame.tamil} · ${frame.english}`
+                : frame.english;
+            const cells = GRAHAS.map((g) => {
+              const longitude = siderealLonForFrame(g, date, frame.id, place);
+              return `<td>${formatRefDegree(longitude)}</td>`;
+            }).join("");
+            return `<tr><td>${label}</td>${cells}</tr>`;
+          }).join("");
+        };
+
+        const openReferencePositionsPanel = () => {
+          refPositionsOpen = true;
+          refPositionsPanel.hidden = false;
+          closeListMenu();
+          renderReferencePositionsTable(currentChartDate, placeState);
+          refPositionsPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        };
+
+        const closeReferencePositionsPanel = () => {
+          refPositionsOpen = false;
+          refPositionsPanel.hidden = true;
+        };
+
+        menuBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const willOpen = listMenu.hidden;
+          listMenu.hidden = !willOpen;
+          menuBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        });
+
+        menuPositionsBtn.addEventListener("click", () => {
+          openReferencePositionsPanel();
+        });
+
+        refPositionsClose.addEventListener("click", () => {
+          closeReferencePositionsPanel();
+        });
+
+        document.addEventListener("click", (event) => {
+          if (!listMenu.hidden && !event.target.closest(".menu-wrap")) {
+            closeListMenu();
+          }
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeListMenu();
+            if (refPositionsOpen) closeReferencePositionsPanel();
+          }
+        });
 
         const today = new Date();
         const dateInput = document.getElementById("dateInput");
