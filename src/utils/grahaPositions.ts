@@ -1,4 +1,10 @@
-import { Body, Ecliptic, GeoVector, SunPosition } from "astronomy-engine";
+import {
+  Body,
+  Ecliptic,
+  EclipticGeoMoon,
+  GeoVector,
+  SunPosition,
+} from "astronomy-engine";
 import { grahas, type Graha } from "../data/grahas";
 import { longitudeToZodiac, normalizeDegrees } from "./positions";
 
@@ -74,7 +80,11 @@ export function getGeocentricTropicalLongitude(
     return normalizeDegrees(SunPosition(date).elon);
   }
 
-  if (grahaId === "chandra" || grahaId in GRAHA_BODY) {
+  if (grahaId === "chandra") {
+    return normalizeDegrees(EclipticGeoMoon(date).lon);
+  }
+
+  if (grahaId in GRAHA_BODY) {
     const body = GRAHA_BODY[grahaId] ?? Body.Moon;
     const vector = GeoVector(body, date, true);
     return normalizeDegrees(Ecliptic(vector).elon);
