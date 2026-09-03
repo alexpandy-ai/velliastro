@@ -6,7 +6,7 @@
     <title>velliAstro</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
     <style>
       :root {
         --bg: #f0f4ff;
@@ -15,6 +15,10 @@
         --text: #2d3250;
         --muted: #6b7190;
         --accent: #a78bfa;
+        --font-display: "Space Grotesk", system-ui, sans-serif;
+        --brand-purple: #5b21b6;
+        --brand-purple-light: #7c3aed;
+        --brand-gold: #d97706;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body {
@@ -35,6 +39,34 @@
         font-size: clamp(1.5rem, 5vw, 2.2rem);
         line-height: 1.2;
         margin: 0;
+      }
+      .brand-title {
+        font-family: var(--font-display);
+        font-size: clamp(2rem, 7.5vw, 2.85rem);
+        font-weight: 600;
+        line-height: 1.05;
+        letter-spacing: -0.035em;
+        margin: 0;
+      }
+      .brand-velli {
+        font-weight: 700;
+        background: linear-gradient(120deg, var(--brand-purple) 0%, var(--brand-purple-light) 55%, var(--accent) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: var(--brand-purple);
+      }
+      @supports not (background-clip: text) {
+        .brand-velli {
+          background: none;
+          -webkit-text-fill-color: unset;
+          color: var(--brand-purple);
+        }
+      }
+      .brand-astro {
+        font-weight: 600;
+        color: var(--brand-gold);
+        letter-spacing: -0.02em;
       }
       .bilingual {
         display: inline-flex;
@@ -574,11 +606,13 @@
       }
       html.lang-ta .ref-positions-table .ref-col-name-en { display: none; }
       html.lang-en .ref-positions-table .ref-col-name-ta { display: none; }
-      html.view-positions .header-brand,
+      html.view-positions .header-brand .sub,
       html.view-positions .date-form,
       html.view-positions .layout,
       html.view-positions .ref-positions-close { display: none; }
       html.view-positions .header { margin-bottom: 0.75rem; }
+      html.view-positions .header-brand { margin-bottom: 0.5rem; }
+      html.view-positions .brand-title { font-size: clamp(1.65rem, 5.5vw, 2.15rem); }
       html.view-positions .lang-tabs { margin: 0 auto 0.5rem; }
       html.view-positions .ref-positions-panel { margin-top: 0; }
     </style>
@@ -600,7 +634,7 @@
       </div>
       <header class="header">
         <div class="header-brand">
-          <h1 class="brand-title">velliAstro</h1>
+          <h1 class="brand-title"><span class="brand-velli">velli</span><span class="brand-astro">Astro</span></h1>
           <p class="sub" id="subtitle">
             <span class="bilingual">
               <span>நாள் 16 பாகங்கள் · காலை 6 மணி முதல்</span>
