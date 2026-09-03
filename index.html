@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>கிரக நிலைகள் · Planet Positions</title>
+    <title>velliAstro</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet" />
@@ -574,7 +574,6 @@
       }
       html.lang-ta .ref-positions-table .ref-col-name-en { display: none; }
       html.lang-en .ref-positions-table .ref-col-name-ta { display: none; }
-      html.view-positions .header-top-bar,
       html.view-positions .header-brand,
       html.view-positions .date-form,
       html.view-positions .layout,
@@ -590,6 +589,9 @@
         <div class="menu-wrap">
           <button type="button" id="menuBtn" class="menu-btn" aria-label="Menu" aria-expanded="false" aria-haspopup="true" title="Menu">☰</button>
           <div id="listMenu" class="list-menu" hidden>
+            <button type="button" id="menuHomeBtn" class="list-menu-item">
+              <span class="bilingual"><span>முகப்பு</span><span class="bilingual-en">Home</span></span>
+            </button>
             <button type="button" id="menuPositionsBtn" class="list-menu-item">
               <span class="bilingual"><span>நிலைகள்</span><span class="bilingual-en">Positions</span></span>
             </button>
@@ -598,12 +600,7 @@
       </div>
       <header class="header">
         <div class="header-brand">
-          <h1>
-            <span class="bilingual">
-              <span>கிரக நிலைகள்</span>
-              <span class="bilingual-en">Planet Positions</span>
-            </span>
-          </h1>
+          <h1 class="brand-title">velliAstro</h1>
           <p class="sub" id="subtitle">
             <span class="bilingual">
               <span>நாள் 16 பாகங்கள் · காலை 6 மணி முதல்</span>
@@ -2060,7 +2057,7 @@
           document.documentElement.classList.remove("lang-ta", "lang-en");
           document.documentElement.classList.add(lang === "ta" ? "lang-ta" : "lang-en");
           document.documentElement.lang = lang === "ta" ? "ta" : "en";
-          document.title = lang === "ta" ? "கிரக நிலைகள் · Planet Positions" : "Planet Positions";
+          document.title = "velliAstro";
           langTabTa.classList.toggle("is-active", lang === "ta");
           langTabEn.classList.toggle("is-active", lang === "en");
           langTabTa.setAttribute("aria-selected", lang === "ta" ? "true" : "false");
@@ -2080,6 +2077,7 @@
 
         const menuBtn = document.getElementById("menuBtn");
         const listMenu = document.getElementById("listMenu");
+        const menuHomeBtn = document.getElementById("menuHomeBtn");
         const menuPositionsBtn = document.getElementById("menuPositionsBtn");
         const refPositionsPanel = document.getElementById("refPositionsPanel");
         const refPositionsHead = document.getElementById("refPositionsHead");
@@ -2128,18 +2126,29 @@
           }).join("");
         };
 
+        const buildChartQueryParams = () => {
+          const params = new URLSearchParams();
+          params.set("date", dateInput.value);
+          params.set("time", timeInput.value);
+          params.set("lat", String(placeState.latitude));
+          params.set("lon", String(placeState.longitude));
+          params.set("lang", currentLang);
+          if (placeState.placeName) {
+            params.set("place", placeState.placeName);
+          }
+          return params;
+        };
+
+        const buildHomeUrl = () => {
+          const url = new URL(window.location.href);
+          url.search = buildChartQueryParams().toString();
+          return url.toString();
+        };
+
         const buildPositionsTabUrl = () => {
           const url = new URL(window.location.href);
-          url.search = "";
+          url.search = buildChartQueryParams().toString();
           url.searchParams.set("view", "positions");
-          url.searchParams.set("date", dateInput.value);
-          url.searchParams.set("time", timeInput.value);
-          url.searchParams.set("lat", String(placeState.latitude));
-          url.searchParams.set("lon", String(placeState.longitude));
-          url.searchParams.set("lang", currentLang);
-          if (placeState.placeName) {
-            url.searchParams.set("place", placeState.placeName);
-          }
           return url.toString();
         };
 
@@ -2148,6 +2157,13 @@
           const willOpen = listMenu.hidden;
           listMenu.hidden = !willOpen;
           menuBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        });
+
+        menuHomeBtn.addEventListener("click", () => {
+          closeListMenu();
+          if (isPositionsView) {
+            window.location.href = buildHomeUrl();
+          }
         });
 
         menuPositionsBtn.addEventListener("click", () => {
@@ -2174,15 +2190,13 @@
         const placeLocationBtn = document.getElementById("placeLocationBtn");
         const latInput = document.getElementById("latInput");
         const lonInput = document.getElementById("lonInput");
-        if (isPositionsView) {
-          document.documentElement.classList.add("view-positions");
-          refPositionsPanel.hidden = false;
-          const paramDate = positionsParams.get("date");
-          const paramTime = positionsParams.get("time");
-          const paramLat = positionsParams.get("lat");
-          const paramLon = positionsParams.get("lon");
-          const paramPlace = positionsParams.get("place");
-          const paramLang = positionsParams.get("lang");
+        const applyChartParamsFromUrl = (params) => {
+          const paramDate = params.get("date");
+          const paramTime = params.get("time");
+          const paramLat = params.get("lat");
+          const paramLon = params.get("lon");
+          const paramPlace = params.get("place");
+          const paramLang = params.get("lang");
           if (paramDate) dateInput.value = paramDate;
           if (paramTime) timeInput.value = paramTime;
           if (paramLat != null && paramLon != null) {
@@ -2199,6 +2213,13 @@
           if (paramLang === "en" || paramLang === "ta") {
             setLanguage(paramLang, false);
           }
+          return Boolean(paramDate || paramTime || (paramLat != null && paramLon != null));
+        };
+
+        if (isPositionsView) {
+          document.documentElement.classList.add("view-positions");
+          refPositionsPanel.hidden = false;
+          applyChartParamsFromUrl(positionsParams);
           const chartDate = chartDateTimeFromLocalInputs(
             dateInput.value,
             timeInput.value,
@@ -2207,18 +2228,22 @@
           currentChartDate = chartDate;
           chartInitialized = true;
           renderReferencePositionsTable(chartDate, placeState);
-          document.title =
-            currentLang === "ta"
-              ? "கிரக நிலைகள் · குறிப்பு · Planet Positions · Reference"
-              : "Planet Positions · Reference";
+          document.title = "velliAstro · Positions";
         } else {
-          dateInput.value = toInputValue(today);
-          timeInput.value = toTimeInputValue(today);
+          const hasUrlParams = applyChartParamsFromUrl(positionsParams);
           placeInput.value = placeState.placeName;
           updateCoordsDisplay(false);
           updateSunriseDisplay(dateInput.value);
           chartInitialized = true;
-          void showNowAtCurrentLocation();
+          if (hasUrlParams) {
+            if (!dateInput.value) dateInput.value = toInputValue(today);
+            if (!timeInput.value) timeInput.value = toTimeInputValue(today);
+            renderChartFromFormInputs();
+          } else {
+            dateInput.value = toInputValue(today);
+            timeInput.value = toTimeInputValue(today);
+            void showNowAtCurrentLocation();
+          }
         }
 
         const onDateTimeInput = () => {
