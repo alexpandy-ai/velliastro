@@ -355,7 +355,7 @@
         padding: 0.55rem 0.4rem;
         text-align: left;
         border-bottom: 1px solid var(--border);
-        overflow-wrap: anywhere;
+        white-space: nowrap;
       }
       .table th:first-child,
       .table td:first-child {
@@ -382,7 +382,13 @@
         padding-right: 1rem;
       }
       .table th { color: var(--muted); font-size: 0.7rem; vertical-align: bottom; }
-      .table th .bilingual { font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+      .table th .bilingual {
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+      }
       html.lang-ta .table th .bilingual {
         text-transform: none;
         letter-spacing: 0.02em;
@@ -393,9 +399,16 @@
         align-items: center;
         gap: 0.35rem;
         min-width: 0;
+        white-space: nowrap;
       }
       .table-symbol { display: inline-block; width: 1.25em; font-size: 1.05em; line-height: 1; text-align: center; font-family: serif; flex-shrink: 0; }
-      .table-name { display: inline-flex; flex-direction: column; line-height: 1.25; }
+      .table-name {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: baseline;
+        line-height: 1.25;
+        white-space: nowrap;
+      }
       .table-name-en { font-size: 0.68rem; font-weight: 400; color: var(--muted); font-family: "DM Sans", sans-serif; }
       .table-header {
         display: flex;
