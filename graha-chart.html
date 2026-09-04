@@ -1374,6 +1374,18 @@
             timeZone: "UTC",
           });
         };
+        /** Rim time at 0° only: sunrise when available, else default 06:00; other sectors unchanged. */
+        const formatRimSectorTime = (sectorIndex, date, place) => {
+          if (sectorIndex !== 0) return formatStartTime(sectorIndex);
+          const parts = placeLocalParts(date, place);
+          const dateValue = `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
+          const sunrise = getSunriseTime(
+            chartDateTimeFromLocalInputs(dateValue, "06:00", place),
+            place,
+          );
+          if (sunrise) return toTimeInputValueForPlace(sunrise, place);
+          return formatStartTime(0);
+        };
         const updateSunriseDisplay = (dateValue, place = placeState) => {
           const sunrise = getSunriseTime(
             chartDateTimeFromLocalInputs(dateValue, "06:00", place),
@@ -2345,7 +2357,7 @@
             const lblOffset = getBoundaryLabelOffset(i);
             const degLbl = polar(a, outer + lblOffset, c);
             const degRot = labelRadialInwardRotation(a);
-            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(a)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatStartTime(i)}</tspan></text>`;
+            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(a)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatRimSectorTime(i, date, place)}</tspan></text>`;
           }
           svg += renderPlanetLabels(positions, c, sectorFillColors, lagnamAngle);
           const lagnamOuter = polar(lagnamVisual, outer, c);
