@@ -340,13 +340,17 @@
       .table table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
       .table th,
       .table td {
-        padding: 0.55rem 0.5rem;
+        padding: 0.55rem 0.4rem;
         text-align: left;
         border-bottom: 1px solid var(--border);
       }
+      .table th:first-child,
+      .table td:first-child {
+        padding-left: 1rem;
+      }
       .table th:last-child,
       .table td:last-child {
-        padding-right: calc(0.5rem + 1px);
+        padding-right: 1rem;
       }
       .table th { color: var(--muted); font-size: 0.7rem; vertical-align: bottom; }
       .table th .bilingual { font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
