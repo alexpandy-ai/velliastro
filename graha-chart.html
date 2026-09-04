@@ -91,20 +91,6 @@
         letter-spacing: normal;
       }
       h1 .bilingual-en { font-size: 0.55em; }
-      .sub {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.35rem;
-        color: var(--muted);
-        font-size: clamp(0.8rem, 3.2vw, 0.95rem);
-        line-height: 1.5;
-        margin: 0.6rem auto 0;
-        max-width: 36rem;
-        text-align: center;
-      }
-      .sub .bilingual-en { font-size: 0.95em; }
-      .sub-meta { font-size: 0.92em; }
       .date-form {
         width: 100%;
         max-width: 28rem;
@@ -506,7 +492,6 @@
         font-family: system-ui, sans-serif;
       }
       html.lang-en h1 .bilingual-en { font-size: 1em; font-weight: 700; }
-      html.lang-en .sub .bilingual-en { font-size: inherit; }
       html.lang-en th .bilingual-en { font-size: inherit; }
       html.lang-en body { font-family: system-ui, sans-serif; }
       html.lang-en .location-label .bilingual-en { font-size: inherit; }
@@ -649,7 +634,6 @@
       }
       html.lang-ta .ref-positions-table .ref-col-name-en { display: none; }
       html.lang-en .ref-positions-table .ref-col-name-ta { display: none; }
-      html.view-positions .header-brand .sub,
       html.view-positions .date-form,
       html.view-positions .layout,
       html.view-positions .ref-positions-close { display: none; }
@@ -678,13 +662,6 @@
       <header class="header">
         <div class="header-brand">
           <h1 class="brand-title"><span class="brand-velli">velli</span><span class="brand-astro">Astro</span></h1>
-          <p class="sub" id="subtitle">
-            <span class="bilingual">
-              <span>நாள் 16 பாகங்கள் · காலை 6 மணி முதல்</span>
-              <span class="bilingual-en">16 day sections · from 6 AM</span>
-            </span>
-            <span class="sub-meta" id="subtitleMeta"></span>
-          </p>
         </div>
         <nav class="lang-tabs" role="tablist" aria-label="Language">
           <button type="button" class="lang-tab is-active" id="langTabTa" role="tab" aria-selected="true">தமிழ்</button>
@@ -2254,8 +2231,6 @@
         function renderChart(date, place = placeState, resetPositions = false) {
           currentChartDate = date;
           const finishRender = () => {
-            const zeroLeft = currentLang === "ta" ? "0° இடது புறம்" : "0° on left";
-            document.getElementById("subtitleMeta").textContent = ` · ${zeroLeft} · ${formatDateTimeLabel(date, place)}`;
             updateCalcInputsLabelBox(place);
             renderTable();
             renderChartSvg(date, place, chartPositions);
