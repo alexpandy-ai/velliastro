@@ -333,9 +333,10 @@
         .date-form { max-width: 32rem; }
         .form-card { padding: 1.15rem 1.25rem; }
       }
-      .layout { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; }
+      .layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; }
+      html.lang-ta .layout { grid-template-columns: 1fr 330px; }
       .panel, .table { background: var(--card); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; box-shadow: 0 1px 3px rgba(26, 26, 46, 0.06); }
-      .table { min-width: 0; overflow: hidden; }
+      .table { min-width: 0; }
       .panel { background: linear-gradient(145deg, #faf8ff 0%, #ffffff 55%, #fff8f0 100%); }
       svg { width: 100%; max-width: 560px; display: block; margin: 0 auto; }
       .table-data-wrap {
@@ -345,10 +346,13 @@
       }
       .table table {
         width: 100%;
-        max-width: 100%;
         border-collapse: collapse;
         font-size: 0.85rem;
         table-layout: fixed;
+      }
+      html.lang-ta .table table {
+        table-layout: auto;
+        font-size: 0.72rem;
       }
       .table th,
       .table td {
@@ -356,6 +360,12 @@
         text-align: left;
         border-bottom: 1px solid var(--border);
         white-space: nowrap;
+        word-break: keep-all;
+        overflow-wrap: normal;
+      }
+      html.lang-ta .table th,
+      html.lang-ta .table td {
+        padding: 0.4rem 0.3rem;
       }
       .table th:first-child,
       .table td:first-child {
@@ -375,11 +385,21 @@
       }
       html.lang-ta .table th:first-child,
       html.lang-ta .table td:first-child {
-        padding-left: 1rem;
+        width: auto;
+        padding-left: 0.65rem;
+      }
+      html.lang-ta .table th:nth-child(2),
+      html.lang-ta .table td:nth-child(2) {
+        width: auto;
+      }
+      html.lang-ta .table th:nth-child(3),
+      html.lang-ta .table td:nth-child(3) {
+        width: 1%;
       }
       html.lang-ta .table th:last-child,
       html.lang-ta .table td:last-child {
-        padding-right: 1rem;
+        width: 1%;
+        padding-right: 0.65rem;
       }
       .table th { color: var(--muted); font-size: 0.7rem; vertical-align: bottom; }
       .table th .bilingual {
@@ -395,19 +415,34 @@
       }
       .table td:first-child { font-family: "Noto Sans Tamil", sans-serif; font-weight: 600; }
       .table-cell-planet {
-        display: flex;
-        align-items: center;
-        gap: 0.35rem;
-        min-width: 0;
+        display: inline;
         white-space: nowrap;
       }
-      .table-symbol { display: inline-block; width: 1.25em; font-size: 1.05em; line-height: 1; text-align: center; font-family: serif; flex-shrink: 0; }
+      .table-symbol {
+        display: inline;
+        margin-right: 0.25em;
+        font-size: 1.05em;
+        line-height: 1;
+        text-align: center;
+        font-family: serif;
+        vertical-align: baseline;
+      }
       .table-name {
-        display: inline-flex;
-        flex-direction: row;
-        align-items: baseline;
+        display: inline;
         line-height: 1.25;
         white-space: nowrap;
+      }
+      .table-name > span {
+        white-space: nowrap;
+        word-break: keep-all;
+        overflow-wrap: normal;
+      }
+      html.lang-ta .table td .table-cell-planet,
+      html.lang-ta .table td .table-name,
+      html.lang-ta .table td .table-name > span {
+        white-space: nowrap;
+        word-break: keep-all;
+        overflow-wrap: normal;
       }
       .table-name-en { font-size: 0.68rem; font-weight: 400; color: var(--muted); font-family: "DM Sans", sans-serif; }
       .table-header {
