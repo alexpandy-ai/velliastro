@@ -1374,7 +1374,7 @@
             timeZone: "UTC",
           });
         };
-        /** Rim time at 0° only: sunrise when available, else default 06:00; other sectors unchanged. */
+        /** Day-start time at Lagnam (0° Tamil day): sunrise when available, else default 06:00. */
         const formatRimSectorTime = (sectorIndex, date, place) => {
           if (sectorIndex !== 0) return formatStartTime(sectorIndex);
           const parts = placeLocalParts(date, place);
@@ -1399,6 +1399,8 @@
         const SECTOR_DEG = 22.5;
         const PLANET_LABEL_RADIUS = 139;
         const LAGNAM_LABEL_RADIUS = 124;
+        /** 0° day-start (sunrise) label sits on the Lagnam spoke, inward of the fixed rim. */
+        const ZERO_DAY_LABEL_RADIUS = 150;
         const PLANET_MIN_FONT = 8;
         const PLANET_MAX_FONT = 9;
         const SECTOR_LABEL_RADIAL_MARGIN = 10;
@@ -2357,7 +2359,7 @@
             const lblOffset = getBoundaryLabelOffset(i);
             const degLbl = polar(a, outer + lblOffset, c);
             const degRot = labelRadialInwardRotation(a);
-            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(a)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatRimSectorTime(i, date, place)}</tspan></text>`;
+            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(a)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatStartTime(i)}</tspan></text>`;
           }
           svg += renderPlanetLabels(positions, c, sectorFillColors, lagnamAngle);
           const lagnamOuter = polar(lagnamVisual, outer, c);
@@ -2368,6 +2370,9 @@
           svg += `<g transform="rotate(${lagnamRot}, ${lagnamLbl.x}, ${lagnamLbl.y})">`;
           svg += `<text x="${lagnamLbl.x}" y="${lagnamLbl.y}" class="lagnam-label" text-anchor="middle" dominant-baseline="middle" fill="${lagnamTextColors.fill}" stroke="${lagnamTextColors.stroke}">${currentLang === "ta" ? "லக்னம்" : "Lagnam"} (${formatLagnamDegree(lagnamAngle)})</text>`;
           svg += `</g>`;
+          const zeroDayLbl = polar(lagnamVisual, ZERO_DAY_LABEL_RADIUS, c);
+          const zeroDayRot = labelRadialInwardRotation(lagnamVisual);
+          svg += `<text x="${zeroDayLbl.x}" y="${zeroDayLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${zeroDayRot}, ${zeroDayLbl.x}, ${zeroDayLbl.y})"><tspan x="${zeroDayLbl.x}" dy="-0.55em">${formatDegreeLabel(0)}</tspan><tspan x="${zeroDayLbl.x}" dy="1.1em">${formatRimSectorTime(0, date, place)}</tspan></text>`;
           document.getElementById("chart").innerHTML = svg;
         };
 
