@@ -205,11 +205,54 @@
       }
       .place-row {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 0.45rem;
         width: 100%;
       }
-      .place-row input[type="text"] { flex: 1; }
+      .place-autocomplete {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+      }
+      .place-row input[type="text"] { width: 100%; }
+      .place-suggestions {
+        position: absolute;
+        z-index: 30;
+        top: calc(100% + 0.25rem);
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 0.35rem 0;
+        list-style: none;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 24px rgba(26, 26, 46, 0.12);
+        max-height: 14rem;
+        overflow-y: auto;
+      }
+      .place-suggestions.is-loading {
+        padding: 0.65rem 0.85rem;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+      .place-suggestion {
+        display: block;
+        width: 100%;
+        text-align: left;
+        font-family: inherit;
+        font-size: 0.86rem;
+        line-height: 1.35;
+        padding: 0.55rem 0.85rem;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+      }
+      .place-suggestion:hover,
+      .place-suggestion.is-active {
+        background: rgba(167, 139, 250, 0.12);
+      }
       .place-search-btn {
         flex-shrink: 0;
         font-family: inherit;
@@ -676,7 +719,10 @@
                 </span>
               </label>
               <div class="place-row">
-                <input type="text" id="placeInput" list="placePresets" placeholder="Chennai" autocomplete="off" />
+                <div class="place-autocomplete">
+                  <input type="text" id="placeInput" placeholder="Chennai" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="placeSuggestions" aria-autocomplete="list" />
+                  <ul id="placeSuggestions" class="place-suggestions" role="listbox" hidden></ul>
+                </div>
                 <button type="button" id="placeLocationBtn" class="place-location-btn" title="Use current location and time" aria-label="Use current location and time">⌖</button>
                 <button type="button" id="placeSearchBtn" class="place-search-btn" title="Search place" aria-label="Search place">⌕</button>
               </div>
@@ -697,16 +743,6 @@
             <button type="submit" class="submit-btn"><span class="bilingual"><span>சமர்ப்பி</span><span class="bilingual-en">Submit</span></span></button>
           </div>
         </form>
-        <datalist id="placePresets">
-          <option value="Chennai, Tamil Nadu, India"></option>
-          <option value="Coimbatore, Tamil Nadu, India"></option>
-          <option value="Madurai, Tamil Nadu, India"></option>
-          <option value="Trichy, Tamil Nadu, India"></option>
-          <option value="Salem, Tamil Nadu, India"></option>
-          <option value="Bengaluru, Karnataka, India"></option>
-          <option value="Mumbai, Maharashtra, India"></option>
-          <option value="Delhi, India"></option>
-        </datalist>
       </header>
       <section id="refPositionsPanel" class="ref-positions-panel" hidden aria-labelledby="refPositionsTitle">
         <div class="ref-positions-panel__header">
@@ -1559,11 +1595,31 @@
           { placeName: "Madurai, Tamil Nadu, India", latitude: 9.9252, longitude: 78.1198 },
           { placeName: "Trichy, Tamil Nadu, India", latitude: 10.7905, longitude: 78.7047 },
           { placeName: "Salem, Tamil Nadu, India", latitude: 11.6643, longitude: 78.146 },
+          { placeName: "Tirunelveli, Tamil Nadu, India", latitude: 8.7139, longitude: 77.7567 },
+          { placeName: "Erode, Tamil Nadu, India", latitude: 11.341, longitude: 77.7172 },
           { placeName: "Bengaluru, Karnataka, India", latitude: 12.9716, longitude: 77.5946 },
+          { placeName: "Hyderabad, Telangana, India", latitude: 17.385, longitude: 78.4867 },
           { placeName: "Mumbai, Maharashtra, India", latitude: 19.076, longitude: 72.8777 },
+          { placeName: "Pune, Maharashtra, India", latitude: 18.5204, longitude: 73.8567 },
           { placeName: "Delhi, India", latitude: 28.7041, longitude: 77.1025 },
+          { placeName: "Kolkata, West Bengal, India", latitude: 22.5726, longitude: 88.3639 },
+          { placeName: "Ahmedabad, Gujarat, India", latitude: 23.0225, longitude: 72.5714 },
+          { placeName: "Kochi, Kerala, India", latitude: 9.9312, longitude: 76.2673 },
+          { placeName: "Durban, KwaZulu-Natal, South Africa", latitude: -29.8587, longitude: 31.0218 },
+          { placeName: "Colombo, Western Province, Sri Lanka", latitude: 6.9271, longitude: 79.8612 },
+          { placeName: "Singapore", latitude: 1.3521, longitude: 103.8198 },
+          { placeName: "London, England, United Kingdom", latitude: 51.5074, longitude: -0.1278 },
+          { placeName: "New York, New York, United States", latitude: 40.7128, longitude: -74.006 },
+          { placeName: "Dubai, United Arab Emirates", latitude: 25.2048, longitude: 55.2708 },
         ];
+        const PHOTON_SEARCH_URL = "https://photon.komoot.io/api/";
+        const PHOTON_REVERSE_URL = "https://photon.komoot.io/reverse";
+        const PLACE_TYPE_RANK = { city: 0, town: 1, village: 2, district: 3, county: 4, state: 5, country: 6, locality: 7, house: 8, other: 9 };
         let placeState = { ...DEFAULT_PLACE };
+        let placeSuggestions = [];
+        let activeSuggestionIndex = -1;
+        let searchRequestId = 0;
+        let skipNextPlaceSearch = false;
         const formatCoordinates = (latitude, longitude) => {
           const latDir = latitude >= 0 ? "N" : "S";
           const lonDir = longitude >= 0 ? "E" : "W";
@@ -1597,8 +1653,106 @@
           if (!normalized) return null;
           return PLACE_PRESETS.find((preset) => {
             const city = preset.placeName.split(",")[0].trim().toLowerCase();
-            return preset.placeName.toLowerCase().includes(normalized) || normalized.includes(city) || city.includes(normalized);
+            return (
+              preset.placeName.toLowerCase() === normalized ||
+              preset.placeName.toLowerCase().startsWith(normalized) ||
+              city === normalized ||
+              city.startsWith(normalized)
+            );
           }) || null;
+        };
+        const presetSuggestions = (query) => {
+          const normalized = query.trim().toLowerCase();
+          if (!normalized) return [];
+          return PLACE_PRESETS.filter((preset) => {
+            const city = preset.placeName.split(",")[0].trim().toLowerCase();
+            return (
+              preset.placeName.toLowerCase().includes(normalized) ||
+              city.startsWith(normalized) ||
+              normalized.startsWith(city)
+            );
+          }).map((preset) => ({ ...preset, id: `preset:${preset.placeName}` }));
+        };
+        const formatPlaceFromProperties = (props) => {
+          const primary = (props.name || props.city || props.district || props.county || "").trim();
+          if (!primary) return "";
+          const parts = [];
+          const seen = new Set();
+          const add = (value) => {
+            const trimmed = String(value || "").trim();
+            if (!trimmed) return;
+            const key = trimmed.toLowerCase();
+            if (seen.has(key)) return;
+            seen.add(key);
+            parts.push(trimmed);
+          };
+          add(primary);
+          add(props.state);
+          add(props.country);
+          return parts.join(", ");
+        };
+        const rankPhotonFeature = (feature, query) => {
+          const props = feature.properties || {};
+          const typeRank = PLACE_TYPE_RANK[props.type || "other"] ?? 9;
+          const name = String(props.name || props.city || "").toLowerCase();
+          const normalized = query.trim().toLowerCase();
+          let nameRank = 2;
+          if (name === normalized) nameRank = 0;
+          else if (name.startsWith(normalized)) nameRank = 1;
+          return typeRank * 10 + nameRank;
+        };
+        const photonFeatureToSuggestion = (feature) => {
+          const coords = feature.geometry?.coordinates;
+          if (!coords) return null;
+          const longitude = coords[0];
+          const latitude = coords[1];
+          if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+          const props = feature.properties || {};
+          const placeName = formatPlaceFromProperties(props);
+          if (!placeName) return null;
+          return {
+            id: `${props.osm_type || "x"}:${props.osm_id || placeName}:${latitude.toFixed(4)}:${longitude.toFixed(4)}`,
+            placeName,
+            latitude,
+            longitude,
+          };
+        };
+        const dedupeSuggestions = (suggestions) => {
+          const seen = new Set();
+          const result = [];
+          for (const suggestion of suggestions) {
+            const key = `${suggestion.placeName.toLowerCase()}|${suggestion.latitude.toFixed(3)}|${suggestion.longitude.toFixed(3)}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            result.push(suggestion);
+          }
+          return result;
+        };
+        const fetchPhotonFeatures = async (url) => {
+          const response = await fetch(url.toString(), { headers: { Accept: "application/json" } });
+          if (!response.ok) return [];
+          const data = await response.json();
+          return data.features || [];
+        };
+        const searchPlaces = async (query, limit = 8) => {
+          const trimmed = query.trim();
+          if (trimmed.length < 2) return presetSuggestions(trimmed).slice(0, limit);
+          const presetMatches = presetSuggestions(trimmed);
+          try {
+            const url = new URL(PHOTON_SEARCH_URL);
+            url.searchParams.set("q", trimmed);
+            url.searchParams.set("limit", String(Math.max(limit, 10)));
+            url.searchParams.set("lang", "en");
+            const features = await fetchPhotonFeatures(url);
+            const ranked = features
+              .slice()
+              .sort((a, b) => rankPhotonFeature(a, trimmed) - rankPhotonFeature(b, trimmed))
+              .map(photonFeatureToSuggestion)
+              .filter(Boolean);
+            return dedupeSuggestions([...presetMatches, ...ranked]).slice(0, limit);
+          } catch {
+            return presetMatches.slice(0, limit);
+          }
         };
         const updateCoordsDisplay = (isLoading = false) => {
           const values = toCoordinateInputValues(placeState.latitude, placeState.longitude);
@@ -1631,42 +1785,29 @@
           const trimmed = query.trim();
           if (!trimmed) return null;
           const preset = matchPreset(trimmed);
-          if (preset) return { ...preset, placeName: trimmed };
-          try {
-            const url = new URL("https://nominatim.openstreetmap.org/search");
-            url.searchParams.set("format", "json");
-            url.searchParams.set("limit", "1");
-            url.searchParams.set("q", trimmed);
-            const response = await fetch(url.toString(), {
-              headers: { Accept: "application/json", "Accept-Language": "en" },
-            });
-            if (!response.ok) return matchPreset(trimmed);
-            const results = await response.json();
-            if (!results.length) return matchPreset(trimmed);
-            return {
-              placeName: trimmed,
-              latitude: parseFloat(results[0].lat),
-              longitude: parseFloat(results[0].lon),
-            };
-          } catch {
-            return matchPreset(trimmed);
+          if (preset) return { ...preset };
+          const suggestions = await searchPlaces(trimmed, 1);
+          if (suggestions.length) {
+            const best = suggestions[0];
+            return { placeName: best.placeName, latitude: best.latitude, longitude: best.longitude };
           }
+          return preset;
         };
         const reverseGeocodeCoordinates = async (latitude, longitude) => {
           try {
-            const url = new URL("https://nominatim.openstreetmap.org/reverse");
-            url.searchParams.set("format", "json");
+            const url = new URL(PHOTON_REVERSE_URL);
             url.searchParams.set("lat", String(latitude));
             url.searchParams.set("lon", String(longitude));
-            const response = await fetch(url.toString(), {
-              headers: { Accept: "application/json", "Accept-Language": "en" },
-            });
-            if (!response.ok) return formatCoordinates(latitude, longitude);
-            const data = await response.json();
-            return data.display_name || formatCoordinates(latitude, longitude);
+            url.searchParams.set("lang", "en");
+            const features = await fetchPhotonFeatures(url);
+            if (features.length) {
+              const label = formatPlaceFromProperties(features[0].properties || {});
+              if (label) return label;
+            }
           } catch {
-            return formatCoordinates(latitude, longitude);
+            // fall through
           }
+          return formatCoordinates(latitude, longitude);
         };
         const resolveCurrentLocationPlace = () =>
           new Promise((resolve, reject) => {
@@ -1693,7 +1834,9 @@
           try {
             const resolved = await resolveCurrentLocationPlace();
             placeState = resolved;
+            skipNextPlaceSearch = true;
             placeInput.value = placeState.placeName;
+            clearPlaceSuggestions();
             const now = new Date();
             dateInput.value = toInputValueForPlace(now, placeState);
             timeInput.value = toTimeInputValueForPlace(now, placeState);
@@ -1717,32 +1860,96 @@
             placeLocationBtn.textContent = "⌖";
           }
         };
+        const applySelectedPlace = (resolved) => {
+          placeState = { ...resolved };
+          placeInput.value = resolved.placeName;
+          updateCoordsDisplay(false);
+          if (chartInitialized) {
+            renderChart(
+              chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
+              placeState,
+              true,
+            );
+            updateSunriseDisplay(dateInput.value);
+          }
+        };
+        const placeSuggestionsEl = () => document.getElementById("placeSuggestions");
+        const clearPlaceSuggestions = () => {
+          placeSuggestions = [];
+          activeSuggestionIndex = -1;
+          const list = placeSuggestionsEl();
+          if (!list) return;
+          list.innerHTML = "";
+          list.hidden = true;
+          placeInput.setAttribute("aria-expanded", "false");
+        };
+        const renderPlaceSuggestions = (suggestions, loading = false, preserveIndex = false) => {
+          const list = placeSuggestionsEl();
+          if (!list) return;
+          placeSuggestions = suggestions;
+          if (!preserveIndex) {
+            activeSuggestionIndex = suggestions.length ? 0 : -1;
+          } else if (suggestions.length) {
+            activeSuggestionIndex = Math.max(0, Math.min(activeSuggestionIndex, suggestions.length - 1));
+          } else {
+            activeSuggestionIndex = -1;
+          }
+          list.innerHTML = "";
+          if (loading) {
+            list.className = "place-suggestions is-loading";
+            list.hidden = false;
+            list.setAttribute("aria-live", "polite");
+            list.innerHTML = '<span class="bilingual"><span>தேடுகிறது…</span><span class="bilingual-en">Searching…</span></span>';
+            placeInput.setAttribute("aria-expanded", "true");
+            return;
+          }
+          list.className = "place-suggestions";
+          if (!suggestions.length) {
+            list.hidden = true;
+            placeInput.setAttribute("aria-expanded", "false");
+            return;
+          }
+          suggestions.forEach((suggestion, index) => {
+            const item = document.createElement("li");
+            item.setAttribute("role", "option");
+            item.setAttribute("aria-selected", index === activeSuggestionIndex ? "true" : "false");
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `place-suggestion${index === activeSuggestionIndex ? " is-active" : ""}`;
+            button.textContent = suggestion.placeName;
+            button.addEventListener("mousedown", (event) => event.preventDefault());
+            button.addEventListener("click", () => {
+              skipNextPlaceSearch = true;
+              applySelectedPlace(suggestion);
+              clearPlaceSuggestions();
+            });
+            item.appendChild(button);
+            list.appendChild(item);
+          });
+          list.hidden = false;
+          placeInput.setAttribute("aria-expanded", "true");
+        };
+        const selectActiveSuggestion = () => {
+          if (!placeSuggestions.length) return false;
+          const selected = placeSuggestions[Math.max(activeSuggestionIndex, 0)];
+          if (!selected) return false;
+          skipNextPlaceSearch = true;
+          applySelectedPlace(selected);
+          clearPlaceSuggestions();
+          return true;
+        };
         const lookupCoordinates = async (query) => {
           const trimmed = query.trim();
           if (!trimmed) return;
           updateCoordsDisplay(true);
           const resolved = await geocodePlace(trimmed);
           if (resolved) {
-            const values = toCoordinateInputValues(resolved.latitude, resolved.longitude);
-            latInput.value = values.latitude;
-            lonInput.value = values.longitude;
-            placeState = {
-              placeName: trimmed,
-              latitude: resolved.latitude,
-              longitude: resolved.longitude,
-            };
-            if (chartInitialized) {
-              renderChart(
-                chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
-                placeState,
-                true,
-              );
-              updateSunriseDisplay(dateInput.value);
-            }
+            applySelectedPlace(resolved);
           }
           updateCoordsDisplay(false);
         };
         const applyPlaceFromForm = async () => {
+          clearPlaceSuggestions();
           await lookupCoordinates(placeInput.value);
           const parsed = parseCoordinateInputs(latInput.value, lonInput.value);
           if (!parsed) {
@@ -2300,19 +2507,68 @@
           }
         });
 
-        let geocodeTimer = null;
-        const scheduleGeocode = (query) => {
-          if (geocodeTimer) clearTimeout(geocodeTimer);
-          geocodeTimer = setTimeout(() => { void lookupCoordinates(query); }, 500);
+        let placeSearchTimer = null;
+        const schedulePlaceSearch = (query) => {
+          if (placeSearchTimer) clearTimeout(placeSearchTimer);
+          const trimmed = query.trim();
+          if (trimmed.length < 2) {
+            clearPlaceSuggestions();
+            return;
+          }
+          placeSearchTimer = setTimeout(async () => {
+            const requestId = ++searchRequestId;
+            renderPlaceSuggestions([], true);
+            const suggestions = await searchPlaces(trimmed);
+            if (requestId !== searchRequestId) return;
+            renderPlaceSuggestions(suggestions, false);
+          }, 280);
         };
 
-        placeInput.addEventListener("input", () => scheduleGeocode(placeInput.value));
+        placeInput.addEventListener("input", () => {
+          if (skipNextPlaceSearch) {
+            skipNextPlaceSearch = false;
+            return;
+          }
+          schedulePlaceSearch(placeInput.value);
+        });
         placeInput.addEventListener("blur", () => {
-          if (geocodeTimer) clearTimeout(geocodeTimer);
-          void lookupCoordinates(placeInput.value);
+          window.setTimeout(() => clearPlaceSuggestions(), 150);
+        });
+        placeInput.addEventListener("keydown", (event) => {
+          if (!placeSuggestions.length) {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              if (placeSearchTimer) clearTimeout(placeSearchTimer);
+              void lookupCoordinates(placeInput.value);
+            }
+            return;
+          }
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            activeSuggestionIndex = activeSuggestionIndex < placeSuggestions.length - 1 ? activeSuggestionIndex + 1 : 0;
+            renderPlaceSuggestions(placeSuggestions, false, true);
+            return;
+          }
+          if (event.key === "ArrowUp") {
+            event.preventDefault();
+            activeSuggestionIndex = activeSuggestionIndex > 0 ? activeSuggestionIndex - 1 : placeSuggestions.length - 1;
+            renderPlaceSuggestions(placeSuggestions, false, true);
+            return;
+          }
+          if (event.key === "Enter") {
+            event.preventDefault();
+            if (placeSearchTimer) clearTimeout(placeSearchTimer);
+            selectActiveSuggestion();
+            return;
+          }
+          if (event.key === "Escape") {
+            event.preventDefault();
+            clearPlaceSuggestions();
+          }
         });
         document.getElementById("placeSearchBtn").addEventListener("click", () => {
-          if (geocodeTimer) clearTimeout(geocodeTimer);
+          if (placeSearchTimer) clearTimeout(placeSearchTimer);
+          if (selectActiveSuggestion()) return;
           void lookupCoordinates(placeInput.value);
         });
         placeLocationBtn.addEventListener("click", () => {
@@ -2321,7 +2577,7 @@
 
         document.getElementById("dateForm").addEventListener("submit", (e) => {
           e.preventDefault();
-          if (geocodeTimer) clearTimeout(geocodeTimer);
+          if (placeSearchTimer) clearTimeout(placeSearchTimer);
           void applyPlaceFromForm().then(() => {
             renderChartFromFormInputs();
             updateSunriseDisplay(dateInput.value);
