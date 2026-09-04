@@ -1150,6 +1150,9 @@
           return tropicalToSidereal(ascTropical, jd);
         };
         const getLagnamAngle = (date, place) => getAscendantLongitude(date, place);
+        const LAGNA_VISUAL_ANGLE = 45;
+        const toVisualAngle = (eclipticLon, lagnamLon) =>
+          norm(eclipticLon - lagnamLon + LAGNA_VISUAL_ANGLE);
         const polar = (a, r, c) => { const rad = ((a + 180) * Math.PI) / 180; return { x: c + r * Math.cos(rad), y: c + r * Math.sin(rad) }; };
         const sector = (c, ir, or, st, en) => {
           const sO = polar(st, or, c), eO = polar(en, or, c);
@@ -1439,9 +1442,13 @@
           const fontSize = PLANET_MIN_FONT;
           return { fontSize, lines: wrapSectorText(text, maxWidth, fontSize) };
         };
-        const layoutSectorPlanetLabel = (planets, sectorIndex, c) => {
+        const layoutSectorPlanetLabel = (planets, sectorIndex, c, lagnamLon) => {
           if (!planets.length) return null;
-          const midAngle = sectorIndex * SECTOR_DEG + SECTOR_DEG / 2;
+          const eclipticMid = sectorIndex * SECTOR_DEG + SECTOR_DEG / 2;
+          const midAngle =
+            lagnamLon === undefined
+              ? eclipticMid
+              : toVisualAngle(eclipticMid, lagnamLon);
           const pos = polar(midAngle, PLANET_LABEL_RADIUS, c);
           const text = formatSectorPlanetLabel(planets);
           const { fontSize, lines } = fitSectorLabelLayout(text, PLANET_LABEL_RADIUS);
@@ -1514,19 +1521,21 @@
             planets: planets.sort((a, b) => a.longitude - b.longitude),
           }));
         };
-        const renderSectorClipDefs = (c, inner, outer) => {
+        const renderSectorClipDefs = (c, inner, outer, lagnamLon) => {
           let svg = "<defs>";
           for (let i = 0; i < SEGMENTS; i++) {
-            const a = i * DEG;
-            svg += `<clipPath id="sector-clip-${i}"><path d="${sectorInset(c, inner, outer, a, a + DEG)}"/></clipPath>`;
+            const eclipticA = i * DEG;
+            const visualA = toVisualAngle(eclipticA, lagnamLon);
+            const visualEnd = toVisualAngle(eclipticA + DEG, lagnamLon);
+            svg += `<clipPath id="sector-clip-${i}"><path d="${sectorInset(c, inner, outer, visualA, visualEnd)}"/></clipPath>`;
           }
           svg += "</defs>";
           return svg;
         };
-        const renderSectorPlanetLabels = (positions, c, inner, outer, sectorFillColors) => {
+        const renderSectorPlanetLabels = (positions, c, inner, outer, sectorFillColors, lagnamLon) => {
           let svg = "";
           for (const { sectorIndex, planets } of groupPlanetsBySector(positions)) {
-            const layout = layoutSectorPlanetLabel(planets, sectorIndex, c);
+            const layout = layoutSectorPlanetLabel(planets, sectorIndex, c, lagnamLon);
             if (!layout) continue;
             const sectorFill =
               sectorIndex % 2 === 0
@@ -2339,25 +2348,28 @@
 
           let svg = "";
           svg += `<circle cx="${c}" cy="${c}" r="${outer}" fill="none" stroke="${chartAccents.ring}" stroke-width="2.5"/>`;
-          const z0 = polar(0, outer, c);
+          const lagnamAngle = getLagnamAngle(date, place);
+          const lagnamVisual = LAGNA_VISUAL_ANGLE;
+          const z0 = polar(toVisualAngle(0, lagnamAngle), outer, c);
           svg += `<line x1="${c}" y1="${c}" x2="${z0.x}" y2="${z0.y}" stroke="${chartAccents.ring}" stroke-width="2" opacity="0.85"/>`;
           for (let i = 0; i < SEGMENTS; i++) {
-            const a = i * DEG;
-            const o = polar(a, outer, c);
+            const eclipticA = i * DEG;
+            const visualA = toVisualAngle(eclipticA, lagnamAngle);
+            const visualEnd = toVisualAngle(eclipticA + DEG, lagnamAngle);
+            const o = polar(visualA, outer, c);
             const sectorFill = i % 2 ? sectorFillColors[i].fill : sectorFillColors[i].fillAlt;
-            svg += `<path d="${sector(c, inner, outer, a, a + DEG)}" fill="${sectorFill}"/>`;
+            svg += `<path d="${sector(c, inner, outer, visualA, visualEnd)}" fill="${sectorFill}"/>`;
             svg += `<line x1="${c}" y1="${c}" x2="${o.x}" y2="${o.y}" stroke="${chartAccents.spoke}" stroke-opacity="0.5" stroke-width="1"/>`;
             const lblOffset = getBoundaryLabelOffset(i);
-            const degLbl = polar(a, outer + lblOffset, c);
-            const degRot = labelRadialInwardRotation(a);
-            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(a)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatStartTime(i)}</tspan></text>`;
+            const degLbl = polar(visualA, outer + lblOffset, c);
+            const degRot = labelRadialInwardRotation(visualA);
+            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(eclipticA)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatStartTime(i)}</tspan></text>`;
           }
-          svg += renderSectorClipDefs(c, inner, outer);
-          svg += renderSectorPlanetLabels(positions, c, inner, outer, sectorFillColors);
-          const lagnamAngle = getLagnamAngle(date, place);
-          const lagnamOuter = polar(lagnamAngle, outer, c);
-          const lagnamLbl = polar(lagnamAngle, LAGNAM_LABEL_RADIUS, c);
-          const lagnamRot = labelRadialRotation(lagnamAngle);
+          svg += renderSectorClipDefs(c, inner, outer, lagnamAngle);
+          svg += renderSectorPlanetLabels(positions, c, inner, outer, sectorFillColors, lagnamAngle);
+          const lagnamOuter = polar(lagnamVisual, outer, c);
+          const lagnamLbl = polar(lagnamVisual, LAGNAM_LABEL_RADIUS, c);
+          const lagnamRot = labelRadialRotation(lagnamVisual);
           const lagnamTextColors = getSectorTextColors(getSectorIndex(lagnamAngle), sectorFillColors);
           svg += `<line x1="${c}" y1="${c}" x2="${lagnamOuter.x}" y2="${lagnamOuter.y}" class="lagnam-spoke"/>`;
           svg += `<g transform="rotate(${lagnamRot}, ${lagnamLbl.x}, ${lagnamLbl.y})">`;
