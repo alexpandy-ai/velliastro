@@ -337,11 +337,21 @@
       .panel, .table { background: var(--card); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; box-shadow: 0 1px 3px rgba(26, 26, 46, 0.06); }
       .panel { background: linear-gradient(145deg, #faf8ff 0%, #ffffff 55%, #fff8f0 100%); }
       svg { width: 100%; max-width: 560px; display: block; margin: 0 auto; }
-      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-      th, td { padding: 0.6rem 0.35rem; text-align: left; border-bottom: 1px solid var(--border); }
-      th { color: var(--muted); font-size: 0.7rem; vertical-align: bottom; }
-      th .bilingual { font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
-      td:first-child { font-family: "Noto Sans Tamil", sans-serif; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; }
+      .table table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+      .table th,
+      .table td {
+        padding: 0.55rem 0.5rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+      .table th { color: var(--muted); font-size: 0.7rem; vertical-align: bottom; }
+      .table th .bilingual { font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+      .table td:first-child { font-family: "Noto Sans Tamil", sans-serif; font-weight: 600; }
+      .table-cell-planet {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
       .table-symbol { display: inline-block; width: 1.25em; font-size: 1.05em; line-height: 1; text-align: center; font-family: serif; flex-shrink: 0; }
       .table-name { display: inline-flex; flex-direction: column; line-height: 1.25; }
       .table-name-en { font-size: 0.68rem; font-weight: 400; color: var(--muted); font-family: "DM Sans", sans-serif; }
@@ -647,7 +657,7 @@
       }
       .ref-positions-table th,
       .ref-positions-table td {
-        padding: 0.45rem 0.35rem;
+        padding: 0.45rem 0.5rem;
         text-align: center;
         border-bottom: 1px solid var(--border);
         white-space: nowrap;
@@ -2174,8 +2184,10 @@
         const donePositionsBtn = document.getElementById("donePositionsBtn");
         const refreshPositionsBtn = document.getElementById("refreshPositionsBtn");
 
+        const formatPlanetDegree = (longitude) => `${longitude.toFixed(2)}°`;
+
         const renderPlanetCell = (p) =>
-          `<span class="table-symbol" style="color:${p.color}">${p.symbol}</span><span class="table-name"><span>${p.tamil}</span><span class="table-name-en">${p.english}</span></span>`;
+          `<span class="table-cell-planet"><span class="table-symbol" style="color:${p.color}">${p.symbol}</span><span class="table-name"><span>${p.tamil}</span><span class="table-name-en">${p.english}</span></span></span>`;
         const renderRasiCell = (p) =>
           `<span class="table-name"><span>${RASI_TAMIL[p.sign] || p.sign}</span><span class="table-name-en">${p.sign}</span></span>`;
 
@@ -2188,8 +2200,8 @@
                 ? `<input type="text" class="table-input" data-id="${p.id}" data-field="formatted" value="${escapeAttr(p.formatted)}" aria-label="${escapeAttr(p.english)} position" />`
                 : p.formatted;
               const degreeCell = isEditingPositions
-                ? `<input type="text" class="table-input" data-id="${p.id}" data-field="longitude" value="${p.longitude.toFixed(1)}" inputmode="decimal" aria-label="${escapeAttr(p.english)} degree" />`
-                : `${p.longitude.toFixed(1)}°`;
+                ? `<input type="text" class="table-input" data-id="${p.id}" data-field="longitude" value="${p.longitude.toFixed(2)}" inputmode="decimal" aria-label="${escapeAttr(p.english)} degree" />`
+                : formatPlanetDegree(p.longitude);
               return `<tr><td>${renderPlanetCell(p)}</td><td data-field="rasi">${renderRasiCell(p)}</td><td>${positionCell}</td><td>${degreeCell}</td></tr>`;
             })
             .join("");
@@ -2213,7 +2225,7 @@
                   formattedInput.value = updated.formatted;
                 }
                 if (longitudeInput && longitudeInput !== input) {
-                  longitudeInput.value = updated.longitude.toFixed(1);
+                  longitudeInput.value = updated.longitude.toFixed(2);
                 }
                 const rasiCell = row.querySelector('[data-field="rasi"]');
                 if (rasiCell) rasiCell.innerHTML = renderRasiCell(updated);
