@@ -1374,18 +1374,6 @@
             timeZone: "UTC",
           });
         };
-        /** Day-start time at Lagnam (0° Tamil day): sunrise when available, else default 06:00. */
-        const formatRimSectorTime = (sectorIndex, date, place) => {
-          if (sectorIndex !== 0) return formatStartTime(sectorIndex);
-          const parts = placeLocalParts(date, place);
-          const dateValue = `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
-          const sunrise = getSunriseTime(
-            chartDateTimeFromLocalInputs(dateValue, "06:00", place),
-            place,
-          );
-          if (sunrise) return toTimeInputValueForPlace(sunrise, place);
-          return formatStartTime(0);
-        };
         const updateSunriseDisplay = (dateValue, place = placeState) => {
           const sunrise = getSunriseTime(
             chartDateTimeFromLocalInputs(dateValue, "06:00", place),
@@ -2354,14 +2342,10 @@
             const sectorFill = i % 2 ? sectorFillColors[i].fill : sectorFillColors[i].fillAlt;
             svg += `<path d="${sector(c, inner, outer, a, a + DEG)}" fill="${sectorFill}"/>`;
             svg += `<line x1="${c}" y1="${c}" x2="${o.x}" y2="${o.y}" stroke="${chartAccents.spoke}" stroke-opacity="0.5" stroke-width="1"/>`;
-            if (i === 0) continue;
-            const isLagnamRim = a === lagnamVisual;
             const lblOffset = getBoundaryLabelOffset(i);
             const degLbl = polar(a, outer + lblOffset, c);
             const degRot = labelRadialInwardRotation(a);
-            const degreeText = isLagnamRim ? formatDegreeLabel(0) : formatDegreeLabel(a);
-            const timeText = isLagnamRim ? formatRimSectorTime(0, date, place) : formatStartTime(i);
-            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${degreeText}</tspan><tspan x="${degLbl.x}" dy="1.1em">${timeText}</tspan></text>`;
+            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(a)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatStartTime(i)}</tspan></text>`;
           }
           svg += renderPlanetLabels(positions, c, sectorFillColors, lagnamAngle);
           const lagnamOuter = polar(lagnamVisual, outer, c);
