@@ -31,8 +31,10 @@
       .header { margin-bottom: 1.5rem; }
       .header-brand {
         text-align: center;
-        margin-bottom: 1.25rem;
+        margin-bottom: 0;
         padding: 0 0.25rem;
+        min-width: 0;
+        justify-self: center;
       }
       .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; font-size: 0.8rem; }
       h1 {
@@ -457,9 +459,11 @@
       }
       .lang-tabs {
         display: flex;
-        justify-content: center;
+        justify-content: flex-end;
         gap: 0.5rem;
-        margin: 0 0 1.25rem;
+        margin: 0;
+        flex-shrink: 0;
+        justify-self: end;
       }
       .lang-tab {
         padding: 0.4rem 1.1rem;
@@ -497,12 +501,33 @@
       html.lang-en .location-label .bilingual-en { font-size: inherit; }
       html.lang-en .coords-display .bilingual-en { font-size: inherit; }
       .header-top-bar {
-        display: flex;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
         align-items: center;
-        justify-content: flex-start;
-        margin-bottom: 0.75rem;
+        gap: 0.5rem 0.75rem;
+        margin-bottom: 1.25rem;
       }
-      .menu-wrap { position: relative; }
+      .menu-wrap {
+        position: relative;
+        flex-shrink: 0;
+        justify-self: start;
+      }
+      @media (max-width: 520px) {
+        .header-top-bar {
+          grid-template-columns: auto 1fr;
+          row-gap: 0.5rem;
+        }
+        .header-brand {
+          grid-column: 1 / -1;
+          grid-row: 1;
+        }
+        .menu-wrap { grid-row: 2; }
+        .lang-tabs {
+          grid-row: 2;
+          grid-column: 2;
+        }
+        .brand-title { font-size: clamp(1.5rem, 6vw, 2rem); }
+      }
       .menu-btn {
         font-family: inherit;
         font-size: 1.35rem;
@@ -638,35 +663,34 @@
       html.view-positions .layout,
       html.view-positions .ref-positions-close { display: none; }
       html.view-positions .header { margin-bottom: 0.75rem; }
-      html.view-positions .header-brand { margin-bottom: 0.5rem; }
+      html.view-positions .header-top-bar { margin-bottom: 0.5rem; }
       html.view-positions .brand-title { font-size: clamp(1.65rem, 5.5vw, 2.15rem); }
-      html.view-positions .lang-tabs { margin: 0 auto 0.5rem; }
       html.view-positions .ref-positions-panel { margin-top: 0; }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <div class="header-top-bar">
-        <div class="menu-wrap">
-          <button type="button" id="menuBtn" class="menu-btn" aria-label="Menu" aria-expanded="false" aria-haspopup="true" title="Menu">☰</button>
-          <div id="listMenu" class="list-menu" hidden>
-            <button type="button" id="menuHomeBtn" class="list-menu-item">
-              <span class="bilingual"><span>முகப்பு</span><span class="bilingual-en">Home</span></span>
-            </button>
-            <button type="button" id="menuPositionsBtn" class="list-menu-item">
-              <span class="bilingual"><span>நிலைகள்</span><span class="bilingual-en">Positions</span></span>
-            </button>
-          </div>
-        </div>
-      </div>
       <header class="header">
-        <div class="header-brand">
-          <h1 class="brand-title"><span class="brand-velli">velli</span><span class="brand-astro">Astro</span></h1>
+        <div class="header-top-bar">
+          <div class="menu-wrap">
+            <button type="button" id="menuBtn" class="menu-btn" aria-label="Menu" aria-expanded="false" aria-haspopup="true" title="Menu">☰</button>
+            <div id="listMenu" class="list-menu" hidden>
+              <button type="button" id="menuHomeBtn" class="list-menu-item">
+                <span class="bilingual"><span>முகப்பு</span><span class="bilingual-en">Home</span></span>
+              </button>
+              <button type="button" id="menuPositionsBtn" class="list-menu-item">
+                <span class="bilingual"><span>நிலைகள்</span><span class="bilingual-en">Positions</span></span>
+              </button>
+            </div>
+          </div>
+          <div class="header-brand">
+            <h1 class="brand-title"><span class="brand-velli">velli</span><span class="brand-astro">Astro</span></h1>
+          </div>
+          <nav class="lang-tabs" role="tablist" aria-label="Language">
+            <button type="button" class="lang-tab is-active" id="langTabTa" role="tab" aria-selected="true">தமிழ்</button>
+            <button type="button" class="lang-tab" id="langTabEn" role="tab" aria-selected="false">English</button>
+          </nav>
         </div>
-        <nav class="lang-tabs" role="tablist" aria-label="Language">
-          <button type="button" class="lang-tab is-active" id="langTabTa" role="tab" aria-selected="true">தமிழ்</button>
-          <button type="button" class="lang-tab" id="langTabEn" role="tab" aria-selected="false">English</button>
-        </nav>
         <form class="date-form" id="dateForm">
           <div class="form-card">
             <div class="form-group form-group--datetime">
