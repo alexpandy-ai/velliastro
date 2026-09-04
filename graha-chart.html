@@ -335,25 +335,50 @@
       }
       .layout { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; }
       .panel, .table { background: var(--card); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; box-shadow: 0 1px 3px rgba(26, 26, 46, 0.06); }
+      .table { min-width: 0; overflow: hidden; }
       .panel { background: linear-gradient(145deg, #faf8ff 0%, #ffffff 55%, #fff8f0 100%); }
       svg { width: 100%; max-width: 560px; display: block; margin: 0 auto; }
-      .table table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+      .table-data-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-inline: 0.75rem;
+      }
+      .table table {
+        width: 100%;
+        max-width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        table-layout: fixed;
+      }
       .table th,
       .table td {
-        padding: 0.55rem 0.4rem;
+        padding: 0.55rem 0.35rem;
         text-align: left;
         border-bottom: 1px solid var(--border);
+        overflow-wrap: anywhere;
       }
       .table th:first-child,
       .table td:first-child {
-        padding-left: 1rem;
+        padding-left: 0.5rem;
+        width: 34%;
       }
+      .table th:nth-child(2),
+      .table td:nth-child(2) { width: 22%; }
+      .table th:nth-child(3),
+      .table td:nth-child(3) { width: 22%; }
       .table th:last-child,
       .table td:last-child {
-        padding-right: 1rem;
+        padding-right: 0.5rem;
+        width: 22%;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
       }
       .table th { color: var(--muted); font-size: 0.7rem; vertical-align: bottom; }
       .table th .bilingual { font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+      html.lang-ta .table th .bilingual {
+        text-transform: none;
+        letter-spacing: 0.02em;
+      }
       .table td:first-child { font-family: "Noto Sans Tamil", sans-serif; font-weight: 600; }
       .table-cell-planet {
         display: flex;
@@ -825,12 +850,14 @@
           </div>
           <div id="calcInputsLabel" class="label-box" hidden></div>
           <div id="positionConsistency" class="position-consistency" role="status" aria-live="polite" hidden></div>
-          <table><thead><tr>
-            <th><span class="bilingual"><span>கிரகம்</span><span class="bilingual-en">Planet</span></span></th>
-            <th><span class="bilingual"><span>ராசி</span><span class="bilingual-en">Rasi</span></span></th>
-            <th><span class="bilingual"><span>நிலை</span><span class="bilingual-en">Position</span></span></th>
-            <th><span class="bilingual"><span>பாகை</span><span class="bilingual-en">Degree</span></span></th>
-          </tr></thead><tbody id="rows"></tbody></table>
+          <div class="table-data-wrap">
+            <table><thead><tr>
+              <th><span class="bilingual"><span>கிரகம்</span><span class="bilingual-en">Planet</span></span></th>
+              <th><span class="bilingual"><span>ராசி</span><span class="bilingual-en">Rasi</span></span></th>
+              <th><span class="bilingual"><span>நிலை</span><span class="bilingual-en">Position</span></span></th>
+              <th><span class="bilingual"><span>பாகை</span><span class="bilingual-en">Degree</span></span></th>
+            </tr></thead><tbody id="rows"></tbody></table>
+          </div>
         </aside>
       </div>
     </div>
