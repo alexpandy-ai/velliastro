@@ -195,19 +195,6 @@ export function finalizeGrahaPositions(
   );
 }
 
-/** Fixed visual angle where the ascendant (Lagnam) spoke is drawn on the degree wheel. */
-export const LAGNA_VISUAL_ANGLE = 45;
-
-/** Map sidereal longitude to a fixed-wheel chart angle with Lagnam pinned at 45°. */
-export function longitudeToVisualAngle(
-  eclipticLongitude: number,
-  lagnamLongitude: number,
-): number {
-  return normalizeDegrees(
-    eclipticLongitude - lagnamLongitude + LAGNA_VISUAL_ANGLE,
-  );
-}
-
 /** 0° on the left; degrees increase counter-clockwise. */
 export function polarToChart(
   longitude: number,
@@ -402,13 +389,8 @@ function fitSectorLabelLayout(
 export function layoutPlanetLabelAtLongitude(
   position: GrahaPosition,
   center: number,
-  lagnamLongitude?: number,
 ): SectorPlanetLabelLayout & { sectorIndex: number } {
-  const eclipticAngle = normalizeDegrees(position.longitude);
-  const angle =
-    lagnamLongitude === undefined
-      ? eclipticAngle
-      : longitudeToVisualAngle(eclipticAngle, lagnamLongitude);
+  const angle = normalizeDegrees(position.longitude);
   const { x, y } = polarToChart(angle, PLANET_LABEL_RADIUS, center);
   const text = formatPlanetLabelPart(position);
   const { fontSize, lines } = fitSectorLabelLayout(text, PLANET_LABEL_RADIUS);
@@ -453,15 +435,10 @@ export function layoutSectorPlanetLabel(
   _innerRadius?: number,
   _outerRadius?: number,
   lang: ChartLang = "ta",
-  lagnamLongitude?: number,
 ): SectorPlanetLabelLayout | null {
   if (planets.length === 0) return null;
 
-  const eclipticMid = getSectorMidAngle(sectorIndex);
-  const midAngle =
-    lagnamLongitude === undefined
-      ? eclipticMid
-      : longitudeToVisualAngle(eclipticMid, lagnamLongitude);
+  const midAngle = getSectorMidAngle(sectorIndex);
   const { x, y } = polarToChart(midAngle, PLANET_LABEL_RADIUS, center);
   const text = formatSectorPlanetLabel(planets, lang);
   const { fontSize, lines } = fitSectorLabelLayout(text, PLANET_LABEL_RADIUS);
@@ -637,11 +614,6 @@ export function getAscendantLongitude(
 /** Sidereal ascendant longitude (ecliptic degrees, not visual chart angle). */
 export function getLagnamAngle(date: Date, place: ChartPlace): number {
   return getAscendantLongitude(date, place);
-}
-
-/** Visual chart angle for the Lagnam spoke (always LAGNA_VISUAL_ANGLE). */
-export function getLagnamVisualAngle(): number {
-  return LAGNA_VISUAL_ANGLE;
 }
 
 /** @deprecated Use getLagnamAngle with place for location-aware ascendant. */

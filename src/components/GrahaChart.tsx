@@ -9,7 +9,6 @@ import {
   formatLagnamDegree,
   getBoundaryLabelRadiusOffset,
   getLagnamAngle,
-  getLagnamVisualAngle,
   getSectorIndex,
   labelRadialInwardRotation,
   labelRadialRotation,
@@ -144,11 +143,10 @@ export function GrahaChart() {
   const tablePositions = isEditingPositions ? draftPositions : chartPositions;
 
   const lagnamAngle = getLagnamAngle(selectedDate, chartPlace);
-  const lagnamVisualAngle = getLagnamVisualAngle();
   const lagnamDegree = formatLagnamDegree(lagnamAngle);
-  const lagnamOuter = polarToChart(lagnamVisualAngle, outerRadius, center);
-  const lagnamLabelPos = polarToChart(lagnamVisualAngle, LAGNAM_LABEL_RADIUS, center);
-  const lagnamLabelRotation = labelRadialRotation(lagnamVisualAngle);
+  const lagnamOuter = polarToChart(lagnamAngle, outerRadius, center);
+  const lagnamLabelPos = polarToChart(lagnamAngle, LAGNAM_LABEL_RADIUS, center);
+  const lagnamLabelRotation = labelRadialRotation(lagnamAngle);
   const lagnamTextColors = getSectorTextColors(getSectorIndex(lagnamAngle));
 
   const boundaries = Array.from(
@@ -537,11 +535,7 @@ export function GrahaChart() {
             {[...chartPositions]
               .sort((a, b) => a.longitude - b.longitude)
               .map((position) => {
-                const layout = layoutPlanetLabelAtLongitude(
-                  position,
-                  center,
-                  lagnamAngle,
-                );
+                const layout = layoutPlanetLabelAtLongitude(position, center);
                 const textColors = getSectorTextColors(layout.sectorIndex);
                 const rotation = labelRadialRotation(layout.labelAngle);
                 const lineHeight = layout.fontSize * SECTOR_LABEL_LINE_HEIGHT;

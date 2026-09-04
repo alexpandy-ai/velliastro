@@ -1150,10 +1150,6 @@
           return tropicalToSidereal(ascTropical, jd);
         };
         const getLagnamAngle = (date, place) => getAscendantLongitude(date, place);
-        const LAGNA_VISUAL_ANGLE = 45;
-        /** Lagnam-relative angle on the fixed degree wheel (rim stays at 0°, 22.5°, …). */
-        const toVisualAngle = (eclipticLon, lagnamLon) =>
-          norm(eclipticLon - lagnamLon + LAGNA_VISUAL_ANGLE);
         const polar = (a, r, c) => { const rad = ((a + 180) * Math.PI) / 180; return { x: c + r * Math.cos(rad), y: c + r * Math.sin(rad) }; };
         const sector = (c, ir, or, st, en) => {
           const sO = polar(st, or, c), eO = polar(en, or, c);
@@ -1443,8 +1439,8 @@
           const fontSize = PLANET_MIN_FONT;
           return { fontSize, lines: wrapSectorText(text, maxWidth, fontSize) };
         };
-        const layoutPlanetLabelAtLongitude = (planet, c, lagnamLon) => {
-          const visualA = toVisualAngle(planet.longitude, lagnamLon);
+        const layoutPlanetLabelAtLongitude = (planet, c) => {
+          const visualA = norm(planet.longitude);
           const pos = polar(visualA, PLANET_LABEL_RADIUS, c);
           const text = formatPlanetPart(planet);
           const { fontSize, lines } = fitSectorLabelLayout(text, PLANET_LABEL_RADIUS);
@@ -1518,10 +1514,10 @@
             planets: planets.sort((a, b) => a.longitude - b.longitude),
           }));
         };
-        const renderPlanetLabels = (positions, c, sectorFillColors, lagnamLon) => {
+        const renderPlanetLabels = (positions, c, sectorFillColors) => {
           let svg = "";
           for (const planet of [...positions].sort((a, b) => a.longitude - b.longitude)) {
-            const layout = layoutPlanetLabelAtLongitude(planet, c, lagnamLon);
+            const layout = layoutPlanetLabelAtLongitude(planet, c);
             const sectorFill =
               layout.sectorIndex % 2 === 0
                 ? sectorFillColors[layout.sectorIndex].fillAlt
@@ -2333,7 +2329,6 @@
           let svg = "";
           svg += `<circle cx="${c}" cy="${c}" r="${outer}" fill="none" stroke="${chartAccents.ring}" stroke-width="2.5"/>`;
           const lagnamAngle = getLagnamAngle(date, place);
-          const lagnamVisual = LAGNA_VISUAL_ANGLE;
           const z0 = polar(0, outer, c);
           svg += `<line x1="${c}" y1="${c}" x2="${z0.x}" y2="${z0.y}" stroke="${chartAccents.ring}" stroke-width="2" opacity="0.85"/>`;
           for (let i = 0; i < SEGMENTS; i++) {
@@ -2347,10 +2342,10 @@
             const degRot = labelRadialInwardRotation(a);
             svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(a)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatStartTime(i)}</tspan></text>`;
           }
-          svg += renderPlanetLabels(positions, c, sectorFillColors, lagnamAngle);
-          const lagnamOuter = polar(lagnamVisual, outer, c);
-          const lagnamLbl = polar(lagnamVisual, LAGNAM_LABEL_RADIUS, c);
-          const lagnamRot = labelRadialRotation(lagnamVisual);
+          svg += renderPlanetLabels(positions, c, sectorFillColors);
+          const lagnamOuter = polar(lagnamAngle, outer, c);
+          const lagnamLbl = polar(lagnamAngle, LAGNAM_LABEL_RADIUS, c);
+          const lagnamRot = labelRadialRotation(lagnamAngle);
           const lagnamTextColors = getSectorTextColors(getSectorIndex(lagnamAngle), sectorFillColors);
           svg += `<line x1="${c}" y1="${c}" x2="${lagnamOuter.x}" y2="${lagnamOuter.y}" class="lagnam-spoke"/>`;
           svg += `<g transform="rotate(${lagnamRot}, ${lagnamLbl.x}, ${lagnamLbl.y})">`;
