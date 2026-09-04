@@ -489,7 +489,7 @@
       .lagnam-label {
         fill: #b45309;
         font-family: "Noto Sans Tamil", sans-serif;
-        font-size: 8px;
+        font-size: 9px;
         font-weight: 700;
         paint-order: stroke fill;
         stroke: rgba(255, 255, 255, 0.92);
@@ -1299,8 +1299,8 @@
         const SECTOR_DEG = 22.5;
         const PLANET_LABEL_RADIUS = 139;
         const LAGNAM_LABEL_RADIUS = 124;
-        const PLANET_MIN_FONT = 7;
-        const PLANET_MAX_FONT = 8;
+        const PLANET_MIN_FONT = 8;
+        const PLANET_MAX_FONT = 9;
         const SECTOR_LABEL_RADIAL_MARGIN = 10;
         const SECTOR_ANGULAR_MARGIN = 1.5;
         const SECTOR_LABEL_LINE_HEIGHT = 1.15;
@@ -2266,7 +2266,7 @@
             const lblOffset = getBoundaryLabelOffset(i);
             const degLbl = polar(a, outer + lblOffset, c);
             const degRot = labelRadialInwardRotation(a);
-            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="8" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(a)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatStartTime(i)}</tspan></text>`;
+            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(a)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatStartTime(i)}</tspan></text>`;
           }
           svg += renderSectorClipDefs(c, inner, outer);
           svg += renderSectorPlanetLabels(positions, c, inner, outer, sectorFillColors);
