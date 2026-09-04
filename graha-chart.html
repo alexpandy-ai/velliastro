@@ -175,13 +175,22 @@
       }
       .submit-btn:hover { opacity: 0.9; }
       .submit-btn:active { opacity: 0.8; }
+      .coords-sunrise-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 0.75rem 1rem;
+        width: 100%;
+      }
       .sunrise-display {
         display: flex;
         flex-wrap: wrap;
         align-items: baseline;
-        justify-content: center;
+        justify-content: flex-end;
         gap: 0.45rem;
-        width: 100%;
+        flex: 0 1 auto;
+        min-width: 0;
         font-size: 0.88rem;
         color: var(--muted);
         padding: 0.15rem 0;
@@ -275,9 +284,20 @@
         flex-direction: column;
         align-items: stretch;
         gap: 0.5rem;
+        flex: 1 1 14rem;
+        min-width: 0;
         font-size: 0.78rem;
         color: var(--muted);
         line-height: 1.2;
+      }
+      @media (max-width: 480px) {
+        .coords-sunrise-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .sunrise-display {
+          justify-content: flex-start;
+        }
       }
       .coords-display .bilingual { justify-content: flex-start; }
       .coords-display .bilingual-en { font-size: 0.6rem; }
@@ -703,15 +723,6 @@
                 <input type="time" id="timeInput" required />
               </div>
             </div>
-            <div class="form-group form-group--sunrise">
-              <span class="sunrise-display" id="sunriseDisplay" aria-live="polite">
-                <span class="bilingual">
-                  <span>சூரிய உதயம்</span>
-                  <span class="bilingual-en">Sunrise</span>
-                </span>
-                <span class="sunrise-value" id="sunriseValue"></span>
-              </span>
-            </div>
             <div class="form-group form-group--place">
               <label for="placeInput" class="location-label">
                 <span class="bilingual">
@@ -729,15 +740,24 @@
               </div>
             </div>
             <div class="form-group form-group--coords">
-              <div class="coords-display" id="coordsDisplay">
-                <span class="bilingual">
-                  <span>ஆயத்தொலைவு</span>
-                  <span class="bilingual-en">Coordinates</span>
-                </span>
-                <span class="coords-fields">
-                  <input type="text" class="coords-input" id="latInput" inputmode="decimal" aria-label="Latitude" placeholder="Lat" maxlength="12" />
-                  <span class="coords-sep">,</span>
-                  <input type="text" class="coords-input" id="lonInput" inputmode="decimal" aria-label="Longitude" placeholder="Lon" maxlength="12" />
+              <div class="coords-sunrise-row">
+                <div class="coords-display" id="coordsDisplay">
+                  <span class="bilingual">
+                    <span>ஆயத்தொலைவு</span>
+                    <span class="bilingual-en">Coordinates</span>
+                  </span>
+                  <span class="coords-fields">
+                    <input type="text" class="coords-input" id="latInput" inputmode="decimal" aria-label="Latitude" placeholder="Lat" maxlength="12" />
+                    <span class="coords-sep">,</span>
+                    <input type="text" class="coords-input" id="lonInput" inputmode="decimal" aria-label="Longitude" placeholder="Lon" maxlength="12" />
+                  </span>
+                </div>
+                <span class="sunrise-display" id="sunriseDisplay" aria-live="polite">
+                  <span class="bilingual">
+                    <span>சூரிய உதயம்</span>
+                    <span class="bilingual-en">Sunrise</span>
+                  </span>
+                  <span class="sunrise-value" id="sunriseValue"></span>
                 </span>
               </div>
             </div>
