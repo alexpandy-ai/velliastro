@@ -4,11 +4,16 @@ import {
   geocodePlace,
   parseCoordinateInputs,
   resolveCurrentLocationPlace,
+  searchPlaces,
   toCoordinateInputValues,
   type PlaceCoords,
+  type PlaceSuggestion,
 } from "../utils/geocode";
 
-export function usePlaceGeocode(initialPlace: PlaceCoords = DEFAULT_PLACE) {
+export function usePlaceGeocode(
+  initialPlace: PlaceCoords = DEFAULT_PLACE,
+  onPlaceCommit?: (place: PlaceCoords) => void,
+) {
   const [placeInput, setPlaceInput] = useState(initialPlace.placeName);
   const [place, setPlace] = useState<PlaceCoords>(initialPlace);
   const [latitudeInput, setLatitudeInput] = useState(() =>
@@ -17,9 +22,14 @@ export function usePlaceGeocode(initialPlace: PlaceCoords = DEFAULT_PLACE) {
   const [longitudeInput, setLongitudeInput] = useState(() =>
     toCoordinateInputValues(initialPlace.latitude, initialPlace.longitude).longitude,
   );
+  const [placeSuggestions, setPlaceSuggestions] = useState<PlaceSuggestion[]>([]);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchRequestRef = useRef(0);
+  const skipNextSearchRef = useRef(false);
 
   const syncCoordinateInputs = useCallback((coords: PlaceCoords) => {
     const values = toCoordinateInputValues(coords.latitude, coords.longitude);
@@ -27,50 +37,144 @@ export function usePlaceGeocode(initialPlace: PlaceCoords = DEFAULT_PLACE) {
     setLongitudeInput(values.longitude);
   }, []);
 
-  const lookupPlaceCoordinates = useCallback(async (query: string) => {
-    const trimmed = query.trim();
-    if (!trimmed) return;
-
-    setIsGeocoding(true);
-    try {
-      const resolved = await geocodePlace(trimmed);
-      if (resolved) {
-        syncCoordinateInputs(resolved);
-      }
-    } finally {
-      setIsGeocoding(false);
-    }
-  }, [syncCoordinateInputs]);
-
-  const scheduleGeocode = useCallback(
-    (query: string) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        void lookupPlaceCoordinates(query);
-      }, 500);
+  const applyResolvedPlace = useCallback(
+    (resolved: PlaceCoords) => {
+      setPlace(resolved);
+      setPlaceInput(resolved.placeName);
+      syncCoordinateInputs(resolved);
     },
-    [lookupPlaceCoordinates],
+    [syncCoordinateInputs],
   );
+
+  const clearPlaceSuggestions = useCallback(() => {
+    setPlaceSuggestions([]);
+    setActiveSuggestionIndex(-1);
+  }, []);
+
+  const selectPlaceSuggestion = useCallback(
+    (suggestion: PlaceSuggestion) => {
+      skipNextSearchRef.current = true;
+      applyResolvedPlace(suggestion);
+      clearPlaceSuggestions();
+      onPlaceCommit?.(suggestion);
+    },
+    [applyResolvedPlace, clearPlaceSuggestions, onPlaceCommit],
+  );
+
+  const lookupPlaceCoordinates = useCallback(
+    async (query: string) => {
+      const trimmed = query.trim();
+      if (!trimmed) return null;
+
+      setIsGeocoding(true);
+      try {
+        const resolved = await geocodePlace(trimmed);
+        if (resolved) {
+          applyResolvedPlace(resolved);
+          return resolved;
+        }
+        return null;
+      } finally {
+        setIsGeocoding(false);
+      }
+    },
+    [applyResolvedPlace],
+  );
+
+  const schedulePlaceSearch = useCallback((query: string) => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      setPlaceSuggestions(trimmed ? [] : []);
+      setActiveSuggestionIndex(-1);
+      setIsSearchingPlaces(false);
+      return;
+    }
+
+    searchDebounceRef.current = setTimeout(() => {
+      const requestId = ++searchRequestRef.current;
+      setIsSearchingPlaces(true);
+      void searchPlaces(trimmed)
+        .then((suggestions) => {
+          if (requestId !== searchRequestRef.current) return;
+          setPlaceSuggestions(suggestions);
+          setActiveSuggestionIndex(suggestions.length ? 0 : -1);
+        })
+        .finally(() => {
+          if (requestId === searchRequestRef.current) {
+            setIsSearchingPlaces(false);
+          }
+        });
+    }, 280);
+  }, []);
 
   useEffect(() => {
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     };
   }, []);
 
   const handlePlaceInputChange = (value: string) => {
     setPlaceInput(value);
-    scheduleGeocode(value);
+    if (skipNextSearchRef.current) {
+      skipNextSearchRef.current = false;
+      return;
+    }
+    schedulePlaceSearch(value);
   };
 
   const handlePlaceBlur = () => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    void lookupPlaceCoordinates(placeInput);
+    window.setTimeout(() => clearPlaceSuggestions(), 150);
   };
 
-  const handlePlaceSearch = () => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    return lookupPlaceCoordinates(placeInput);
+  const handlePlaceSearch = async () => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    if (placeSuggestions.length) {
+      selectPlaceSuggestion(placeSuggestions[Math.max(activeSuggestionIndex, 0)]);
+      return;
+    }
+    const resolved = await lookupPlaceCoordinates(placeInput);
+    if (resolved) onPlaceCommit?.(resolved);
+  };
+
+  const handlePlaceKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!placeSuggestions.length) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        void handlePlaceSearch();
+      }
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveSuggestionIndex((index) =>
+        index < placeSuggestions.length - 1 ? index + 1 : 0,
+      );
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveSuggestionIndex((index) =>
+        index > 0 ? index - 1 : placeSuggestions.length - 1,
+      );
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const selected =
+        placeSuggestions[Math.max(activeSuggestionIndex, 0)] ?? placeSuggestions[0];
+      if (selected) selectPlaceSuggestion(selected);
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      clearPlaceSuggestions();
+    }
   };
 
   const commitCoordinateInputs = useCallback(() => {
@@ -90,19 +194,21 @@ export function usePlaceGeocode(initialPlace: PlaceCoords = DEFAULT_PLACE) {
   }, [latitudeInput, longitudeInput, place, syncCoordinateInputs]);
 
   const applyPlaceFromForm = useCallback(async (): Promise<PlaceCoords> => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    clearPlaceSuggestions();
 
     let latitude = place.latitude;
     let longitude = place.longitude;
-    const trimmed = placeInput.trim();
+    let placeName = placeInput.trim() || place.placeName;
 
-    if (trimmed) {
+    if (placeInput.trim()) {
       setIsGeocoding(true);
       try {
-        const resolved = await geocodePlace(trimmed);
+        const resolved = await geocodePlace(placeInput.trim());
         if (resolved) {
           latitude = resolved.latitude;
           longitude = resolved.longitude;
+          placeName = resolved.placeName;
         }
       } finally {
         setIsGeocoding(false);
@@ -115,15 +221,21 @@ export function usePlaceGeocode(initialPlace: PlaceCoords = DEFAULT_PLACE) {
       longitude = manual.longitude;
     }
 
-    const nextPlace = {
-      placeName: trimmed || place.placeName,
-      latitude,
-      longitude,
-    };
+    const nextPlace = { placeName, latitude, longitude };
     setPlace(nextPlace);
+    setPlaceInput(placeName);
     syncCoordinateInputs(nextPlace);
+    onPlaceCommit?.(nextPlace);
     return nextPlace;
-  }, [latitudeInput, longitudeInput, place, placeInput, syncCoordinateInputs]);
+  }, [
+    clearPlaceSuggestions,
+    latitudeInput,
+    longitudeInput,
+    onPlaceCommit,
+    place,
+    placeInput,
+    syncCoordinateInputs,
+  ]);
 
   const handleLatitudeInputChange = (value: string) => {
     setLatitudeInput(value.slice(0, 12));
@@ -141,28 +253,34 @@ export function usePlaceGeocode(initialPlace: PlaceCoords = DEFAULT_PLACE) {
     setIsLocating(true);
     try {
       const resolved = await resolveCurrentLocationPlace();
-      setPlace(resolved);
-      setPlaceInput(resolved.placeName);
-      syncCoordinateInputs(resolved);
+      skipNextSearchRef.current = true;
+      applyResolvedPlace(resolved);
+      clearPlaceSuggestions();
       return resolved;
     } catch {
       return null;
     } finally {
       setIsLocating(false);
     }
-  }, [syncCoordinateInputs]);
+  }, [applyResolvedPlace, clearPlaceSuggestions]);
 
   return {
     placeInput,
     place,
     latitudeInput,
     longitudeInput,
+    placeSuggestions,
+    activeSuggestionIndex,
     isGeocoding,
+    isSearchingPlaces,
     isLocating,
     setPlaceInput,
     handlePlaceInputChange,
     handlePlaceBlur,
     handlePlaceSearch,
+    handlePlaceKeyDown,
+    selectPlaceSuggestion,
+    clearPlaceSuggestions,
     applyPlaceFromForm,
     applyCurrentLocation,
     handleLatitudeInputChange,

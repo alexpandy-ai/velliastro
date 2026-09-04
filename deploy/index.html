@@ -1,0 +1,2729 @@
+<!doctype html>
+<html lang="ta" class="lang-ta">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>velliAstro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f0f4ff;
+        --card: #ffffff;
+        --border: rgba(26, 26, 46, 0.12);
+        --text: #2d3250;
+        --muted: #6b7190;
+        --accent: #a78bfa;
+        --font-display: "Space Grotesk", system-ui, sans-serif;
+        --brand-purple: #5b21b6;
+        --brand-purple-light: #7c3aed;
+        --brand-gold: #d97706;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: "Noto Sans Tamil", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+      .wrap { max-width: 1100px; margin: 0 auto; padding: 1rem 1rem 2rem; }
+      .header { margin-bottom: 1.5rem; }
+      .header-brand {
+        text-align: center;
+        margin-bottom: 0;
+        padding: 0 0.25rem;
+        min-width: 0;
+        justify-self: center;
+      }
+      .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; font-size: 0.8rem; }
+      h1 {
+        font-size: clamp(1.5rem, 5vw, 2.2rem);
+        line-height: 1.2;
+        margin: 0;
+      }
+      .brand-title {
+        font-family: var(--font-display);
+        font-size: clamp(2rem, 7.5vw, 2.85rem);
+        font-weight: 600;
+        line-height: 1.05;
+        letter-spacing: -0.035em;
+        margin: 0;
+      }
+      .brand-velli {
+        font-weight: 700;
+        background: linear-gradient(120deg, var(--brand-purple) 0%, var(--brand-purple-light) 55%, var(--accent) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: var(--brand-purple);
+      }
+      @supports not (background-clip: text) {
+        .brand-velli {
+          background: none;
+          -webkit-text-fill-color: unset;
+          color: var(--brand-purple);
+        }
+      }
+      .brand-astro {
+        font-weight: 600;
+        color: var(--brand-gold);
+        letter-spacing: -0.02em;
+      }
+      .bilingual {
+        display: inline-flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: center;
+        gap: 0.35em;
+      }
+      .bilingual-en::before {
+        content: "·";
+        margin-right: 0.35em;
+        color: var(--muted);
+        font-weight: 400;
+      }
+      .bilingual-en {
+        font-size: 0.85em;
+        font-weight: 400;
+        color: var(--muted);
+        font-family: system-ui, sans-serif;
+        text-transform: none;
+        letter-spacing: normal;
+      }
+      h1 .bilingual-en { font-size: 0.55em; }
+      .date-form {
+        width: 100%;
+        max-width: 28rem;
+        margin: 0 auto;
+      }
+      .form-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        box-shadow: 0 1px 3px rgba(26, 26, 46, 0.05);
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      .form-group--datetime {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+      .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        min-width: 0;
+      }
+      .form-row {
+        display: contents;
+      }
+      .form-row--location {
+        display: contents;
+      }
+      .date-form label,
+      .location-label {
+        font-size: 0.8rem;
+        color: var(--muted);
+        line-height: 1.2;
+      }
+      .location-label .bilingual-en { font-size: 0.62rem; }
+      .date-form input[type="date"],
+      .date-form input[type="time"],
+      .date-form input[type="text"] {
+        font-family: inherit;
+        font-size: 0.9rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        width: 100%;
+        min-width: 0;
+        color-scheme: light;
+      }
+      .date-form input[type="date"]:focus,
+      .date-form input[type="time"]:focus,
+      .date-form input[type="text"]:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+      }
+      .submit-btn {
+        width: 100%;
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        border: none;
+        background: var(--accent);
+        color: #2d3250;
+        cursor: pointer;
+        transition: opacity 0.15s ease;
+        margin-top: 0.15rem;
+      }
+      .submit-btn:hover { opacity: 0.9; }
+      .submit-btn:active { opacity: 0.8; }
+      .coords-sunrise-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 0.75rem 1rem;
+        width: 100%;
+      }
+      .sunrise-display {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: flex-end;
+        gap: 0.45rem;
+        flex: 0 1 auto;
+        min-width: 0;
+        font-size: 0.88rem;
+        color: var(--muted);
+        padding: 0.15rem 0;
+      }
+      .sunrise-value {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--text);
+      }
+      .place-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.45rem;
+        width: 100%;
+      }
+      .place-autocomplete {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+      }
+      .place-row input[type="text"] { width: 100%; }
+      .place-suggestions {
+        position: absolute;
+        z-index: 30;
+        top: calc(100% + 0.25rem);
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 0.35rem 0;
+        list-style: none;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 24px rgba(26, 26, 46, 0.12);
+        max-height: 14rem;
+        overflow-y: auto;
+      }
+      .place-suggestions.is-loading {
+        padding: 0.65rem 0.85rem;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+      .place-suggestion {
+        display: block;
+        width: 100%;
+        text-align: left;
+        font-family: inherit;
+        font-size: 0.86rem;
+        line-height: 1.35;
+        padding: 0.55rem 0.85rem;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+      }
+      .place-suggestion:hover,
+      .place-suggestion.is-active {
+        background: rgba(167, 139, 250, 0.12);
+      }
+      .place-search-btn {
+        flex-shrink: 0;
+        font-family: inherit;
+        font-size: 0.9rem;
+        padding: 0.6rem 0.7rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        cursor: pointer;
+        line-height: 1;
+        transition: border-color 0.15s ease, opacity 0.15s ease;
+      }
+      .place-search-btn:hover { border-color: var(--accent); opacity: 0.9; }
+      .place-location-btn {
+        flex-shrink: 0;
+        font-family: inherit;
+        font-size: 0.9rem;
+        padding: 0.6rem 0.7rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        cursor: pointer;
+        line-height: 1;
+        transition: border-color 0.15s ease, opacity 0.15s ease;
+      }
+      .place-location-btn:hover:not(:disabled) { border-color: var(--accent); opacity: 0.9; }
+      .place-location-btn:disabled { opacity: 0.55; cursor: wait; }
+      .coords-display {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        flex: 1 1 14rem;
+        min-width: 0;
+        font-size: 0.78rem;
+        color: var(--muted);
+        line-height: 1.2;
+      }
+      @media (max-width: 480px) {
+        .coords-sunrise-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .sunrise-display {
+          justify-content: flex-start;
+        }
+      }
+      .coords-display .bilingual { justify-content: flex-start; }
+      .coords-display .bilingual-en { font-size: 0.6rem; }
+      .coords-fields {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        width: 100%;
+      }
+      .coords-input {
+        flex: 1;
+        min-width: 0;
+        width: 12ch;
+        max-width: 12ch;
+        font-family: system-ui, sans-serif;
+        font-size: 0.82rem;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+        padding: 0.55rem 0.6rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+      }
+      .coords-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+      }
+      .coords-input.is-loading { opacity: 0.55; }
+      .coords-sep { color: var(--muted); font-size: 0.82rem; flex-shrink: 0; }
+      @media (min-width: 640px) {
+        .wrap { padding: 1.5rem 1.5rem 2.5rem; }
+        .date-form { max-width: 32rem; }
+        .form-card { padding: 1.15rem 1.25rem; }
+      }
+      .layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; }
+      html.lang-ta .layout { grid-template-columns: 1fr 330px; }
+      .panel, .table { background: var(--card); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; box-shadow: 0 1px 3px rgba(26, 26, 46, 0.06); }
+      .table { min-width: 0; }
+      .panel { background: linear-gradient(145deg, #faf8ff 0%, #ffffff 55%, #fff8f0 100%); }
+      svg { width: 100%; max-width: 560px; display: block; margin: 0 auto; }
+      .table-data-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-inline: 0;
+      }
+      .table table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        table-layout: fixed;
+      }
+      html.lang-ta .table table {
+        table-layout: auto;
+        font-size: 0.72rem;
+      }
+      .table th,
+      .table td {
+        padding: 0.55rem 0.4rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+        word-break: keep-all;
+        overflow-wrap: normal;
+      }
+      html.lang-ta .table th,
+      html.lang-ta .table td {
+        padding: 0.4rem 0.3rem;
+      }
+      .table th:first-child,
+      .table td:first-child {
+        padding-left: 1rem;
+        width: 34%;
+      }
+      .table th:nth-child(2),
+      .table td:nth-child(2) { width: 22%; }
+      .table th:nth-child(3),
+      .table td:nth-child(3) { width: 22%; }
+      .table th:last-child,
+      .table td:last-child {
+        padding-right: 1rem;
+        width: 22%;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      html.lang-ta .table th:first-child,
+      html.lang-ta .table td:first-child {
+        width: auto;
+        padding-left: 0.65rem;
+      }
+      html.lang-ta .table th:nth-child(2),
+      html.lang-ta .table td:nth-child(2) {
+        width: auto;
+      }
+      html.lang-ta .table th:nth-child(3),
+      html.lang-ta .table td:nth-child(3) {
+        width: 1%;
+      }
+      html.lang-ta .table th:last-child,
+      html.lang-ta .table td:last-child {
+        width: 1%;
+        padding-right: 0.65rem;
+      }
+      .table th { color: var(--muted); font-size: 0.7rem; vertical-align: bottom; }
+      .table th .bilingual {
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+      }
+      html.lang-ta .table th .bilingual {
+        text-transform: none;
+        letter-spacing: 0.02em;
+      }
+      .table td:first-child { font-family: "Noto Sans Tamil", sans-serif; font-weight: 600; }
+      .table-cell-planet {
+        display: inline;
+        white-space: nowrap;
+      }
+      .table-symbol {
+        display: inline;
+        margin-right: 0.25em;
+        font-size: 1.05em;
+        line-height: 1;
+        text-align: center;
+        font-family: serif;
+        vertical-align: baseline;
+      }
+      .table-name {
+        display: inline;
+        line-height: 1.25;
+        white-space: nowrap;
+      }
+      .table-name > span {
+        white-space: nowrap;
+        word-break: keep-all;
+        overflow-wrap: normal;
+      }
+      html.lang-ta .table td .table-cell-planet,
+      html.lang-ta .table td .table-name,
+      html.lang-ta .table td .table-name > span {
+        white-space: nowrap;
+        word-break: keep-all;
+        overflow-wrap: normal;
+      }
+      .table-name-en { font-size: 0.68rem; font-weight: 400; color: var(--muted); font-family: "DM Sans", sans-serif; }
+      .table-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.2rem;
+      }
+      .table-header h2 { margin: 0; font-size: 1.2rem; }
+      .table-toolbar { display: flex; gap: 0.5rem; flex-shrink: 0; }
+      .table-edit-btn,
+      .table-done-btn {
+        font-family: inherit;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.35rem 0.7rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        cursor: pointer;
+      }
+      .table-done-btn {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #2d3250;
+      }
+      .position-consistency {
+        font-size: 0.8rem;
+        line-height: 1.45;
+        padding: 0.5rem 0.65rem;
+        border-radius: 0.5rem;
+        margin: 0 0 0.75rem;
+      }
+      .position-consistency ul {
+        margin: 0.35rem 0 0;
+        padding-left: 1.1rem;
+      }
+      .position-consistency li { margin: 0.15rem 0; }
+      .position-consistency--ok {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+      }
+      .position-consistency--warn {
+        background: #fff7ed;
+        color: #c2410c;
+        border: 1px solid #fed7aa;
+      }
+      .position-consistency--edit {
+        background: #f0f4ff;
+        color: #5b21b6;
+        border: 1px solid #ddd6fe;
+      }
+      .label-box {
+        font-size: 0.78rem;
+        line-height: 1.45;
+        padding: 0.65rem 0.75rem;
+        border-radius: 0.65rem;
+        margin: 0.35rem 0 0.85rem;
+        background: #f8f9fc;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .label-box__row {
+        display: grid;
+        grid-template-columns: minmax(5.5rem, 38%) 1fr;
+        gap: 0.35rem 0.5rem;
+        align-items: baseline;
+        padding: 0.2rem 0;
+      }
+      .label-box__row + .label-box__row {
+        border-top: 1px solid rgba(26, 26, 46, 0.06);
+        margin-top: 0.15rem;
+        padding-top: 0.35rem;
+      }
+      .label-box__key {
+        color: var(--muted);
+        font-size: 0.72rem;
+      }
+      .label-box__key .bilingual-en { font-size: 0.62rem; }
+      .label-box__value {
+        font-variant-numeric: tabular-nums;
+        word-break: break-word;
+      }
+      .consistency-note {
+        margin: 0.35rem 0 0;
+        font-size: 0.75rem;
+        opacity: 0.92;
+      }
+      .ephemeris-select {
+        width: 100%;
+        font-family: inherit;
+        font-size: 0.85rem;
+        padding: 0.55rem 0.65rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+      }
+      .table-input {
+        width: 100%;
+        min-width: 0;
+        font-family: inherit;
+        font-size: 0.78rem;
+        padding: 0.3rem 0.4rem;
+        border-radius: 0.45rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+      .table-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+      }
+      @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+      .lagnam-spoke {
+        stroke: #f59e0b;
+        stroke-width: 4;
+        stroke-linecap: round;
+        opacity: 1;
+      }
+      .lagnam-label {
+        fill: #b45309;
+        font-family: "Noto Sans Tamil", sans-serif;
+        font-size: 9px;
+        font-weight: 700;
+        paint-order: stroke fill;
+        stroke: rgba(255, 255, 255, 0.92);
+        stroke-width: 3;
+      }
+      .lang-tabs {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin: 0;
+        flex-shrink: 0;
+        justify-self: end;
+      }
+      .lang-tab {
+        padding: 0.4rem 1.1rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--card);
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        font-family: inherit;
+      }
+      .lang-tab:hover { border-color: var(--accent); color: var(--text); }
+      .lang-tab.is-active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      html.lang-ta .bilingual-en,
+      html.lang-ta .table-name-en { display: none !important; }
+      html.lang-en .bilingual > span:first-child:not(.bilingual-en),
+      html.lang-en .table-name > span:first-child { display: none !important; }
+      html.lang-en .bilingual-en::before { content: none; margin: 0; }
+      html.lang-en .bilingual-en,
+      html.lang-en .table-name-en {
+        color: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        font-family: system-ui, sans-serif;
+      }
+      html.lang-en h1 .bilingual-en { font-size: 1em; font-weight: 700; }
+      html.lang-en th .bilingual-en { font-size: inherit; }
+      html.lang-en body { font-family: system-ui, sans-serif; }
+      html.lang-en .location-label .bilingual-en { font-size: inherit; }
+      html.lang-en .coords-display .bilingual-en { font-size: inherit; }
+      .header-top-bar {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 0.5rem 0.75rem;
+        margin-bottom: 1.25rem;
+      }
+      .menu-wrap {
+        position: relative;
+        flex-shrink: 0;
+        justify-self: start;
+      }
+      @media (max-width: 520px) {
+        .header-top-bar {
+          grid-template-columns: auto 1fr;
+          row-gap: 0.5rem;
+        }
+        .header-brand {
+          grid-column: 1 / -1;
+          grid-row: 1;
+        }
+        .menu-wrap { grid-row: 2; }
+        .lang-tabs {
+          grid-row: 2;
+          grid-column: 2;
+        }
+        .brand-title { font-size: clamp(1.5rem, 6vw, 2rem); }
+      }
+      .menu-btn {
+        font-family: inherit;
+        font-size: 1.35rem;
+        line-height: 1;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.15s ease, background 0.15s ease;
+      }
+      .menu-btn:hover,
+      .menu-btn[aria-expanded="true"] {
+        border-color: var(--accent);
+        background: #faf8ff;
+      }
+      .list-menu {
+        position: absolute;
+        top: calc(100% + 0.35rem);
+        left: 0;
+        min-width: 11rem;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 24px rgba(26, 26, 46, 0.12);
+        padding: 0.35rem;
+        z-index: 40;
+      }
+      .list-menu-item {
+        display: block;
+        width: 100%;
+        text-align: left;
+        font-family: inherit;
+        font-size: 0.88rem;
+        font-weight: 600;
+        padding: 0.55rem 0.75rem;
+        border: none;
+        border-radius: 0.5rem;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+      }
+      .list-menu-item:hover { background: #f0f4ff; color: #5b21b6; }
+      .ref-positions-panel {
+        margin: 0 0 1.25rem;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 1.25rem;
+        padding: 1rem 1.15rem 1.15rem;
+        box-shadow: 0 4px 16px rgba(26, 26, 46, 0.08);
+      }
+      .ref-positions-panel__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.35rem;
+      }
+      .ref-positions-panel__header h2 { margin: 0; font-size: 1.05rem; }
+      .ref-positions-close {
+        flex-shrink: 0;
+        font-family: inherit;
+        font-size: 1.25rem;
+        line-height: 1;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .ref-positions-close:hover { border-color: var(--accent); color: var(--text); }
+      .ref-positions-meta {
+        font-size: 0.75rem;
+        color: var(--muted);
+        line-height: 1.45;
+        margin: 0 0 0.75rem;
+      }
+      .ref-positions-status {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin: 0 0 0.65rem;
+      }
+      .ref-positions-status.is-error { color: #c2410c; }
+      .ref-positions-table-wrap { overflow-x: auto; }
+      .ref-positions-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.72rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .ref-positions-table th,
+      .ref-positions-table td {
+        padding: 0.45rem 0.5rem;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      .ref-positions-table th:first-child,
+      .ref-positions-table td:first-child {
+        text-align: left;
+        font-weight: 600;
+        position: sticky;
+        left: 0;
+        background: var(--card);
+        min-width: 6.5rem;
+      }
+      .ref-positions-table thead th {
+        color: var(--muted);
+        font-size: 0.65rem;
+        vertical-align: bottom;
+      }
+      .ref-positions-table .ref-col-symbol {
+        display: block;
+        font-size: 0.95rem;
+        line-height: 1.1;
+      }
+      .ref-positions-table .ref-col-name {
+        display: block;
+        font-size: 0.58rem;
+        font-weight: 400;
+        color: var(--muted);
+      }
+      html.lang-ta .ref-positions-table .ref-col-name-en { display: none; }
+      html.lang-en .ref-positions-table .ref-col-name-ta { display: none; }
+      html.view-positions .date-form,
+      html.view-positions .layout,
+      html.view-positions .ref-positions-close { display: none; }
+      html.view-positions .header { margin-bottom: 0.75rem; }
+      html.view-positions .header-top-bar { margin-bottom: 0.5rem; }
+      html.view-positions .brand-title { font-size: clamp(1.65rem, 5.5vw, 2.15rem); }
+      html.view-positions .ref-positions-panel { margin-top: 0; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="header">
+        <div class="header-top-bar">
+          <div class="menu-wrap">
+            <button type="button" id="menuBtn" class="menu-btn" aria-label="Menu" aria-expanded="false" aria-haspopup="true" title="Menu">☰</button>
+            <div id="listMenu" class="list-menu" hidden>
+              <button type="button" id="menuHomeBtn" class="list-menu-item">
+                <span class="bilingual"><span>முகப்பு</span><span class="bilingual-en">Home</span></span>
+              </button>
+              <button type="button" id="menuPositionsBtn" class="list-menu-item">
+                <span class="bilingual"><span>நிலைகள்</span><span class="bilingual-en">Positions</span></span>
+              </button>
+            </div>
+          </div>
+          <div class="header-brand">
+            <h1 class="brand-title"><span class="brand-velli">velli</span><span class="brand-astro">Astro</span></h1>
+          </div>
+          <nav class="lang-tabs" role="tablist" aria-label="Language">
+            <button type="button" class="lang-tab is-active" id="langTabTa" role="tab" aria-selected="true">தமிழ்</button>
+            <button type="button" class="lang-tab" id="langTabEn" role="tab" aria-selected="false">English</button>
+          </nav>
+        </div>
+        <form class="date-form" id="dateForm">
+          <div class="form-card">
+            <div class="form-group form-group--datetime">
+              <div class="form-field">
+                <label for="dateInput"><span class="bilingual"><span>தேதி</span><span class="bilingual-en">Select date</span></span></label>
+                <input type="date" id="dateInput" required />
+              </div>
+              <div class="form-field">
+                <label for="timeInput"><span class="bilingual"><span>நேரம்</span><span class="bilingual-en">Time</span></span></label>
+                <input type="time" id="timeInput" required />
+              </div>
+            </div>
+            <div class="form-group form-group--place">
+              <label for="placeInput" class="location-label">
+                <span class="bilingual">
+                  <span>இடம்</span>
+                  <span class="bilingual-en">Place</span>
+                </span>
+              </label>
+              <div class="place-row">
+                <div class="place-autocomplete">
+                  <input type="text" id="placeInput" placeholder="Chennai" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="placeSuggestions" aria-autocomplete="list" />
+                  <ul id="placeSuggestions" class="place-suggestions" role="listbox" hidden></ul>
+                </div>
+                <button type="button" id="placeLocationBtn" class="place-location-btn" title="Use current location and time" aria-label="Use current location and time">⌖</button>
+                <button type="button" id="placeSearchBtn" class="place-search-btn" title="Search place" aria-label="Search place">⌕</button>
+              </div>
+            </div>
+            <div class="form-group form-group--coords">
+              <div class="coords-sunrise-row">
+                <div class="coords-display" id="coordsDisplay">
+                  <span class="bilingual">
+                    <span>ஆயத்தொலைவு</span>
+                    <span class="bilingual-en">Coordinates</span>
+                  </span>
+                  <span class="coords-fields">
+                    <input type="text" class="coords-input" id="latInput" inputmode="decimal" aria-label="Latitude" placeholder="Lat" maxlength="12" />
+                    <span class="coords-sep">,</span>
+                    <input type="text" class="coords-input" id="lonInput" inputmode="decimal" aria-label="Longitude" placeholder="Lon" maxlength="12" />
+                  </span>
+                </div>
+                <span class="sunrise-display" id="sunriseDisplay" aria-live="polite">
+                  <span class="bilingual">
+                    <span>சூரிய உதயம்</span>
+                    <span class="bilingual-en">Sunrise</span>
+                  </span>
+                  <span class="sunrise-value" id="sunriseValue"></span>
+                </span>
+              </div>
+            </div>
+            <button type="submit" class="submit-btn"><span class="bilingual"><span>சமர்ப்பி</span><span class="bilingual-en">Submit</span></span></button>
+          </div>
+        </form>
+      </header>
+      <section id="refPositionsPanel" class="ref-positions-panel" hidden aria-labelledby="refPositionsTitle">
+        <div class="ref-positions-panel__header">
+          <h2 id="refPositionsTitle">
+            <span class="bilingual">
+              <span>கிரக நிலைகள் · குறிப்பு</span>
+              <span class="bilingual-en">Planet Positions · Reference</span>
+            </span>
+          </h2>
+          <button type="button" id="refPositionsClose" class="ref-positions-close" aria-label="Close">×</button>
+        </div>
+        <p class="ref-positions-meta">
+          <span class="bilingual">
+            <span>Swiss Ephemeris–compatible · Lahiri (ICRC 1956) · 360° சைதிர</span>
+            <span class="bilingual-en">Swiss Ephemeris–compatible · Lahiri (ICRC 1956) · 360° sidereal</span>
+          </span>
+        </p>
+        <div id="refPositionsStatus" class="ref-positions-status" aria-live="polite"></div>
+        <div class="ref-positions-table-wrap">
+          <table class="ref-positions-table">
+            <thead id="refPositionsHead"></thead>
+            <tbody id="refPositionsBody"></tbody>
+          </table>
+        </div>
+      </section>
+      <div class="layout">
+        <section class="panel"><svg id="chart" viewBox="0 0 560 560"></svg></section>
+        <aside class="table">
+          <div class="table-header">
+            <h2>
+              <span class="bilingual">
+                <span>கிரக நிலைகள்</span>
+                <span class="bilingual-en">Planet Positions</span>
+              </span>
+            </h2>
+            <div class="table-toolbar">
+              <button type="button" id="refreshPositionsBtn" class="table-edit-btn" title="Reset planet positions and degrees"><span class="bilingual"><span>புதுப்பி</span><span class="bilingual-en">Refresh</span></span></button>
+              <button type="button" id="editPositionsBtn" class="table-edit-btn"><span class="bilingual"><span>திருத்து</span><span class="bilingual-en">Edit</span></span></button>
+              <button type="button" id="donePositionsBtn" class="table-done-btn" hidden><span class="bilingual"><span>முடிந்தது</span><span class="bilingual-en">Done</span></span></button>
+            </div>
+          </div>
+          <div id="calcInputsLabel" class="label-box" hidden></div>
+          <div id="positionConsistency" class="position-consistency" role="status" aria-live="polite" hidden></div>
+          <div class="table-data-wrap">
+            <table><thead><tr>
+              <th><span class="bilingual"><span>கிரகம்</span><span class="bilingual-en">Planet</span></span></th>
+              <th><span class="bilingual"><span>ராசி</span><span class="bilingual-en">Rasi</span></span></th>
+              <th><span class="bilingual"><span>நிலை</span><span class="bilingual-en">Position</span></span></th>
+              <th><span class="bilingual"><span>பாகை</span><span class="bilingual-en">Degree</span></span></th>
+            </tr></thead><tbody id="rows"></tbody></table>
+          </div>
+        </aside>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+    <script>
+      try {
+        const SEGMENTS = 16, DEG = 360 / SEGMENTS, J2000 = Date.UTC(2000, 0, 1, 12);
+        const DAY_START_HOUR = 6;
+        const MINUTES_PER_SECTOR = (24 * 60) / SEGMENTS;
+        const BOUNDARY_LABEL_OFFSET = 31;
+        const BOUNDARY_LABEL_STAGGER = 12;
+        const formatDegreeLabel = (angle) => {
+          const text = angle % 1 === 0 ? String(angle) : angle.toFixed(1);
+          return `${text}°`;
+        };
+        const labelRadialInwardRotation = (angle) => {
+          let rotation = angle;
+          if (angle >= 90 && angle <= 270) rotation += 180;
+          return rotation;
+        };
+        const formatStartTime = (sectorIndex) => {
+          const sectorStart = DAY_START_HOUR * 60 + sectorIndex * MINUTES_PER_SECTOR;
+          const m = ((sectorStart % (24 * 60)) + 24 * 60) % (24 * 60);
+          const hours = String(Math.floor(m / 60)).padStart(2, "0");
+          const minutes = String(m % 60).padStart(2, "0");
+          return `${hours}:${minutes}`;
+        };
+        const formatBoundaryLabel = (angle, sectorIndex) =>
+          `${formatDegreeLabel(angle)} (${formatStartTime(sectorIndex)})`;
+        const getBoundaryLabelOffset = (sectorIndex) =>
+          BOUNDARY_LABEL_OFFSET + (sectorIndex % 2) * BOUNDARY_LABEL_STAGGER;
+        const labelRadialRotation = (angle) => {
+          let rotation = angle;
+          if (Math.cos((angle * Math.PI) / 180) < 0) rotation += 180;
+          return rotation;
+        };
+        const SIGNS = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+        const RASI_TAMIL = {
+          Aries: "மேஷம்",
+          Taurus: "ரிஷபம்",
+          Gemini: "மிதுனம்",
+          Cancer: "கடகம்",
+          Leo: "சிம்மம்",
+          Virgo: "கன்னி",
+          Libra: "துலாம்",
+          Scorpio: "விருச்சிகம்",
+          Sagittarius: "தனுசு",
+          Capricorn: "மகரம்",
+          Aquarius: "கும்பம்",
+          Pisces: "மீனம்",
+        };
+        const GRAHAS = [
+          { id:"surya", tamil:"சூரியன்", english:"Sun", short:"சூ", letter:"ச", color:"#ff8c00", symbol:"☉", period:365.256, L0:280.46 },
+          { id:"chandra", tamil:"சந்திரன்", english:"Moon", short:"ச", letter:"ச", color:"#94a3b8", symbol:"☽", period:27.321661, L0:218.32 },
+          { id:"sevvai", tamil:"செவ்வாய்", english:"Mars", short:"செ", letter:"ச", color:"#c1440e", symbol:"♂", period:686.98, L0:355.43 },
+          { id:"budhan", tamil:"புதன்", english:"Mercury", short:"பு", letter:"ப", color:"#4caf50", symbol:"☿", period:87.969, L0:252.25 },
+          { id:"guru", tamil:"வியாழன்", english:"Jupiter", short:"வி", letter:"வ", color:"#f5c842", symbol:"♃", period:4332.59, L0:34.35 },
+          { id:"sukran", tamil:"சுக்கிரன்", english:"Venus", short:"சு", letter:"ச", color:"#f8b4d9", symbol:"♀", period:224.701, L0:181.98 },
+          { id:"sani", tamil:"சனி", english:"Saturn", short:"ச", letter:"ச", color:"#5b7fd4", symbol:"♄", period:10759.22, L0:50.08 },
+          { id:"rahu", tamil:"ராகு", english:"Rahu", short:"ரா", letter:"ர", color:"#6b5b7a", symbol:"☊", period:-6793.5, L0:125.04 },
+          { id:"ketu", tamil:"கேது", english:"Ketu", short:"கே", letter:"க", color:"#9a7b5c", symbol:"☋", period:null, L0:null },
+        ];
+        const norm = (v) => ((v % 360) + 360) % 360;
+        const JD_J2000 = 2451545.0;
+        const DEG_TO_RAD = Math.PI / 180;
+        const RAD_TO_DEG = 180 / Math.PI;
+        const dateToJulianDate = (date) => date.getTime() / 86400000 + 2440587.5;
+        const julianCenturies = (jd) => (jd - JD_J2000) / 36525.0;
+        // ICRC 1956 Lahiri (Chitrapaksha) — matches AstroSage / Indian Ephemeris at J2000 ≈ 23°51′41″
+        const getLahiriAyanamsa = (jd) => {
+          const T = julianCenturies(jd);
+          return 23.860974 + 1.395524 * T + 0.000308 * T * T + 0.0000005 * T * T * T;
+        };
+        const tropicalToSidereal = (tropical, jd) => norm(tropical - getLahiriAyanamsa(jd));
+        const getSunTropical = (jd) => {
+          const T = julianCenturies(jd);
+          const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+          const M = 357.52911 + 35999.05029 * T - 0.0001537 * T * T;
+          const Mrad = M * DEG_TO_RAD;
+          const C =
+            (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(Mrad) +
+            (0.019993 - 0.000101 * T) * Math.sin(2 * Mrad) +
+            0.000289 * Math.sin(3 * Mrad);
+          return norm(L0 + C);
+        };
+        const getMoonTropical = (jd) => {
+          const T = julianCenturies(jd);
+          const Lp = 218.3164477 + 481267.88123421 * T - 0.0015786 * T * T;
+          const D = 297.8501921 + 445267.1114034 * T - 0.0018819 * T * T;
+          const M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T * T;
+          const Mp = 134.9633964 + 477198.8675055 * T + 0.0087414 * T * T;
+          const F = 93.272095 + 483202.0175233 * T - 0.0036539 * T * T;
+          const Drad = D * DEG_TO_RAD;
+          const Mrad = M * DEG_TO_RAD;
+          const Mprad = Mp * DEG_TO_RAD;
+          const Frad = F * DEG_TO_RAD;
+          return norm(
+            Lp +
+              6.288774 * Math.sin(Mprad) +
+              1.274027 * Math.sin(2 * Drad - Mprad) +
+              0.658314 * Math.sin(2 * Drad) +
+              0.213618 * Math.sin(2 * Mprad) -
+              0.185116 * Math.sin(Mrad) * Math.sin(Mprad) -
+              0.114332 * Math.sin(2 * Frad)
+          );
+        };
+        const getRahuTropical = (jd) => {
+          const T = julianCenturies(jd);
+          return norm(
+            125.0445479 -
+              1934.1362891 * T +
+              0.0020754 * T * T +
+              (T * T * T) / 467441 -
+              (T * T * T * T) / 60616000
+          );
+        };
+        const PLANET_ORBITS = {
+          sevvai: { L0: 355.433, rate: 360 / 686.98, e: 0.0934, perihelion: 336.06 },
+          budhan: { L0: 252.250906, rate: 360 / 87.969, e: 0.205635, perihelion: 77.456 },
+          guru: { L0: 34.351519, rate: 360 / 4332.59, e: 0.048498, perihelion: 14.331 },
+          sukran: { L0: 181.979801, rate: 360 / 224.701, e: 0.006772, perihelion: 131.533 },
+          sani: { L0: 50.077444, rate: 360 / 10759.22, e: 0.055723, perihelion: 93.057 },
+        };
+        const planetLongitudeFromElements = (jd, L0, rate, e, perihelion) => {
+          const L = norm(L0 + rate * (jd - JD_J2000));
+          const M = norm(L - perihelion);
+          const Mrad = M * DEG_TO_RAD;
+          const C = (360 / Math.PI) * e * Math.sin(Mrad) * (1 + e * Math.cos(Mrad));
+          return norm(L + C);
+        };
+        const getPlanetTropical = (g, jd) => {
+          if (g.id === "surya") return getSunTropical(jd);
+          if (g.id === "chandra") return getMoonTropical(jd);
+          if (g.id === "rahu") return getRahuTropical(jd);
+          const orbit = PLANET_ORBITS[g.id];
+          if (orbit) {
+            return planetLongitudeFromElements(jd, orbit.L0, orbit.rate, orbit.e, orbit.perihelion);
+          }
+          return 0;
+        };
+        const GRAHA_BODY = {
+          chandra: "Moon",
+          sevvai: "Mars",
+          budhan: "Mercury",
+          guru: "Jupiter",
+          sukran: "Venus",
+          sani: "Saturn",
+        };
+        const getGeocentricTropical = (grahaId, date) => {
+          const A = window.Astronomy;
+          if (!A) return null;
+          if (grahaId === "surya") return A.SunPosition(date).elon;
+          if (grahaId === "chandra" && typeof A.EclipticGeoMoon === "function") {
+            return A.EclipticGeoMoon(date).lon;
+          }
+          const bodyName = GRAHA_BODY[grahaId];
+          if (!bodyName) return null;
+          return A.Ecliptic(A.GeoVector(A.Body[bodyName], date, true)).elon;
+        };
+        const tropicalFromEquator = (bodyName, date, place) => {
+          const A = window.Astronomy;
+          if (!A) return null;
+          const observer = new A.Observer(place.latitude, place.longitude, 0);
+          const body = A.Body[bodyName];
+          const equ = A.Equator(body, date, observer, true, true);
+          const eclVec = A.RotateVector(A.Rotation_EQD_ECL(date), equ.vec);
+          return norm(A.SphereFromVector(eclVec).lon);
+        };
+        const getTopocentricTropical = (grahaId, date, place) => {
+          const A = window.Astronomy;
+          if (!A) return null;
+          if (grahaId === "ketu") {
+            const rahu = getTopocentricTropical("rahu", date, place);
+            return rahu == null ? null : norm(rahu + 180);
+          }
+          if (grahaId === "rahu") return getRahuTropical(dateToJulianDate(date));
+          if (grahaId === "surya") return tropicalFromEquator("Sun", date, place);
+          if (grahaId === "chandra") return tropicalFromEquator("Moon", date, place);
+          const bodyName = GRAHA_BODY[grahaId];
+          if (!bodyName) return null;
+          return tropicalFromEquator(bodyName, date, place);
+        };
+        const getHeliocentricTropical = (grahaId, date) => {
+          const A = window.Astronomy;
+          if (!A) return null;
+          if (grahaId === "surya" || grahaId === "rahu" || grahaId === "ketu") return null;
+          const bodyName = GRAHA_BODY[grahaId];
+          if (!bodyName) return null;
+          const helio = A.HelioVector(A.Body[bodyName], date);
+          return norm(A.Ecliptic(helio).elon);
+        };
+        const siderealLonForFrame = (g, date, frame, place) => {
+          const jd = dateToJulianDate(date);
+          if (frame === "geocentric") return siderealLon(g, date);
+          if (frame === "topocentric") {
+            const tropical = getTopocentricTropical(g.id, date, place);
+            return tropical == null ? null : tropicalToSidereal(tropical, jd);
+          }
+          const tropical = getHeliocentricTropical(g.id, date);
+          return tropical == null ? null : tropicalToSidereal(tropical, jd);
+        };
+        const REFERENCE_FRAMES = [
+          { id: "geocentric", tamil: "புவி மைய", english: "GeoCentric" },
+          { id: "topocentric", tamil: "இட மைய", english: "TopCentric" },
+          { id: "heliocentric", tamil: "சூரிய மைய", english: "HelioCentric" },
+        ];
+        const siderealLon = (g, date) => {
+          const jd = dateToJulianDate(date);
+          if (g.id === "bhoomi" || g.id === "earth") return norm(siderealLon(GRAHAS.find((x) => x.id === "surya"), date) + 180);
+          if (g.id === "ketu") return norm(siderealLon(GRAHAS.find((x) => x.id === "rahu"), date) + 180);
+          if (g.id === "rahu") return tropicalToSidereal(getRahuTropical(jd), jd);
+          const tropical = getGeocentricTropical(g.id, date);
+          if (tropical != null) return tropicalToSidereal(tropical, jd);
+          console.warn(`velliastro: astronomy-engine unavailable for ${g.english}; using mean-element fallback`);
+          return tropicalToSidereal(getPlanetTropical(g, jd), jd);
+        };
+        const getAscendantLongitude = (date, place) => {
+          const jd = dateToJulianDate(date);
+          const T = julianCenturies(jd);
+          const eps = (23.439291 - 0.0130042 * T) * DEG_TO_RAD;
+          const gmst = norm(
+            280.46061837 +
+              360.98564736629 * (jd - JD_J2000) +
+              0.000387933 * T * T -
+              (T * T * T) / 38710000.0
+          );
+          const lst = norm(gmst + place.longitude);
+          const lstRad = lst * DEG_TO_RAD;
+          const latRad = place.latitude * DEG_TO_RAD;
+          const y = Math.sin(lstRad);
+          const x = Math.cos(lstRad) * Math.cos(eps) - Math.tan(latRad) * Math.sin(eps);
+          const ascTropical = norm(Math.atan2(y, x) * RAD_TO_DEG);
+          return tropicalToSidereal(ascTropical, jd);
+        };
+        const getLagnamAngle = (date, place) => getAscendantLongitude(date, place);
+        const LAGNA_VISUAL_ANGLE = 45;
+        /** Lagnam-relative angle on the fixed degree wheel (rim stays at 0°, 22.5°, …). */
+        const toVisualAngle = (eclipticLon, lagnamLon) =>
+          norm(eclipticLon - lagnamLon + LAGNA_VISUAL_ANGLE);
+        const polar = (a, r, c) => { const rad = ((a + 180) * Math.PI) / 180; return { x: c + r * Math.cos(rad), y: c + r * Math.sin(rad) }; };
+        const sector = (c, ir, or, st, en) => {
+          const sO = polar(st, or, c), eO = polar(en, or, c);
+          if (ir <= 0) {
+            return `M ${c} ${c} L ${sO.x} ${sO.y} A ${or} ${or} 0 0 1 ${eO.x} ${eO.y} Z`;
+          }
+          const sI = polar(en, ir, c), eI = polar(st, ir, c);
+          return `M ${sO.x} ${sO.y} A ${or} ${or} 0 0 1 ${eO.x} ${eO.y} L ${sI.x} ${sI.y} A ${ir} ${ir} 0 0 0 ${eI.x} ${eI.y} Z`;
+        };
+        const formatDateTimeLabel = (date, place = placeState) => {
+          const offsetMinutes = estimateTimezoneOffsetMinutes(place.longitude, place.latitude);
+          const placeMs = date.getTime() + offsetMinutes * 60 * 1000;
+          const shifted = new Date(placeMs);
+          const datePart = shifted.toLocaleDateString("en-IN", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            timeZone: "UTC",
+          });
+          const timePart = shifted.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+            timeZone: "UTC",
+          });
+          return `${datePart}, ${timePart}`;
+        };
+        const formatInputDateLabel = (dateValue) => {
+          const [year, month, day] = dateValue.split("-").map(Number);
+          const local = new Date(Date.UTC(year, month - 1, day));
+          return local.toLocaleDateString("en-IN", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            timeZone: "UTC",
+          });
+        };
+        const formatInputTimeLabel = (timeValue) => {
+          const [hours, minutes] = timeValue.split(":").map(Number);
+          const local = new Date(Date.UTC(2000, 0, 1, hours, minutes));
+          return local.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+            timeZone: "UTC",
+          });
+        };
+        const formatLocalInputDateTimeLabel = (dateValue, timeValue) =>
+          `${formatInputDateLabel(dateValue)}, ${formatInputTimeLabel(timeValue)}`;
+        const formatTimezoneOffsetLabel = (offsetMinutes) => {
+          const sign = offsetMinutes >= 0 ? "+" : "-";
+          const abs = Math.abs(offsetMinutes);
+          const hours = Math.floor(abs / 60);
+          const mins = abs % 60;
+          return mins === 0
+            ? `UTC${sign}${hours}`
+            : `UTC${sign}${hours}:${String(mins).padStart(2, "0")}`;
+        };
+        const formatUtcInstantLabel = (utcDate) =>
+          utcDate.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, " UTC");
+        const formatPlaceLabel = (placeName) => {
+          const trimmed = String(placeName || "").trim();
+          if (!trimmed) return "—";
+          const parts = trimmed
+            .split(",")
+            .map((part) => part.trim())
+            .filter(Boolean)
+            .filter((part) => !/^\d{5,7}$/.test(part))
+            .filter((part) => !/^ward\s+\d+/i.test(part))
+            .map((part) =>
+              part
+                .replace(/^Greater\s+/i, "")
+                .replace(/\s+District$/i, "")
+                .trim(),
+            )
+            .filter(Boolean);
+          if (parts.length === 0) return trimmed;
+          if (parts.length <= 3) return parts.join(", ");
+          const country = parts[parts.length - 1];
+          const state = parts[parts.length - 2];
+          const city = parts[parts.length - 3];
+          return [city, state, country].join(", ");
+        };
+        const placeLocalParts = (utcDate, place) => {
+          const offsetMinutes = estimateTimezoneOffsetMinutes(place.longitude, place.latitude);
+          const shifted = new Date(utcDate.getTime() + offsetMinutes * 60 * 1000);
+          return {
+            year: shifted.getUTCFullYear(),
+            month: shifted.getUTCMonth() + 1,
+            day: shifted.getUTCDate(),
+            hours: shifted.getUTCHours(),
+            minutes: shifted.getUTCMinutes(),
+          };
+        };
+        const toInputValueForPlace = (utcDate, place) => {
+          const parts = placeLocalParts(utcDate, place);
+          return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
+        };
+        const toTimeInputValueForPlace = (utcDate, place) => {
+          const parts = placeLocalParts(utcDate, place);
+          return `${String(parts.hours).padStart(2, "0")}:${String(parts.minutes).padStart(2, "0")}`;
+        };
+        const toInputValue = (date) => toInputValueForPlace(date, placeState);
+        const toTimeInputValue = (date) => toTimeInputValueForPlace(date, placeState);
+        const parseDateTime = (dateValue, timeValue) => {
+          const [y, m, d] = dateValue.split("-").map(Number);
+          const [hours, minutes] = timeValue.split(":").map(Number);
+          return new Date(y, m - 1, d, hours, minutes, 0);
+        };
+        const estimateTimezoneOffsetMinutes = (longitude, latitude) => {
+          if (longitude >= 68 && longitude <= 97 && latitude >= 6 && latitude <= 37.5) {
+            return 5 * 60 + 30;
+          }
+          if (longitude >= 80 && longitude <= 89 && latitude >= 26 && latitude <= 31) {
+            return 5 * 60 + 45;
+          }
+          if (longitude >= 16 && longitude <= 33 && latitude >= -35 && latitude <= -22) {
+            return 2 * 60;
+          }
+          return Math.round(longitude / 15) * 60;
+        };
+        const chartDateTimeFromLocalInputs = (dateValue, timeValue, place) => {
+          const [year, month, day] = dateValue.split("-").map(Number);
+          const [hours, minutes] = timeValue.split(":").map(Number);
+          const offsetMinutes = estimateTimezoneOffsetMinutes(place.longitude, place.latitude);
+          return new Date(
+            Date.UTC(year, month - 1, day, hours, minutes, 0) - offsetMinutes * 60 * 1000
+          );
+        };
+        const SUNRISE_ALTITUDE = -0.833 * (Math.PI / 180);
+        const sunApparentLongitude = (jd) => {
+          const T = (jd - JD_J2000) / 36525;
+          const L0 = (280.46646 + 36000.76983 * T) * (Math.PI / 180);
+          const M = (357.52911 + 35999.05029 * T) * (Math.PI / 180);
+          const C =
+            (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M) +
+            (0.019993 - 0.000101 * T) * Math.sin(2 * M) +
+            0.000289 * Math.sin(3 * M);
+          return L0 + C * (Math.PI / 180);
+        };
+        const meanObliquity = (jd) => {
+          const T = (jd - JD_J2000) / 36525;
+          return (
+            23.439291 -
+            0.0130042 * T -
+            0.00000016 * T * T +
+            0.000000504 * T * T * T
+          ) * (Math.PI / 180);
+        };
+        const gmstDegreesSun = (jd) => {
+          const T = (jd - JD_J2000) / 36525;
+          return norm(
+            280.46061837 +
+              360.98564736629 * (jd - JD_J2000) +
+              0.000387933 * T * T -
+              (T * T * T) / 38710000,
+          );
+        };
+        const sunAltitudeRad = (jd, latitude, longitude) => {
+          const lambda = sunApparentLongitude(jd);
+          const epsilon = meanObliquity(jd);
+          const decl = Math.asin(Math.sin(epsilon) * Math.sin(lambda));
+          const ra = Math.atan2(
+            Math.cos(epsilon) * Math.sin(lambda),
+            Math.cos(lambda),
+          );
+          const lst = norm(gmstDegreesSun(jd) + longitude) * (Math.PI / 180);
+          const hourAngle = lst - ra;
+          const latRad = latitude * (Math.PI / 180);
+          return Math.asin(
+            Math.sin(latRad) * Math.sin(decl) +
+              Math.cos(latRad) * Math.cos(decl) * Math.cos(hourAngle),
+          );
+        };
+        const getSunriseTime = (date, place) => {
+          const parts = placeLocalParts(date, place);
+          const dateValue = `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
+          const dayStart = chartDateTimeFromLocalInputs(dateValue, "00:00", place).getTime();
+          const solarNoon = chartDateTimeFromLocalInputs(dateValue, "12:00", place).getTime();
+          const altitudeAtNoon = sunAltitudeRad(
+            dateToJulianDate(new Date(solarNoon)),
+            place.latitude,
+            place.longitude,
+          );
+          if (altitudeAtNoon < SUNRISE_ALTITUDE) return null;
+          let low = dayStart;
+          let high = solarNoon;
+          if (
+            sunAltitudeRad(
+              dateToJulianDate(new Date(dayStart)),
+              place.latitude,
+              place.longitude,
+            ) >= SUNRISE_ALTITUDE
+          ) {
+            return new Date(dayStart);
+          }
+          for (let i = 0; i < 48; i++) {
+            const mid = (low + high) / 2;
+            const altitude = sunAltitudeRad(
+              dateToJulianDate(new Date(mid)),
+              place.latitude,
+              place.longitude,
+            );
+            if (altitude < SUNRISE_ALTITUDE) low = mid;
+            else high = mid;
+          }
+          return new Date(high);
+        };
+        const formatSunriseTime = (date, place = placeState) => {
+          const parts = placeLocalParts(date, place);
+          const local = new Date(Date.UTC(2000, 0, 1, parts.hours, parts.minutes));
+          return local.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+            timeZone: "UTC",
+          });
+        };
+        const updateSunriseDisplay = (dateValue, place = placeState) => {
+          const sunrise = getSunriseTime(
+            chartDateTimeFromLocalInputs(dateValue, "06:00", place),
+            place,
+          );
+          document.getElementById("sunriseValue").textContent = sunrise
+            ? formatSunriseTime(sunrise, place)
+            : "—";
+        };
+        const lon = (g, date) => siderealLon(g, date);
+        const SECTOR_DEG = 22.5;
+        const PLANET_LABEL_RADIUS = 139;
+        const LAGNAM_LABEL_RADIUS = 124;
+        const PLANET_MIN_FONT = 8;
+        const PLANET_MAX_FONT = 9;
+        const SECTOR_LABEL_RADIAL_MARGIN = 10;
+        const SECTOR_ANGULAR_MARGIN = 1.5;
+        const SECTOR_LABEL_LINE_HEIGHT = 1.15;
+        const getSectorIndex = (lon) => Math.floor(norm(lon) / SECTOR_DEG) % SEGMENTS;
+        let currentLang = localStorage.getItem("velliastro-lang") === "en" ? "en" : "ta";
+        const formatPlanetPart = (p) => {
+          const name = currentLang === "ta" ? p.tamil : p.english;
+          return `${name} (${p.longitude.toFixed(1)}°)`;
+        };
+        const formatSectorPlanetLabel = (planets) =>
+          [...planets].sort((a, b) => a.longitude - b.longitude).map(formatPlanetPart).join(", ");
+        const estimateLabelWidth = (text, fontSize) => {
+          let width = 0;
+          for (const ch of text) width += /[\u0B80-\u0BFF]/.test(ch) ? fontSize * 0.78 : fontSize * 0.52;
+          return width;
+        };
+        const sectorInset = (c, ir, or, st, en) => {
+          return sector(
+            c,
+            ir + SECTOR_LABEL_RADIAL_MARGIN,
+            or - SECTOR_LABEL_RADIAL_MARGIN,
+            st + SECTOR_ANGULAR_MARGIN,
+            en - SECTOR_ANGULAR_MARGIN,
+          );
+        };
+        const getSectorLabelMaxWidth = (radius) => {
+          const halfSpanDeg = SECTOR_DEG / 2 - SECTOR_ANGULAR_MARGIN;
+          return 2 * radius * Math.sin((halfSpanDeg * Math.PI) / 180);
+        };
+        const wrapSectorText = (text, maxWidth, fontSize) => {
+          const parts = text.split(", ");
+          const lines = [];
+          let current = "";
+          for (const part of parts) {
+            const candidate = current ? `${current}, ${part}` : part;
+            if (estimateLabelWidth(candidate, fontSize) <= maxWidth) current = candidate;
+            else {
+              if (current) lines.push(current);
+              current = part;
+            }
+          }
+          if (current) lines.push(current);
+          return lines;
+        };
+        const fitSectorLabelLayout = (text, radius) => {
+          const maxWidth = getSectorLabelMaxWidth(radius);
+          for (let size = PLANET_MAX_FONT; size >= PLANET_MIN_FONT; size -= 0.5) {
+            const lines = wrapSectorText(text, maxWidth, size);
+            const allFit = lines.every((line) => estimateLabelWidth(line, size) <= maxWidth);
+            if (allFit) return { fontSize: size, lines };
+          }
+          const fontSize = PLANET_MIN_FONT;
+          return { fontSize, lines: wrapSectorText(text, maxWidth, fontSize) };
+        };
+        const layoutPlanetLabelAtLongitude = (planet, c, lagnamLon) => {
+          const visualA = toVisualAngle(planet.longitude, lagnamLon);
+          const pos = polar(visualA, PLANET_LABEL_RADIUS, c);
+          const text = formatPlanetPart(planet);
+          const { fontSize, lines } = fitSectorLabelLayout(text, PLANET_LABEL_RADIUS);
+          return {
+            x: pos.x,
+            y: pos.y,
+            labelAngle: visualA,
+            fontSize,
+            text,
+            lines,
+            sectorIndex: getSectorIndex(planet.longitude),
+          };
+        };
+        const verifyGrahaPositions = (positions) => {
+          const issues = [];
+          for (const position of positions) {
+            const derived = zodiac(position.longitude);
+            if (derived.formatted !== position.formatted) {
+              issues.push(
+                `${position.english}: position ${position.formatted} does not match degree ${position.longitude.toFixed(1)}° (expected ${derived.formatted})`,
+              );
+            }
+          }
+          return issues;
+        };
+        const escapeHtml = (value) =>
+          String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        const updatePositionConsistencyStatus = async (_positions) => {
+          const el = document.getElementById("positionConsistency");
+          if (el) el.hidden = true;
+        };
+        const calcInputsLabelRow = (taKey, enKey, value) =>
+          `<div class="label-box__row">` +
+          `<span class="label-box__key"><span class="bilingual"><span>${taKey}</span><span class="bilingual-en">${enKey}</span></span></span>` +
+          `<span class="label-box__value">${escapeHtml(value)}</span>` +
+          `</div>`;
+        const updateCalcInputsLabelBox = (place = placeState, utcDate = currentChartDate) => {
+          const el = document.getElementById("calcInputsLabel");
+          if (!el) return;
+          const rawPlaceName = place.placeName || placeInput.value.trim() || "—";
+          const placeName = formatPlaceLabel(rawPlaceName);
+          const dateTimeLabel = formatLocalInputDateTimeLabel(
+            dateInput.value,
+            timeInput.value,
+          );
+          const coordinatesLabel = formatCoordinates(place.latitude, place.longitude);
+          const timezoneLabel = formatTimezoneOffsetLabel(
+            estimateTimezoneOffsetMinutes(place.longitude, place.latitude),
+          );
+          const utcInstantLabel = formatUtcInstantLabel(utcDate);
+          el.hidden = false;
+          el.innerHTML =
+            calcInputsLabelRow("இடம்", "Place", placeName) +
+            calcInputsLabelRow("தேதி & நேரம்", "Date & time", dateTimeLabel) +
+            calcInputsLabelRow("ஆள்கூறு", "Coordinates", coordinatesLabel) +
+            calcInputsLabelRow("நேர மண்டலம்", "Timezone", timezoneLabel) +
+            calcInputsLabelRow("UTC", "UTC instant", utcInstantLabel);
+        };
+        const groupPlanetsBySector = (positions) => {
+          const groups = new Map();
+          for (const p of positions) {
+            const idx = getSectorIndex(p.longitude);
+            if (!groups.has(idx)) groups.set(idx, []);
+            groups.get(idx).push(p);
+          }
+          return [...groups.entries()].map(([sectorIndex, planets]) => ({
+            sectorIndex,
+            planets: planets.sort((a, b) => a.longitude - b.longitude),
+          }));
+        };
+        const renderPlanetLabels = (positions, c, sectorFillColors, lagnamLon) => {
+          let svg = "";
+          for (const planet of [...positions].sort((a, b) => a.longitude - b.longitude)) {
+            const layout = layoutPlanetLabelAtLongitude(planet, c, lagnamLon);
+            const sectorFill =
+              layout.sectorIndex % 2 === 0
+                ? sectorFillColors[layout.sectorIndex].fillAlt
+                : sectorFillColors[layout.sectorIndex].fill;
+            const labelFill = isDarkFill(sectorFill) ? "#f8fafc" : "#1a1a2e";
+            const labelStroke = isDarkFill(sectorFill)
+              ? "rgba(30,27,75,0.85)"
+              : "rgba(255,255,255,0.92)";
+            const rotation = labelRadialRotation(layout.labelAngle);
+            const lineHeight = layout.fontSize * SECTOR_LABEL_LINE_HEIGHT;
+            const blockOffset =
+              layout.lines.length > 1
+                ? -((layout.lines.length - 1) * lineHeight) / 2
+                : 0;
+            const tspans = layout.lines
+              .map((line, lineIndex) => {
+                const dy = lineIndex === 0 ? blockOffset : lineHeight;
+                return `<tspan x="${layout.x}" dy="${dy}">${line}</tspan>`;
+              })
+              .join("");
+            svg += `<g transform="rotate(${rotation}, ${layout.x}, ${layout.y})">`;
+            svg += `<text x="${layout.x}" y="${layout.y}" text-anchor="middle" dominant-baseline="middle" font-family="Noto Sans Tamil" fill="${labelFill}" font-size="${layout.fontSize}" font-weight="600" paint-order="stroke fill" stroke="${labelStroke}" stroke-width="3">${tspans}</text>`;
+            svg += `</g>`;
+          }
+          return svg;
+        };
+        const zodiac = (L) => {
+          const d = norm(L), i = Math.floor(d / 30), deg = d % 30, m = Math.floor((deg % 1) * 60);
+          return { sign: SIGNS[i], formatted: `${Math.floor(deg)}°${String(m).padStart(2,"0")}'` };
+        };
+        const parseFormattedPositionInSign = (formatted) => {
+          const trimmed = formatted.trim();
+          const dmsMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*°\s*(\d{1,2})?'?$/);
+          if (dmsMatch) {
+            const degrees = parseFloat(dmsMatch[1]);
+            const minutes = parseInt(dmsMatch[2], 10);
+            const inSign = degrees + minutes / 60;
+            if (inSign >= 0 && inSign < 30) return inSign;
+          }
+          const simple = parseFloat(trimmed.replace(/[°'"]/g, " ").trim());
+          if (Number.isFinite(simple) && simple >= 0 && simple < 30) return simple;
+          return null;
+        };
+        const applyPositionEdit = (position, field, rawValue) => {
+          if (field === "longitude") {
+            const value = parseFloat(String(rawValue).replace(/°$/, "").trim());
+            if (!Number.isFinite(value)) return position;
+            const longitude = norm(value);
+            return { ...position, longitude, ...zodiac(longitude) };
+          }
+          const degreeInSign = parseFormattedPositionInSign(rawValue);
+          if (degreeInSign === null) return position;
+          const signIndex = Math.floor(norm(position.longitude) / 30);
+          const longitude = norm(signIndex * 30 + degreeInSign);
+          return { ...position, longitude, ...zodiac(longitude) };
+        };
+        const buildPositions = (date) =>
+          GRAHAS.map((g) => ({
+            ...g,
+            longitude: lon(g, date),
+            ...zodiac(lon(g, date)),
+          }));
+        const EPHEMERIS_COMPARE_TOLERANCE_DEG = 1;
+        const BHARAT_GRAHA_KEYS = {
+          surya: "sun",
+          chandra: "moon",
+          sevvai: "mangala",
+          budhan: "budha",
+          guru: "guru",
+          sukran: "shukra",
+          sani: "shani",
+          rahu: "rahu",
+          ketu: "ketu",
+        };
+        localStorage.setItem("velliastro-ephemeris", "astronomy-engine");
+        const angularDistanceDegrees = (a, b) => {
+          const delta = Math.abs(norm(a) - norm(b));
+          return delta > 180 ? 360 - delta : delta;
+        };
+        const getReferenceLongitude = (grahaId, date) => {
+          const graha = GRAHAS.find((g) => g.id === grahaId);
+          return graha ? siderealLon(graha, date) : 0;
+        };
+        const buildReferencePositions = (date) =>
+          GRAHAS.map((g) => {
+            const longitude = getReferenceLongitude(g.id, date);
+            return { ...g, longitude, ...zodiac(longitude) };
+          });
+        const getTimezoneId = (place) => {
+          if (
+            place.longitude >= 68 &&
+            place.longitude <= 97 &&
+            place.latitude >= 6 &&
+            place.latitude <= 37.5
+          ) {
+            return "Asia/Kolkata";
+          }
+          if (
+            place.longitude >= 80 &&
+            place.longitude <= 89 &&
+            place.latitude >= 26 &&
+            place.latitude <= 31
+          ) {
+            return "Asia/Kathmandu";
+          }
+          return "UTC";
+        };
+        const BHARAT_API_PROXY_PATH = "/api/bharat/chart";
+        const BHARAT_API_CORS_PROXY_URL =
+          "https://velliastro-ephemeris.lead-fire.workers.dev/api/bharat/chart";
+        const BHARAT_API_NETLIFY_PROXY_URL =
+          "https://velliastro-ephemeris.netlify.app/api/bharat/chart";
+        const getBharatApiUrls = () => {
+          const host = window.location.hostname;
+          if (host === "localhost" || host === "127.0.0.1") {
+            return [BHARAT_API_PROXY_PATH];
+          }
+          return [BHARAT_API_CORS_PROXY_URL, BHARAT_API_NETLIFY_PROXY_URL, BHARAT_API_PROXY_PATH];
+        };
+        const fetchBharatLongitudes = async (dateValue, timeValue, place) => {
+          const birthTime = /^\d{2}:\d{2}:\d{2}$/.test(timeValue) ? timeValue : `${timeValue}:00`;
+          const requestBody = JSON.stringify({
+            birthDate: dateValue,
+            birthTime,
+            birthPlace: {
+              lat: place.latitude,
+              lon: place.longitude,
+              tz: getTimezoneId(place),
+            },
+            ayanamsa: "lahiri",
+          });
+          for (const apiUrl of getBharatApiUrls()) {
+            try {
+              const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Accept: "application/json" },
+                body: requestBody,
+              });
+              if (!response.ok) continue;
+              const data = await response.json();
+              if (!data.ok || !data.nirayana) continue;
+              const longitudes = {};
+              for (const [grahaId, key] of Object.entries(BHARAT_GRAHA_KEYS)) {
+                const value = data.nirayana[key];
+                if (typeof value === "number" && Number.isFinite(value)) {
+                  longitudes[grahaId] = norm(value);
+                }
+              }
+              if (typeof longitudes.surya === "number") {
+                longitudes.bhoomi = norm(longitudes.surya + 180);
+              }
+              return longitudes;
+            } catch {
+              continue;
+            }
+          }
+          return null;
+        };
+        const buildApiPositions = async (dateValue, timeValue, place) => {
+          const longitudes = await fetchBharatLongitudes(dateValue, timeValue, place);
+          if (!longitudes) return null;
+          return GRAHAS.map((g) => {
+            const longitude = longitudes[g.id] ?? 0;
+            return { ...g, longitude, ...zodiac(longitude) };
+          });
+        };
+        const comparePositionsToLongitudes = (positions, longitudes, sourceLabel) => {
+          const issues = [];
+          for (const position of positions) {
+            const referenceLongitude = longitudes[position.id];
+            if (typeof referenceLongitude !== "number" || !Number.isFinite(referenceLongitude)) continue;
+            const delta = angularDistanceDegrees(position.longitude, referenceLongitude);
+            if (delta > EPHEMERIS_COMPARE_TOLERANCE_DEG) {
+              issues.push(
+                `${position.english}: chart ${position.longitude.toFixed(1)}° vs ${sourceLabel} ${referenceLongitude.toFixed(1)}° (Δ ${delta.toFixed(1)}°)`,
+              );
+            }
+          }
+          return issues;
+        };
+        const loadChartPositions = async (date) => buildPositions(date);
+        const formatLagnamDegree = (longitude) => `${longitude.toFixed(1)}°`;
+        const DEFAULT_PLACE = { placeName: "Chennai, Tamil Nadu, India", latitude: 13.0827, longitude: 80.2707 };
+        const PLACE_PRESETS = [
+          DEFAULT_PLACE,
+          { placeName: "Coimbatore, Tamil Nadu, India", latitude: 11.0168, longitude: 76.9558 },
+          { placeName: "Madurai, Tamil Nadu, India", latitude: 9.9252, longitude: 78.1198 },
+          { placeName: "Trichy, Tamil Nadu, India", latitude: 10.7905, longitude: 78.7047 },
+          { placeName: "Salem, Tamil Nadu, India", latitude: 11.6643, longitude: 78.146 },
+          { placeName: "Tirunelveli, Tamil Nadu, India", latitude: 8.7139, longitude: 77.7567 },
+          { placeName: "Erode, Tamil Nadu, India", latitude: 11.341, longitude: 77.7172 },
+          { placeName: "Bengaluru, Karnataka, India", latitude: 12.9716, longitude: 77.5946 },
+          { placeName: "Hyderabad, Telangana, India", latitude: 17.385, longitude: 78.4867 },
+          { placeName: "Mumbai, Maharashtra, India", latitude: 19.076, longitude: 72.8777 },
+          { placeName: "Pune, Maharashtra, India", latitude: 18.5204, longitude: 73.8567 },
+          { placeName: "Delhi, India", latitude: 28.7041, longitude: 77.1025 },
+          { placeName: "Kolkata, West Bengal, India", latitude: 22.5726, longitude: 88.3639 },
+          { placeName: "Ahmedabad, Gujarat, India", latitude: 23.0225, longitude: 72.5714 },
+          { placeName: "Kochi, Kerala, India", latitude: 9.9312, longitude: 76.2673 },
+          { placeName: "Durban, KwaZulu-Natal, South Africa", latitude: -29.8587, longitude: 31.0218 },
+          { placeName: "Colombo, Western Province, Sri Lanka", latitude: 6.9271, longitude: 79.8612 },
+          { placeName: "Singapore", latitude: 1.3521, longitude: 103.8198 },
+          { placeName: "London, England, United Kingdom", latitude: 51.5074, longitude: -0.1278 },
+          { placeName: "New York, New York, United States", latitude: 40.7128, longitude: -74.006 },
+          { placeName: "Dubai, United Arab Emirates", latitude: 25.2048, longitude: 55.2708 },
+        ];
+        const PHOTON_SEARCH_URL = "https://photon.komoot.io/api/";
+        const PHOTON_REVERSE_URL = "https://photon.komoot.io/reverse";
+        const PLACE_TYPE_RANK = { city: 0, town: 1, village: 2, district: 3, county: 4, state: 5, country: 6, locality: 7, house: 8, other: 9 };
+        let placeState = { ...DEFAULT_PLACE };
+        let placeSuggestions = [];
+        let activeSuggestionIndex = -1;
+        let searchRequestId = 0;
+        let skipNextPlaceSearch = false;
+        let placeUserCommitted = false;
+        let placeSearchTimer = null;
+        const formatCoordinates = (latitude, longitude) => {
+          const latDir = latitude >= 0 ? "N" : "S";
+          const lonDir = longitude >= 0 ? "E" : "W";
+          return `${Math.abs(latitude).toFixed(4)}° ${latDir}, ${Math.abs(longitude).toFixed(4)}° ${lonDir}`;
+        };
+        const toCoordinateInputValues = (latitude, longitude) => ({
+          latitude: latitude.toFixed(4),
+          longitude: longitude.toFixed(4),
+        });
+        const parseCoordinatePart = (value, kind) => {
+          const trimmed = value.trim().replace(/°/g, "");
+          const match = trimmed.match(/^(-?\d+(?:\.\d+)?)\s*([NnSsEeWw])?$/);
+          if (!match) return null;
+          let num = parseFloat(match[1]);
+          const dir = match[2]?.toUpperCase();
+          if (dir === "S" || dir === "W") num = -Math.abs(num);
+          else if (dir === "N" || dir === "E") num = Math.abs(num);
+          if (!Number.isFinite(num)) return null;
+          if (kind === "lat" && Math.abs(num) > 90) return null;
+          if (kind === "lon" && Math.abs(num) > 180) return null;
+          return num;
+        };
+        const parseCoordinateInputs = (latitudeValue, longitudeValue) => {
+          const latitude = parseCoordinatePart(latitudeValue, "lat");
+          const longitude = parseCoordinatePart(longitudeValue, "lon");
+          if (latitude === null || longitude === null) return null;
+          return { latitude, longitude };
+        };
+        const matchPreset = (query) => {
+          const normalized = query.trim().toLowerCase();
+          if (!normalized) return null;
+          return PLACE_PRESETS.find((preset) => {
+            const city = preset.placeName.split(",")[0].trim().toLowerCase();
+            return (
+              preset.placeName.toLowerCase() === normalized ||
+              preset.placeName.toLowerCase().startsWith(normalized) ||
+              city === normalized ||
+              city.startsWith(normalized)
+            );
+          }) || null;
+        };
+        const presetSuggestions = (query) => {
+          const normalized = query.trim().toLowerCase();
+          if (!normalized) return [];
+          return PLACE_PRESETS.filter((preset) => {
+            const city = preset.placeName.split(",")[0].trim().toLowerCase();
+            return (
+              preset.placeName.toLowerCase().includes(normalized) ||
+              city.startsWith(normalized) ||
+              normalized.startsWith(city)
+            );
+          }).map((preset) => ({ ...preset, id: `preset:${preset.placeName}` }));
+        };
+        const formatPlaceFromProperties = (props) => {
+          const primary = (props.name || props.city || props.district || props.county || "").trim();
+          if (!primary) return "";
+          const parts = [];
+          const seen = new Set();
+          const add = (value) => {
+            const trimmed = String(value || "").trim();
+            if (!trimmed) return;
+            const key = trimmed.toLowerCase();
+            if (seen.has(key)) return;
+            seen.add(key);
+            parts.push(trimmed);
+          };
+          add(primary);
+          add(props.state);
+          add(props.country);
+          return parts.join(", ");
+        };
+        const rankPhotonFeature = (feature, query) => {
+          const props = feature.properties || {};
+          const typeRank = PLACE_TYPE_RANK[props.type || "other"] ?? 9;
+          const name = String(props.name || props.city || "").toLowerCase();
+          const normalized = query.trim().toLowerCase();
+          let nameRank = 2;
+          if (name === normalized) nameRank = 0;
+          else if (name.startsWith(normalized)) nameRank = 1;
+          return typeRank * 10 + nameRank;
+        };
+        const photonFeatureToSuggestion = (feature) => {
+          const coords = feature.geometry?.coordinates;
+          if (!coords) return null;
+          const longitude = coords[0];
+          const latitude = coords[1];
+          if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+          const props = feature.properties || {};
+          const placeName = formatPlaceFromProperties(props);
+          if (!placeName) return null;
+          return {
+            id: `${props.osm_type || "x"}:${props.osm_id || placeName}:${latitude.toFixed(4)}:${longitude.toFixed(4)}`,
+            placeName,
+            latitude,
+            longitude,
+          };
+        };
+        const dedupeSuggestions = (suggestions) => {
+          const seen = new Set();
+          const result = [];
+          for (const suggestion of suggestions) {
+            const key = `${suggestion.placeName.toLowerCase()}|${suggestion.latitude.toFixed(3)}|${suggestion.longitude.toFixed(3)}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            result.push(suggestion);
+          }
+          return result;
+        };
+        const fetchPhotonFeatures = async (url) => {
+          const response = await fetch(url.toString(), { headers: { Accept: "application/json" } });
+          if (!response.ok) return [];
+          const data = await response.json();
+          return data.features || [];
+        };
+        const searchPlaces = async (query, limit = 8) => {
+          const trimmed = query.trim();
+          if (trimmed.length < 2) return presetSuggestions(trimmed).slice(0, limit);
+          const presetMatches = presetSuggestions(trimmed);
+          try {
+            const url = new URL(PHOTON_SEARCH_URL);
+            url.searchParams.set("q", trimmed);
+            url.searchParams.set("limit", String(Math.max(limit, 10)));
+            url.searchParams.set("lang", "en");
+            const features = await fetchPhotonFeatures(url);
+            const ranked = features
+              .slice()
+              .sort((a, b) => rankPhotonFeature(a, trimmed) - rankPhotonFeature(b, trimmed))
+              .map(photonFeatureToSuggestion)
+              .filter(Boolean);
+            return dedupeSuggestions([...presetMatches, ...ranked]).slice(0, limit);
+          } catch {
+            return presetMatches.slice(0, limit);
+          }
+        };
+        const updateCoordsDisplay = (isLoading = false) => {
+          const values = toCoordinateInputValues(placeState.latitude, placeState.longitude);
+          latInput.value = values.latitude;
+          lonInput.value = values.longitude;
+          latInput.classList.toggle("is-loading", isLoading);
+          lonInput.classList.toggle("is-loading", isLoading);
+        };
+        const commitCoordsFromInputs = () => {
+          const parsed = parseCoordinateInputs(latInput.value, lonInput.value);
+          if (!parsed) {
+            updateCoordsDisplay(false);
+            return false;
+          }
+          placeState = { ...placeState, latitude: parsed.latitude, longitude: parsed.longitude };
+          updateCoordsDisplay(false);
+          renderChart(
+            chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
+            placeState,
+          );
+          updateSunriseDisplay(dateInput.value);
+          return true;
+        };
+        const escapeAttr = (value) =>
+          String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        const geocodePlace = async (query) => {
+          const trimmed = query.trim();
+          if (!trimmed) return null;
+          const preset = matchPreset(trimmed);
+          if (preset) return { ...preset };
+          const suggestions = await searchPlaces(trimmed, 1);
+          if (suggestions.length) {
+            const best = suggestions[0];
+            return { placeName: best.placeName, latitude: best.latitude, longitude: best.longitude };
+          }
+          return preset;
+        };
+        const reverseGeocodeCoordinates = async (latitude, longitude) => {
+          try {
+            const url = new URL(PHOTON_REVERSE_URL);
+            url.searchParams.set("lat", String(latitude));
+            url.searchParams.set("lon", String(longitude));
+            url.searchParams.set("lang", "en");
+            const features = await fetchPhotonFeatures(url);
+            if (features.length) {
+              const label = formatPlaceFromProperties(features[0].properties || {});
+              if (label) return label;
+            }
+          } catch {
+            // fall through
+          }
+          return formatCoordinates(latitude, longitude);
+        };
+        const resolveCurrentLocationPlace = () =>
+          new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+              reject(new Error("Geolocation not supported"));
+              return;
+            }
+            navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                const { latitude, longitude } = position.coords;
+                const placeName = await reverseGeocodeCoordinates(latitude, longitude);
+                resolve({ placeName, latitude, longitude });
+              },
+              reject,
+              { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
+            );
+          });
+        let isLocating = false;
+        const showNowAtCurrentLocation = async () => {
+          if (isLocating) return;
+          isLocating = true;
+          placeLocationBtn.disabled = true;
+          placeLocationBtn.textContent = "…";
+          try {
+            const resolved = await resolveCurrentLocationPlace();
+            if (placeUserCommitted) return;
+            placeState = resolved;
+            skipNextPlaceSearch = true;
+            placeInput.value = placeState.placeName;
+            clearPlaceSuggestions();
+            const now = new Date();
+            dateInput.value = toInputValueForPlace(now, placeState);
+            timeInput.value = toTimeInputValueForPlace(now, placeState);
+            updateCoordsDisplay(false);
+            updateSunriseDisplay(dateInput.value);
+            commitPlaceAndRenderChart();
+          } catch {
+            renderChart(
+              chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
+              placeState,
+              true,
+            );
+          } finally {
+            isLocating = false;
+            placeLocationBtn.disabled = false;
+            placeLocationBtn.textContent = "⌖";
+          }
+        };
+        const applyResolvedPlaceToForm = (resolved) => {
+          placeState = { ...resolved };
+          placeInput.value = resolved.placeName;
+          updateCoordsDisplay(false);
+        };
+        const commitPlaceAndRenderChart = () => {
+          if (placeSearchTimer) clearTimeout(placeSearchTimer);
+          clearPlaceSuggestions();
+          if (!chartInitialized || isEditingPositions) return;
+          const chartDate = chartDateTimeFromLocalInputs(
+            dateInput.value,
+            timeInput.value,
+            placeState,
+          );
+          currentChartDate = chartDate;
+          renderChart(chartDate, placeState, true);
+          updateSunriseDisplay(dateInput.value);
+          if (isPositionsView) {
+            renderReferencePositionsTable(chartDate, placeState);
+          }
+        };
+        const applySelectedPlace = (resolved) => {
+          placeUserCommitted = true;
+          skipNextPlaceSearch = true;
+          applyResolvedPlaceToForm(resolved);
+          commitPlaceAndRenderChart();
+        };
+        const placeSuggestionsEl = () => document.getElementById("placeSuggestions");
+        const clearPlaceSuggestions = () => {
+          placeSuggestions = [];
+          activeSuggestionIndex = -1;
+          const list = placeSuggestionsEl();
+          if (!list) return;
+          list.innerHTML = "";
+          list.hidden = true;
+          placeInput.setAttribute("aria-expanded", "false");
+        };
+        const renderPlaceSuggestions = (suggestions, loading = false, preserveIndex = false) => {
+          const list = placeSuggestionsEl();
+          if (!list) return;
+          placeSuggestions = suggestions;
+          if (!preserveIndex) {
+            activeSuggestionIndex = suggestions.length ? 0 : -1;
+          } else if (suggestions.length) {
+            activeSuggestionIndex = Math.max(0, Math.min(activeSuggestionIndex, suggestions.length - 1));
+          } else {
+            activeSuggestionIndex = -1;
+          }
+          list.innerHTML = "";
+          if (loading) {
+            list.className = "place-suggestions is-loading";
+            list.hidden = false;
+            list.setAttribute("aria-live", "polite");
+            list.innerHTML = '<span class="bilingual"><span>தேடுகிறது…</span><span class="bilingual-en">Searching…</span></span>';
+            placeInput.setAttribute("aria-expanded", "true");
+            return;
+          }
+          list.className = "place-suggestions";
+          if (!suggestions.length) {
+            list.hidden = true;
+            placeInput.setAttribute("aria-expanded", "false");
+            return;
+          }
+          suggestions.forEach((suggestion, index) => {
+            const item = document.createElement("li");
+            item.setAttribute("role", "option");
+            item.setAttribute("aria-selected", index === activeSuggestionIndex ? "true" : "false");
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `place-suggestion${index === activeSuggestionIndex ? " is-active" : ""}`;
+            button.textContent = suggestion.placeName;
+            button.addEventListener("mousedown", (event) => event.preventDefault());
+            button.addEventListener("click", () => {
+              skipNextPlaceSearch = true;
+              applySelectedPlace(suggestion);
+              clearPlaceSuggestions();
+            });
+            item.appendChild(button);
+            list.appendChild(item);
+          });
+          list.hidden = false;
+          placeInput.setAttribute("aria-expanded", "true");
+        };
+        const selectActiveSuggestion = () => {
+          if (!placeSuggestions.length) return false;
+          const selected = placeSuggestions[Math.max(activeSuggestionIndex, 0)];
+          if (!selected) return false;
+          skipNextPlaceSearch = true;
+          applySelectedPlace(selected);
+          clearPlaceSuggestions();
+          return true;
+        };
+        const lookupCoordinates = async (query, { commit = false } = {}) => {
+          const trimmed = query.trim();
+          if (!trimmed) return null;
+          updateCoordsDisplay(true);
+          const resolved = await geocodePlace(trimmed);
+          if (resolved) {
+            if (commit) placeUserCommitted = true;
+            applyResolvedPlaceToForm(resolved);
+            if (commit) commitPlaceAndRenderChart();
+          }
+          updateCoordsDisplay(false);
+          return resolved;
+        };
+        const applyPlaceFromForm = async () => {
+          if (placeSearchTimer) clearTimeout(placeSearchTimer);
+          clearPlaceSuggestions();
+          placeUserCommitted = true;
+          const trimmed = placeInput.value.trim();
+          if (trimmed) {
+            updateCoordsDisplay(true);
+            const resolved = await geocodePlace(trimmed);
+            if (resolved) applyResolvedPlaceToForm(resolved);
+            updateCoordsDisplay(false);
+          }
+          const parsed = parseCoordinateInputs(latInput.value, lonInput.value);
+          if (!parsed) {
+            placeState = {
+              ...placeState,
+              placeName: trimmed || placeState.placeName,
+            };
+            updateCoordsDisplay(false);
+            return;
+          }
+          placeState = {
+            placeName: trimmed || placeState.placeName,
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
+          };
+          updateCoordsDisplay(false);
+        };
+        const DAY_COLORS = ["#fff8e7", "#fef3c7", "#fde68a"];
+        const SUNSET_COLORS = ["#fcd34d", "#a78bfa", "#6366f1"];
+        const NIGHT_COLORS = ["#1e1b4b", "#312e81", "#3730a3"];
+        const SUNRISE_COLORS = ["#6366f1", "#fbbf24", "#fff8e7"];
+        const MINUTES_PER_DAY = 24 * 60;
+        const DAY_START_MIN = 6 * 60;
+        const DAY_END_MIN = 17 * 60;
+        const SUNSET_END_MIN = 19 * 60;
+        const SUNRISE_START_MIN = 5 * 60;
+        const normalizeClockMinutes = (minutes) =>
+          ((minutes % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
+        const hexToRgb = (hex) => {
+          const h = hex.replace("#", "");
+          const n = parseInt(h.length === 3 ? h.replace(/./g, (c) => c + c) : h, 16);
+          return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+        };
+        const hexToHsl = (hex) => {
+          const h = hex.replace("#", "");
+          const n = parseInt(h.length === 3 ? h.replace(/./g, (c) => c + c) : h, 16);
+          const r = ((n >> 16) & 255) / 255;
+          const g = ((n >> 8) & 255) / 255;
+          const b = (n & 255) / 255;
+          const max = Math.max(r, g, b);
+          const min = Math.min(r, g, b);
+          const l = (max + min) / 2;
+          let hue = 0;
+          let sat = 0;
+          if (max !== min) {
+            const d = max - min;
+            sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            if (max === r) hue = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+            else if (max === g) hue = ((b - r) / d + 2) * 60;
+            else hue = ((r - g) / d + 4) * 60;
+          }
+          return { h: hue, s: sat * 100, l: l * 100 };
+        };
+        const hslToHex = (h, s, l) => {
+          const sn = s / 100;
+          const ln = l / 100;
+          const c = (1 - Math.abs(2 * ln - 1)) * sn;
+          const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+          const m = ln - c / 2;
+          let r = 0;
+          let g = 0;
+          let b = 0;
+          if (h < 60) [r, g, b] = [c, x, 0];
+          else if (h < 120) [r, g, b] = [x, c, 0];
+          else if (h < 180) [r, g, b] = [0, c, x];
+          else if (h < 240) [r, g, b] = [0, x, c];
+          else if (h < 300) [r, g, b] = [x, 0, c];
+          else [r, g, b] = [c, 0, x];
+          const clamp = (v) => Math.max(0, Math.min(255, Math.round((v + m) * 255)));
+          return `#${[clamp(r), clamp(g), clamp(b)].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+        };
+        const lerpHsl = (a, b, t) => {
+          const ha = hexToHsl(a);
+          const hb = hexToHsl(b);
+          const clamped = Math.max(0, Math.min(1, t));
+          let dh = hb.h - ha.h;
+          if (dh > 180) dh -= 360;
+          if (dh < -180) dh += 360;
+          return hslToHex(
+            ha.h + dh * clamped,
+            ha.s + (hb.s - ha.s) * clamped,
+            ha.l + (hb.l - ha.l) * clamped,
+          );
+        };
+        const lerpPalette = (colors, t) => {
+          if (colors.length <= 1) return colors[0] || "#ffffff";
+          const scaled = t * (colors.length - 1);
+          const i = Math.min(Math.floor(scaled), colors.length - 2);
+          return lerpHsl(colors[i], colors[i + 1], scaled - i);
+        };
+        const getTimeOfDayColor = (clockMinutes) => {
+          const m = normalizeClockMinutes(clockMinutes);
+          if (m >= DAY_START_MIN && m < DAY_END_MIN) {
+            return lerpPalette(DAY_COLORS, (m - DAY_START_MIN) / (DAY_END_MIN - DAY_START_MIN));
+          }
+          if (m >= DAY_END_MIN && m < SUNSET_END_MIN) {
+            return lerpPalette(SUNSET_COLORS, (m - DAY_END_MIN) / (SUNSET_END_MIN - DAY_END_MIN));
+          }
+          if (m >= SUNSET_END_MIN || m < SUNRISE_START_MIN) {
+            const nightSpan = MINUTES_PER_DAY - SUNSET_END_MIN + SUNRISE_START_MIN;
+            const nightElapsed =
+              m >= SUNSET_END_MIN ? m - SUNSET_END_MIN : m + (MINUTES_PER_DAY - SUNSET_END_MIN);
+            return lerpPalette(NIGHT_COLORS, nightElapsed / nightSpan);
+          }
+          return lerpPalette(
+            SUNRISE_COLORS,
+            (m - SUNRISE_START_MIN) / (DAY_START_MIN - SUNRISE_START_MIN),
+          );
+        };
+        const shiftLightness = (hex, delta) => {
+          const { h, s, l } = hexToHsl(hex);
+          return hslToHex(h, s, Math.max(0, Math.min(100, l + delta)));
+        };
+        const getSectorMidpointClockMinutes = (sectorIndex) => {
+          const start = DAY_START_HOUR * 60 + sectorIndex * MINUTES_PER_SECTOR;
+          return normalizeClockMinutes(start + MINUTES_PER_SECTOR / 2);
+        };
+        const getSectorFillColors = (sectorIndex) => {
+          const base = getTimeOfDayColor(getSectorMidpointClockMinutes(sectorIndex));
+          const { l } = hexToHsl(base);
+          const evenDelta = l < 35 ? 4 : 3;
+          const oddDelta = l < 35 ? -3 : -2;
+          return {
+            fill: shiftLightness(base, oddDelta),
+            fillAlt: shiftLightness(base, evenDelta),
+          };
+        };
+        const getAllSectorFillColors = () =>
+          Array.from({ length: SEGMENTS }, (_, i) => getSectorFillColors(i));
+        const relativeLuminance = (hex) => {
+          const { r, g, b } = hexToRgb(hex);
+          const linearize = (c) => {
+            const s = c / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+          };
+          const [rs, gs, bs] = [r, g, b].map(linearize);
+          return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+        };
+        const isDarkFill = (hex) => relativeLuminance(hex) < 0.45;
+        const getSectorDisplayFill = (sectorIndex, sectorFillColors) =>
+          sectorIndex % 2 === 0
+            ? sectorFillColors[sectorIndex].fillAlt
+            : sectorFillColors[sectorIndex].fill;
+        const getSectorTextColors = (sectorIndex, sectorFillColors) => {
+          const sectorFill = getSectorDisplayFill(sectorIndex, sectorFillColors);
+          return {
+            fill: isDarkFill(sectorFill) ? "#f8fafc" : "#1a1a2e",
+            stroke: isDarkFill(sectorFill)
+              ? "rgba(30,27,75,0.85)"
+              : "rgba(255,255,255,0.92)",
+          };
+        };
+        const nightBlend = (minutes) => {
+          const m = normalizeClockMinutes(minutes);
+          if (m >= DAY_START_MIN && m < DAY_END_MIN) return 0;
+          if (m >= DAY_END_MIN && m < SUNSET_END_MIN) return (m - DAY_END_MIN) / (SUNSET_END_MIN - DAY_END_MIN);
+          if (m >= SUNSET_END_MIN || m < SUNRISE_START_MIN) return 1;
+          return 1 - (m - SUNRISE_START_MIN) / (DAY_START_MIN - SUNRISE_START_MIN);
+        };
+        const getChartAccentColors = (clockMinutes) => {
+          const night = nightBlend(clockMinutes);
+          const ring = lerpHsl("#8b5cf6", "#5b5894", night);
+          const spoke = lerpHsl("#c4b5fd", "#4a4678", night * 0.85);
+          const base = getTimeOfDayColor(clockMinutes);
+          const light = shiftLightness(base, 12);
+          const warm = shiftLightness(lerpHsl(base, "#fff8f0", 0.35), 8);
+          return {
+            ring,
+            spoke,
+            panelGradient: `linear-gradient(145deg, ${light} 0%, #ffffff 55%, ${warm} 100%)`,
+          };
+        };
+        let chartPositions = [];
+        let isEditingPositions = false;
+        let editDraft = [];
+        let currentChartDate = new Date();
+        const editPositionsBtn = document.getElementById("editPositionsBtn");
+        const donePositionsBtn = document.getElementById("donePositionsBtn");
+        const refreshPositionsBtn = document.getElementById("refreshPositionsBtn");
+
+        const formatPlanetDegree = (longitude) => `${longitude.toFixed(2)}°`;
+
+        const renderPlanetCell = (p) =>
+          `<span class="table-cell-planet"><span class="table-symbol" style="color:${p.color}">${p.symbol}</span><span class="table-name"><span>${p.tamil}</span><span class="table-name-en">${p.english}</span></span></span>`;
+        const renderRasiCell = (p) =>
+          `<span class="table-name"><span>${RASI_TAMIL[p.sign] || p.sign}</span><span class="table-name-en">${p.sign}</span></span>`;
+
+        const renderTable = () => {
+          const positions = isEditingPositions ? editDraft : chartPositions;
+          const rows = document.getElementById("rows");
+          rows.innerHTML = positions
+            .map((p) => {
+              const positionCell = isEditingPositions
+                ? `<input type="text" class="table-input" data-id="${p.id}" data-field="formatted" value="${escapeAttr(p.formatted)}" aria-label="${escapeAttr(p.english)} position" />`
+                : p.formatted;
+              const degreeCell = isEditingPositions
+                ? `<input type="text" class="table-input" data-id="${p.id}" data-field="longitude" value="${p.longitude.toFixed(2)}" inputmode="decimal" aria-label="${escapeAttr(p.english)} degree" />`
+                : formatPlanetDegree(p.longitude);
+              return `<tr><td>${renderPlanetCell(p)}</td><td data-field="rasi">${renderRasiCell(p)}</td><td>${positionCell}</td><td>${degreeCell}</td></tr>`;
+            })
+            .join("");
+
+          if (isEditingPositions) {
+            rows.querySelectorAll(".table-input").forEach((input) => {
+              input.addEventListener("input", () => {
+                const id = input.dataset.id;
+                const field = input.dataset.field;
+                editDraft = editDraft.map((position) =>
+                  position.id === id
+                    ? applyPositionEdit(position, field, input.value)
+                    : position,
+                );
+                const updated = editDraft.find((position) => position.id === id);
+                if (!updated) return;
+                const row = input.closest("tr");
+                const formattedInput = row.querySelector('[data-field="formatted"]');
+                const longitudeInput = row.querySelector('[data-field="longitude"]');
+                if (formattedInput && formattedInput !== input) {
+                  formattedInput.value = updated.formatted;
+                }
+                if (longitudeInput && longitudeInput !== input) {
+                  longitudeInput.value = updated.longitude.toFixed(2);
+                }
+                const rasiCell = row.querySelector('[data-field="rasi"]');
+                if (rasiCell) rasiCell.innerHTML = renderRasiCell(updated);
+                updatePositionConsistencyStatus(editDraft);
+              });
+            });
+          }
+
+          updatePositionConsistencyStatus(positions);
+        };
+
+        const renderChartSvg = (date, place, positions) => {
+          const size = 560, c = size / 2, outer = 235, inner = 0;
+          const clockMinutes = date.getHours() * 60 + date.getMinutes();
+          const sectorFillColors = getAllSectorFillColors();
+          const chartAccents = getChartAccentColors(clockMinutes);
+          const panelEl = document.querySelector(".panel");
+          if (panelEl) panelEl.style.background = chartAccents.panelGradient;
+
+          let svg = "";
+          svg += `<circle cx="${c}" cy="${c}" r="${outer}" fill="none" stroke="${chartAccents.ring}" stroke-width="2.5"/>`;
+          const lagnamAngle = getLagnamAngle(date, place);
+          const lagnamVisual = LAGNA_VISUAL_ANGLE;
+          const z0 = polar(0, outer, c);
+          svg += `<line x1="${c}" y1="${c}" x2="${z0.x}" y2="${z0.y}" stroke="${chartAccents.ring}" stroke-width="2" opacity="0.85"/>`;
+          for (let i = 0; i < SEGMENTS; i++) {
+            const a = i * DEG;
+            const o = polar(a, outer, c);
+            const sectorFill = i % 2 ? sectorFillColors[i].fill : sectorFillColors[i].fillAlt;
+            svg += `<path d="${sector(c, inner, outer, a, a + DEG)}" fill="${sectorFill}"/>`;
+            svg += `<line x1="${c}" y1="${c}" x2="${o.x}" y2="${o.y}" stroke="${chartAccents.spoke}" stroke-opacity="0.5" stroke-width="1"/>`;
+            const lblOffset = getBoundaryLabelOffset(i);
+            const degLbl = polar(a, outer + lblOffset, c);
+            const degRot = labelRadialInwardRotation(a);
+            svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(a)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatStartTime(i)}</tspan></text>`;
+          }
+          svg += renderPlanetLabels(positions, c, sectorFillColors, lagnamAngle);
+          const lagnamOuter = polar(lagnamVisual, outer, c);
+          const lagnamLbl = polar(lagnamVisual, LAGNAM_LABEL_RADIUS, c);
+          const lagnamRot = labelRadialRotation(lagnamVisual);
+          const lagnamTextColors = getSectorTextColors(getSectorIndex(lagnamAngle), sectorFillColors);
+          svg += `<line x1="${c}" y1="${c}" x2="${lagnamOuter.x}" y2="${lagnamOuter.y}" class="lagnam-spoke"/>`;
+          svg += `<g transform="rotate(${lagnamRot}, ${lagnamLbl.x}, ${lagnamLbl.y})">`;
+          svg += `<text x="${lagnamLbl.x}" y="${lagnamLbl.y}" class="lagnam-label" text-anchor="middle" dominant-baseline="middle" fill="${lagnamTextColors.fill}" stroke="${lagnamTextColors.stroke}">${currentLang === "ta" ? "லக்னம்" : "Lagnam"} (${formatLagnamDegree(lagnamAngle)})</text>`;
+          svg += `</g>`;
+          document.getElementById("chart").innerHTML = svg;
+        };
+
+        const renderChartFromFormInputs = () => {
+          if (!chartInitialized || isEditingPositions) return;
+          const chartDate = chartDateTimeFromLocalInputs(
+            dateInput.value,
+            timeInput.value,
+            placeState,
+          );
+          renderChart(chartDate, placeState, true);
+        };
+
+        function renderChart(date, place = placeState, resetPositions = false) {
+          currentChartDate = date;
+          const finishRender = () => {
+            updateCalcInputsLabelBox(place);
+            renderTable();
+            renderChartSvg(date, place, chartPositions);
+          };
+
+          if (resetPositions || !chartPositions.length) {
+            void loadChartPositions(date).then((positions) => {
+              chartPositions = positions;
+              isEditingPositions = false;
+              editDraft = [];
+              editPositionsBtn.hidden = false;
+              donePositionsBtn.hidden = true;
+              finishRender();
+            });
+            return;
+          }
+
+          finishRender();
+        }
+
+        editPositionsBtn.addEventListener("click", () => {
+          isEditingPositions = true;
+          editDraft = chartPositions.map((position) => ({ ...position }));
+          editPositionsBtn.hidden = true;
+          donePositionsBtn.hidden = false;
+          renderTable();
+        });
+
+        refreshPositionsBtn.addEventListener("click", () => {
+          void loadChartPositions(currentChartDate).then((positions) => {
+            chartPositions = positions;
+            isEditingPositions = false;
+            editDraft = [];
+            editPositionsBtn.hidden = false;
+            donePositionsBtn.hidden = true;
+            renderChartSvg(currentChartDate, placeState, chartPositions);
+            renderTable();
+          });
+        });
+
+        donePositionsBtn.addEventListener("click", () => {
+          chartPositions = editDraft.map((position) => {
+            const longitude = norm(position.longitude);
+            return { ...position, longitude, ...zodiac(longitude) };
+          });
+          isEditingPositions = false;
+          editDraft = [];
+          editPositionsBtn.hidden = false;
+          donePositionsBtn.hidden = true;
+          renderChartSvg(currentChartDate, placeState, chartPositions);
+          renderTable();
+        });
+
+        const langTabTa = document.getElementById("langTabTa");
+        const langTabEn = document.getElementById("langTabEn");
+        let chartInitialized = false;
+        const positionsParams = new URLSearchParams(window.location.search);
+        const isPositionsView = positionsParams.get("view") === "positions";
+
+        const setLanguage = (lang, rerender = true) => {
+          currentLang = lang;
+          localStorage.setItem("velliastro-lang", lang);
+          document.documentElement.classList.remove("lang-ta", "lang-en");
+          document.documentElement.classList.add(lang === "ta" ? "lang-ta" : "lang-en");
+          document.documentElement.lang = lang === "ta" ? "ta" : "en";
+          document.title = "velliAstro";
+          langTabTa.classList.toggle("is-active", lang === "ta");
+          langTabEn.classList.toggle("is-active", lang === "en");
+          langTabTa.setAttribute("aria-selected", lang === "ta" ? "true" : "false");
+          langTabEn.setAttribute("aria-selected", lang === "en" ? "true" : "false");
+          if (rerender && chartInitialized) {
+            if (isPositionsView) {
+              renderReferencePositionsTable(currentChartDate, placeState);
+            } else {
+              renderChart(currentChartDate, placeState, false);
+            }
+          }
+        };
+
+        langTabTa.addEventListener("click", () => setLanguage("ta"));
+        langTabEn.addEventListener("click", () => setLanguage("en"));
+        setLanguage(currentLang, false);
+
+        const menuBtn = document.getElementById("menuBtn");
+        const listMenu = document.getElementById("listMenu");
+        const menuHomeBtn = document.getElementById("menuHomeBtn");
+        const menuPositionsBtn = document.getElementById("menuPositionsBtn");
+        const refPositionsPanel = document.getElementById("refPositionsPanel");
+        const refPositionsHead = document.getElementById("refPositionsHead");
+        const refPositionsBody = document.getElementById("refPositionsBody");
+        const refPositionsStatus = document.getElementById("refPositionsStatus");
+
+        const closeListMenu = () => {
+          listMenu.hidden = true;
+          menuBtn.setAttribute("aria-expanded", "false");
+        };
+
+        const formatRefDegree = (value) =>
+          typeof value === "number" && Number.isFinite(value) ? `${value.toFixed(2)}°` : "—";
+
+        const renderReferencePositionsTable = (date, place) => {
+          if (!isPositionsView) return;
+          if (!window.Astronomy) {
+            refPositionsStatus.textContent =
+              currentLang === "ta"
+                ? "Swiss Ephemeris engine ஏற்றப்படவில்லை."
+                : "Swiss Ephemeris engine failed to load.";
+            refPositionsStatus.classList.add("is-error");
+            return;
+          }
+          refPositionsStatus.classList.remove("is-error");
+          refPositionsStatus.textContent =
+            currentLang === "ta"
+              ? `${formatDateTimeLabel(date, place)} · ${formatCoordinates(place.latitude, place.longitude)}`
+              : `${formatDateTimeLabel(date, place)} · ${formatCoordinates(place.latitude, place.longitude)}`;
+
+          refPositionsHead.innerHTML = `<tr><th><span class="bilingual"><span>கிரகம்</span><span class="bilingual-en">Planet</span></span></th>${REFERENCE_FRAMES.map(
+            (frame) =>
+              `<th><span class="ref-col-name ref-col-name-ta">${frame.tamil}</span><span class="ref-col-name ref-col-name-en">${frame.english}</span></th>`,
+          ).join("")}</tr>`;
+
+          refPositionsBody.innerHTML = GRAHAS.map((g) => {
+            const label = `<span class="ref-col-symbol">${g.symbol}</span><span class="ref-col-name ref-col-name-ta">${g.tamil}</span><span class="ref-col-name ref-col-name-en">${g.english}</span>`;
+            const cells = REFERENCE_FRAMES.map((frame) => {
+              const longitude = siderealLonForFrame(g, date, frame.id, place);
+              return `<td>${formatRefDegree(longitude)}</td>`;
+            }).join("");
+            return `<tr><td>${label}</td>${cells}</tr>`;
+          }).join("");
+        };
+
+        const buildChartQueryParams = () => {
+          const params = new URLSearchParams();
+          params.set("date", dateInput.value);
+          params.set("time", timeInput.value);
+          params.set("lat", String(placeState.latitude));
+          params.set("lon", String(placeState.longitude));
+          params.set("lang", currentLang);
+          if (placeState.placeName) {
+            params.set("place", placeState.placeName);
+          }
+          return params;
+        };
+
+        const buildHomeUrl = () => {
+          const url = new URL(window.location.href);
+          url.search = buildChartQueryParams().toString();
+          return url.toString();
+        };
+
+        const buildPositionsTabUrl = () => {
+          const url = new URL(window.location.href);
+          url.search = buildChartQueryParams().toString();
+          url.searchParams.set("view", "positions");
+          return url.toString();
+        };
+
+        menuBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const willOpen = listMenu.hidden;
+          listMenu.hidden = !willOpen;
+          menuBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        });
+
+        menuHomeBtn.addEventListener("click", () => {
+          closeListMenu();
+          if (isPositionsView) {
+            window.location.href = buildHomeUrl();
+          }
+        });
+
+        menuPositionsBtn.addEventListener("click", () => {
+          closeListMenu();
+          window.open(buildPositionsTabUrl(), "_blank", "noopener");
+        });
+
+        document.addEventListener("click", (event) => {
+          if (!listMenu.hidden && !event.target.closest(".menu-wrap")) {
+            closeListMenu();
+          }
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeListMenu();
+          }
+        });
+
+        const today = new Date();
+        const dateInput = document.getElementById("dateInput");
+        const timeInput = document.getElementById("timeInput");
+        const placeInput = document.getElementById("placeInput");
+        const placeLocationBtn = document.getElementById("placeLocationBtn");
+        const latInput = document.getElementById("latInput");
+        const lonInput = document.getElementById("lonInput");
+        const applyChartParamsFromUrl = (params) => {
+          const paramDate = params.get("date");
+          const paramTime = params.get("time");
+          const paramLat = params.get("lat");
+          const paramLon = params.get("lon");
+          const paramPlace = params.get("place");
+          const paramLang = params.get("lang");
+          if (paramDate) dateInput.value = paramDate;
+          if (paramTime) timeInput.value = paramTime;
+          if (paramLat != null && paramLon != null) {
+            const lat = parseFloat(paramLat);
+            const lon = parseFloat(paramLon);
+            if (Number.isFinite(lat) && Number.isFinite(lon)) {
+              placeState = {
+                placeName: paramPlace || "",
+                latitude: lat,
+                longitude: lon,
+              };
+            }
+          }
+          if (paramLang === "en" || paramLang === "ta") {
+            setLanguage(paramLang, false);
+          }
+          return Boolean(paramDate || paramTime || (paramLat != null && paramLon != null));
+        };
+
+        if (isPositionsView) {
+          document.documentElement.classList.add("view-positions");
+          refPositionsPanel.hidden = false;
+          applyChartParamsFromUrl(positionsParams);
+          const chartDate = chartDateTimeFromLocalInputs(
+            dateInput.value,
+            timeInput.value,
+            placeState,
+          );
+          currentChartDate = chartDate;
+          chartInitialized = true;
+          renderReferencePositionsTable(chartDate, placeState);
+          document.title = "velliAstro · Positions";
+        } else {
+          const hasUrlParams = applyChartParamsFromUrl(positionsParams);
+          placeInput.value = placeState.placeName;
+          updateCoordsDisplay(false);
+          updateSunriseDisplay(dateInput.value);
+          chartInitialized = true;
+          if (hasUrlParams) {
+            if (!dateInput.value) dateInput.value = toInputValue(today);
+            if (!timeInput.value) timeInput.value = toTimeInputValue(today);
+            renderChartFromFormInputs();
+          } else {
+            dateInput.value = toInputValue(today);
+            timeInput.value = toTimeInputValue(today);
+            void showNowAtCurrentLocation();
+          }
+        }
+
+        const onDateTimeInput = () => {
+          updateSunriseDisplay(dateInput.value);
+          renderChartFromFormInputs();
+        };
+        dateInput.addEventListener("change", onDateTimeInput);
+        dateInput.addEventListener("input", onDateTimeInput);
+        timeInput.addEventListener("change", onDateTimeInput);
+        timeInput.addEventListener("input", onDateTimeInput);
+        latInput.addEventListener("blur", commitCoordsFromInputs);
+        lonInput.addEventListener("blur", commitCoordsFromInputs);
+        latInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commitCoordsFromInputs();
+          }
+        });
+        lonInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commitCoordsFromInputs();
+          }
+        });
+
+        const schedulePlaceSearch = (query) => {
+          if (placeSearchTimer) clearTimeout(placeSearchTimer);
+          const trimmed = query.trim();
+          if (trimmed.length < 2) {
+            clearPlaceSuggestions();
+            return;
+          }
+          placeSearchTimer = setTimeout(async () => {
+            const requestId = ++searchRequestId;
+            renderPlaceSuggestions([], true);
+            const suggestions = await searchPlaces(trimmed);
+            if (requestId !== searchRequestId) return;
+            renderPlaceSuggestions(suggestions, false);
+          }, 280);
+        };
+
+        placeInput.addEventListener("input", () => {
+          if (skipNextPlaceSearch) {
+            skipNextPlaceSearch = false;
+            return;
+          }
+          schedulePlaceSearch(placeInput.value);
+        });
+        placeInput.addEventListener("blur", () => {
+          window.setTimeout(() => clearPlaceSuggestions(), 150);
+        });
+        placeInput.addEventListener("keydown", (event) => {
+          if (!placeSuggestions.length) {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              if (placeSearchTimer) clearTimeout(placeSearchTimer);
+              void lookupCoordinates(placeInput.value, { commit: true });
+            }
+            return;
+          }
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            activeSuggestionIndex = activeSuggestionIndex < placeSuggestions.length - 1 ? activeSuggestionIndex + 1 : 0;
+            renderPlaceSuggestions(placeSuggestions, false, true);
+            return;
+          }
+          if (event.key === "ArrowUp") {
+            event.preventDefault();
+            activeSuggestionIndex = activeSuggestionIndex > 0 ? activeSuggestionIndex - 1 : placeSuggestions.length - 1;
+            renderPlaceSuggestions(placeSuggestions, false, true);
+            return;
+          }
+          if (event.key === "Enter") {
+            event.preventDefault();
+            if (placeSearchTimer) clearTimeout(placeSearchTimer);
+            selectActiveSuggestion();
+            return;
+          }
+          if (event.key === "Escape") {
+            event.preventDefault();
+            clearPlaceSuggestions();
+          }
+        });
+        document.getElementById("placeSearchBtn").addEventListener("click", () => {
+          if (placeSearchTimer) clearTimeout(placeSearchTimer);
+          if (selectActiveSuggestion()) return;
+          void lookupCoordinates(placeInput.value, { commit: true });
+        });
+        placeLocationBtn.addEventListener("click", () => {
+          placeUserCommitted = false;
+          void showNowAtCurrentLocation();
+        });
+
+        document.getElementById("dateForm").addEventListener("submit", (e) => {
+          e.preventDefault();
+          void applyPlaceFromForm().then(() => {
+            commitPlaceAndRenderChart();
+          });
+        });
+      } catch (error) {
+        document.body.innerHTML = `<div style="padding:2rem;color:#ff6b6b;font-family:monospace"><h2>Chart failed to load</h2><pre>${error.message}</pre></div>`;
+        console.error(error);
+      }
+    </script>
+  </body>
+</html>

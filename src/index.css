@@ -610,6 +610,14 @@ body {
 
 .positions-table {
   padding: 1.25rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.positions-table__data-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-inline: 0;
 }
 
 .positions-table__header {
@@ -629,14 +637,41 @@ body {
 
 .positions-table table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .positions-table th,
 .positions-table td {
-  padding: 0.7rem 0.5rem;
+  padding: 0.7rem 0.4rem;
   text-align: left;
   font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.positions-table th:first-child,
+.positions-table td:first-child {
+  padding-left: 1rem;
+  width: 34%;
+}
+
+.positions-table th:nth-child(2),
+.positions-table td:nth-child(2) {
+  width: 22%;
+}
+
+.positions-table th:nth-child(3),
+.positions-table td:nth-child(3) {
+  width: 22%;
+}
+
+.positions-table th:last-child,
+.positions-table td:last-child {
+  padding-right: 1rem;
+  width: 22%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .positions-table th {
@@ -821,10 +856,46 @@ body {
   margin-bottom: 1.5rem;
 }
 
-.graha-chart__header-brand {
-  text-align: center;
+.graha-chart__header-top-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
   margin-bottom: 1.25rem;
+}
+
+.graha-chart__header-brand {
+  grid-column: 2;
+  text-align: center;
+  margin-bottom: 0;
   padding: 0 0.25rem;
+  min-width: 0;
+}
+
+.graha-chart__lang-tabs {
+  grid-column: 3;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin: 0;
+  justify-self: end;
+}
+
+@media (max-width: 520px) {
+  .graha-chart__header-top-bar {
+    grid-template-columns: 1fr auto;
+    row-gap: 0.5rem;
+  }
+
+  .graha-chart__header-brand {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .graha-chart__lang-tabs {
+    grid-row: 2;
+    grid-column: 2;
+  }
 }
 
 .graha-chart__eyebrow {
@@ -870,13 +941,6 @@ body {
   font-family: var(--font-body);
   text-transform: none;
   letter-spacing: normal;
-}
-
-.graha-chart__lang-tabs {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin: 0 0 1.25rem;
 }
 
 .graha-chart__lang-tab {
@@ -1075,13 +1139,23 @@ body {
   opacity: 0.9;
 }
 
+.graha-chart__coords-sunrise-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  width: 100%;
+}
+
 .graha-chart__sunrise-display {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 0.45rem;
-  width: 100%;
+  flex: 0 1 auto;
+  min-width: 0;
   font-size: 0.88rem;
   color: var(--text-muted);
   padding: 0.15rem 0;
@@ -1095,13 +1169,61 @@ body {
 
 .graha-chart__place-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.45rem;
   width: 100%;
 }
 
-.graha-chart__place-row input[type="text"] {
+.graha-chart__place-autocomplete {
+  position: relative;
   flex: 1;
+  min-width: 0;
+}
+
+.graha-chart__place-row input[type="text"] {
+  width: 100%;
+}
+
+.graha-chart__place-suggestions {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.35rem 0;
+  list-style: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 24px rgba(26, 26, 46, 0.12);
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.graha-chart__place-suggestions--loading {
+  padding: 0.65rem 0.85rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.graha-chart__place-suggestion {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  padding: 0.55rem 0.85rem;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.graha-chart__place-suggestion:hover,
+.graha-chart__place-suggestion.is-active {
+  background: rgba(167, 139, 250, 0.12);
 }
 
 .graha-chart__place-search-btn,
@@ -1135,9 +1257,22 @@ body {
   flex-direction: column;
   align-items: stretch;
   gap: 0.5rem;
+  flex: 1 1 14rem;
+  min-width: 0;
   font-size: 0.78rem;
   color: var(--text-muted);
   line-height: 1.2;
+}
+
+@media (max-width: 480px) {
+  .graha-chart__coords-sunrise-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .graha-chart__sunrise-display {
+    justify-content: flex-start;
+  }
 }
 
 .graha-chart__coords-display .graha-chart__bilingual {
@@ -1207,6 +1342,10 @@ body {
   align-items: start;
 }
 
+.graha-chart.lang-ta .graha-chart__layout {
+  grid-template-columns: 1fr 330px;
+}
+
 .graha-chart__panel {
   background: linear-gradient(145deg, #faf8ff 0%, #ffffff 55%, #fff8f0 100%);
   border: 1px solid var(--border);
@@ -1247,7 +1386,7 @@ body {
 
 .graha-chart__boundary-label {
   fill: #6d28d9;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
@@ -1256,7 +1395,7 @@ body {
 
 .graha-chart__degree-label {
   fill: #7c3aed;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
@@ -1264,7 +1403,7 @@ body {
 
 .graha-chart__time-label {
   fill: #6366f1;
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
@@ -1278,7 +1417,7 @@ body {
 .graha-chart__graha-label {
   fill: #1a1a2e;
   font-family: "Noto Sans Tamil", var(--font-body);
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   pointer-events: none;
   paint-order: stroke fill;
@@ -1289,7 +1428,7 @@ body {
 .graha-chart__graha-detail {
   fill: #4a5070;
   font-family: "Noto Sans Tamil", var(--font-body);
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
@@ -1300,7 +1439,7 @@ body {
 
 .graha-chart__degree-inline {
   fill: #1a1a2e;
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   paint-order: stroke fill;
@@ -1318,7 +1457,7 @@ body {
 .graha-chart__lagnam-label {
   fill: #b45309;
   font-family: "Noto Sans Tamil", var(--font-body);
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
   paint-order: stroke fill;
   stroke: rgba(255, 255, 255, 0.92);
@@ -1349,6 +1488,13 @@ body {
   border-radius: 1.25rem;
   padding: 1.25rem;
   box-shadow: 0 1px 3px rgba(26, 26, 46, 0.06);
+  min-width: 0;
+}
+
+.graha-chart__table-data-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-inline: 0;
 }
 
 .graha-chart__table h2 {
@@ -1500,14 +1646,74 @@ body {
 .graha-chart__table table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.graha-chart.lang-ta .graha-chart__table table {
+  table-layout: auto;
+  font-size: 0.72rem;
 }
 
 .graha-chart__table th,
 .graha-chart__table td {
-  padding: 0.65rem 0.4rem;
+  padding: 0.55rem 0.4rem;
   text-align: left;
   font-size: 0.82rem;
   border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+.graha-chart.lang-ta .graha-chart__table th,
+.graha-chart.lang-ta .graha-chart__table td {
+  padding: 0.4rem 0.3rem;
+}
+
+.graha-chart__table th:first-child,
+.graha-chart__table td:first-child {
+  padding-left: 1rem;
+  width: 34%;
+}
+
+.graha-chart__table th:nth-child(2),
+.graha-chart__table td:nth-child(2) {
+  width: 22%;
+}
+
+.graha-chart__table th:nth-child(3),
+.graha-chart__table td:nth-child(3) {
+  width: 22%;
+}
+
+.graha-chart__table th:last-child,
+.graha-chart__table td:last-child {
+  padding-right: 1rem;
+  width: 22%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.graha-chart.lang-ta .graha-chart__table th:first-child,
+.graha-chart.lang-ta .graha-chart__table td:first-child {
+  width: auto;
+  padding-left: 0.65rem;
+}
+
+.graha-chart.lang-ta .graha-chart__table th:nth-child(2),
+.graha-chart.lang-ta .graha-chart__table td:nth-child(2) {
+  width: auto;
+}
+
+.graha-chart.lang-ta .graha-chart__table th:nth-child(3),
+.graha-chart.lang-ta .graha-chart__table td:nth-child(3) {
+  width: 1%;
+}
+
+.graha-chart.lang-ta .graha-chart__table th:last-child,
+.graha-chart.lang-ta .graha-chart__table td:last-child {
+  width: 1%;
+  padding-right: 0.65rem;
 }
 
 .graha-chart__table th {
@@ -1522,30 +1728,53 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.graha-chart.lang-ta .graha-chart__table th .graha-chart__bilingual {
+  text-transform: none;
+  letter-spacing: 0.02em;
 }
 
 .graha-chart__table td:first-child {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
   font-family: "Noto Sans Tamil", var(--font-body);
   font-weight: 600;
 }
 
+.graha-chart__table-cell-planet {
+  display: inline;
+  white-space: nowrap;
+}
+
 .graha-chart__table-symbol {
-  display: inline-block;
-  width: 1.25em;
+  display: inline;
+  margin-right: 0.25em;
   font-size: 1.05em;
   line-height: 1;
   text-align: center;
   font-family: serif;
-  flex-shrink: 0;
+  vertical-align: baseline;
 }
 
 .graha-chart__table-name {
-  display: inline-flex;
-  flex-direction: column;
+  display: inline;
   line-height: 1.25;
+  white-space: nowrap;
+}
+
+.graha-chart__table-name > span {
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+.graha-chart.lang-ta .graha-chart__table td .graha-chart__table-cell-planet,
+.graha-chart.lang-ta .graha-chart__table td .graha-chart__table-name,
+.graha-chart.lang-ta .graha-chart__table td .graha-chart__table-name > span {
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
 }
 
 .graha-chart__table-name-en {

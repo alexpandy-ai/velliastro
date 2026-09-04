@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  describeInsetSectorWedge,
   describeSectorWedge,
   SECTOR_LABEL_LINE_HEIGHT,
   finalizeGrahaPositions,
@@ -10,12 +9,12 @@ import {
   formatLagnamDegree,
   getBoundaryLabelRadiusOffset,
   getLagnamAngle,
+  getLagnamVisualAngle,
   getSectorIndex,
   labelRadialInwardRotation,
   labelRadialRotation,
-  groupPlanetsBySector,
   LAGNAM_LABEL_RADIUS,
-  layoutSectorPlanetLabel,
+  layoutPlanetLabelAtLongitude,
   polarToChart,
   SECTOR_COUNT,
   SECTOR_DEGREES,
@@ -27,14 +26,13 @@ import {
   chartDateTimeFromLocalInputs,
   estimateTimezoneOffsetMinutes,
   formatDateInputForPlace,
-  formatDateTimeLabelForPlace,
   formatLocalInputDateTimeLabel,
   formatPlaceLabel,
   formatTimeInputForPlace,
   formatTimezoneOffsetLabel,
   formatUtcInstantLabel,
 } from "../utils/chartDateTime";
-import { PLACE_PRESETS, formatCoordinates } from "../utils/geocode";
+import { DEFAULT_PLACE, formatCoordinates, type PlaceCoords } from "../utils/geocode";
 import { getTamilRasi, type ZodiacSign } from "../utils/positions";
 import { formatSunriseLabel } from "../utils/sunrise";
 import { usePlaceGeocode } from "../hooks/usePlaceGeocode";
@@ -67,10 +65,6 @@ function parseDateTime(dateValue: string, timeValue: string): Date {
   return new Date(y, m - 1, d, hours, minutes, 0);
 }
 
-function formatDateTimeLabel(date: Date, place: { latitude: number; longitude: number }): string {
-  return formatDateTimeLabelForPlace(date, place);
-}
-
 export function GrahaChart() {
   const size = 560;
   const center = size / 2;
@@ -81,33 +75,60 @@ export function GrahaChart() {
   const [inputDate, setInputDate] = useState(() => toInputValue(now));
   const [inputTime, setInputTime] = useState(() => toTimeInputValue(now));
   const [selectedDate, setSelectedDate] = useState(() => now);
+  const [chartPositions, setChartPositions] = useState<GrahaPosition[]>(() =>
+    getGrahaPositions(now, { latitude: DEFAULT_PLACE.latitude, longitude: DEFAULT_PLACE.longitude }),
+  );
+  const [isEditingPositions, setIsEditingPositions] = useState(false);
+  const [draftPositions, setDraftPositions] = useState<GrahaPosition[]>([]);
+  const inputDateRef = useRef(inputDate);
+  const inputTimeRef = useRef(inputTime);
+  inputDateRef.current = inputDate;
+  inputTimeRef.current = inputTime;
+  const placeUserCommittedRef = useRef(false);
+  const isEditingPositionsRef = useRef(false);
+  isEditingPositionsRef.current = isEditingPositions;
+
+  const recalculateChart = useCallback((nextPlace: PlaceCoords) => {
+    placeUserCommittedRef.current = true;
+    if (isEditingPositionsRef.current) return;
+    const nextDate = chartDateTimeFromLocalInputs(
+      inputDateRef.current,
+      inputTimeRef.current,
+      nextPlace,
+    );
+    setSelectedDate(nextDate);
+    setChartPositions(getGrahaPositions(nextDate, nextPlace));
+    setIsEditingPositions(false);
+    setDraftPositions([]);
+  }, []);
+
   const {
     placeInput,
     place,
     latitudeInput,
     longitudeInput,
+    placeSuggestions,
+    activeSuggestionIndex,
     isGeocoding,
+    isSearchingPlaces,
     isLocating,
     handlePlaceInputChange,
     handlePlaceBlur,
     handlePlaceSearch,
+    handlePlaceKeyDown,
+    selectPlaceSuggestion,
     applyPlaceFromForm,
     applyCurrentLocation,
     handleLatitudeInputChange,
     handleLongitudeInputChange,
     handleCoordinateBlur,
     commitCoordinateInputs,
-  } = usePlaceGeocode();
+  } = usePlaceGeocode(undefined, recalculateChart);
 
   const chartPlace = {
     latitude: place.latitude,
     longitude: place.longitude,
   };
-  const [chartPositions, setChartPositions] = useState<GrahaPosition[]>(() =>
-    getGrahaPositions(now, { latitude: place.latitude, longitude: place.longitude }),
-  );
-  const [isEditingPositions, setIsEditingPositions] = useState(false);
-  const [draftPositions, setDraftPositions] = useState<GrahaPosition[]>([]);
   const [lang, setLang] = useState<ChartLang>(() => {
     if (typeof window === "undefined") return "ta";
     return localStorage.getItem("velliastro-lang") === "en" ? "en" : "ta";
@@ -121,13 +142,13 @@ export function GrahaChart() {
   }, [lang]);
 
   const tablePositions = isEditingPositions ? draftPositions : chartPositions;
-  const sectorPlanetGroups = groupPlanetsBySector(chartPositions);
 
   const lagnamAngle = getLagnamAngle(selectedDate, chartPlace);
+  const lagnamVisualAngle = getLagnamVisualAngle();
   const lagnamDegree = formatLagnamDegree(lagnamAngle);
-  const lagnamOuter = polarToChart(lagnamAngle, outerRadius, center);
-  const lagnamLabelPos = polarToChart(lagnamAngle, LAGNAM_LABEL_RADIUS, center);
-  const lagnamLabelRotation = labelRadialRotation(lagnamAngle);
+  const lagnamOuter = polarToChart(lagnamVisualAngle, outerRadius, center);
+  const lagnamLabelPos = polarToChart(lagnamVisualAngle, LAGNAM_LABEL_RADIUS, center);
+  const lagnamLabelRotation = labelRadialRotation(lagnamVisualAngle);
   const lagnamTextColors = getSectorTextColors(getSectorIndex(lagnamAngle));
 
   const boundaries = Array.from(
@@ -135,7 +156,6 @@ export function GrahaChart() {
     (_, i) => i * DEGREES_PER_SEGMENT,
   );
 
-  const dateLabel = formatDateTimeLabel(selectedDate, chartPlace);
   const timezoneOffsetMinutes = estimateTimezoneOffsetMinutes(
     chartPlace.longitude,
     chartPlace.latitude,
@@ -147,7 +167,6 @@ export function GrahaChart() {
     timezoneLabel: formatTimezoneOffsetLabel(timezoneOffsetMinutes),
     utcInstantLabel: formatUtcInstantLabel(selectedDate),
   };
-  const zeroLeftLabel = lang === "ta" ? "0° இடது புறம்" : "0° on left";
   const sectorFillColors = getAllSectorFillColors();
   const chartAccents = getChartAccentColors(getClockMinutesFromDate(selectedDate));
 
@@ -155,17 +174,7 @@ export function GrahaChart() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nextPlace = await applyPlaceFromForm();
-    const nextDate = chartDateTimeFromLocalInputs(
-      inputDate,
-      inputTime,
-      nextPlace,
-    );
-    const nextPositions = getGrahaPositions(nextDate, nextPlace);
-    setSelectedDate(nextDate);
-    setChartPositions(nextPositions);
-    setIsEditingPositions(false);
-    setDraftPositions([]);
+    await applyPlaceFromForm();
   };
 
   const startPositionEdit = () => {
@@ -200,7 +209,7 @@ export function GrahaChart() {
 
   const showNowAtCurrentLocation = useCallback(async () => {
     const nextPlace = await applyCurrentLocation();
-    if (!nextPlace) return;
+    if (!nextPlace || placeUserCommittedRef.current) return;
 
     const chartNow = new Date();
     const dateValue = formatDateInputForPlace(chartNow, nextPlace);
@@ -229,49 +238,41 @@ export function GrahaChart() {
     const nextDate = chartDateTimeFromLocalInputs(inputDate, inputTime, chartPlace);
     setSelectedDate(nextDate);
     setChartPositions(getGrahaPositions(nextDate, chartPlace));
-  }, [inputDate, inputTime, chartPlace, isEditingPositions]);
+  }, [inputDate, inputTime, chartPlace.latitude, chartPlace.longitude, isEditingPositions]);
 
   return (
     <div className={`graha-chart graha-chart--bright lang-${lang}`}>
       <header className="graha-chart__header">
-        <div className="graha-chart__header-brand">
-          <h1>
-            <span className="graha-chart__bilingual">
-              <span>கிரக நிலைகள்</span>
-              <span className="graha-chart__bilingual-en">Planet Positions</span>
-            </span>
-          </h1>
-          <p className="graha-chart__subtitle">
-            <span className="graha-chart__bilingual">
-              <span>நாள் 16 பாகங்கள் · காலை 6 மணி முதல்</span>
-              <span className="graha-chart__bilingual-en">16 day sections · from 6 AM</span>
-            </span>
-            <span className="graha-chart__subtitle-meta">
-              {` · ${zeroLeftLabel} · `}
-              {dateLabel}
-            </span>
-          </p>
+        <div className="graha-chart__header-top-bar">
+          <div className="graha-chart__header-brand">
+            <h1>
+              <span className="graha-chart__bilingual">
+                <span>கிரக நிலைகள்</span>
+                <span className="graha-chart__bilingual-en">Planet Positions</span>
+              </span>
+            </h1>
+          </div>
+          <nav className="graha-chart__lang-tabs" role="tablist" aria-label="Language">
+            <button
+              type="button"
+              className={`graha-chart__lang-tab${lang === "ta" ? " is-active" : ""}`}
+              role="tab"
+              aria-selected={lang === "ta"}
+              onClick={() => setLang("ta")}
+            >
+              தமிழ்
+            </button>
+            <button
+              type="button"
+              className={`graha-chart__lang-tab${lang === "en" ? " is-active" : ""}`}
+              role="tab"
+              aria-selected={lang === "en"}
+              onClick={() => setLang("en")}
+            >
+              English
+            </button>
+          </nav>
         </div>
-        <nav className="graha-chart__lang-tabs" role="tablist" aria-label="Language">
-          <button
-            type="button"
-            className={`graha-chart__lang-tab${lang === "ta" ? " is-active" : ""}`}
-            role="tab"
-            aria-selected={lang === "ta"}
-            onClick={() => setLang("ta")}
-          >
-            தமிழ்
-          </button>
-          <button
-            type="button"
-            className={`graha-chart__lang-tab${lang === "en" ? " is-active" : ""}`}
-            role="tab"
-            aria-selected={lang === "en"}
-            onClick={() => setLang("en")}
-          >
-            English
-          </button>
-        </nav>
         <form className="graha-chart__date-form" onSubmit={handleSubmit}>
           <div className="graha-chart__form-card">
             <div className="graha-chart__form-group graha-chart__form-group--datetime">
@@ -306,20 +307,6 @@ export function GrahaChart() {
                 />
               </div>
             </div>
-            <div className="graha-chart__form-group graha-chart__form-group--sunrise">
-              <span className="graha-chart__sunrise-display" aria-live="polite">
-                <span className="graha-chart__bilingual">
-                  <span>சூரிய உதயம்</span>
-                  <span className="graha-chart__bilingual-en">Sunrise</span>
-                </span>
-                <span className="graha-chart__sunrise-value">
-                  {formatSunriseLabel(
-                  chartDateTimeFromLocalInputs(inputDate, "06:00", chartPlace),
-                  chartPlace,
-                )}
-                </span>
-              </span>
-            </div>
             <div className="graha-chart__form-group graha-chart__form-group--place">
               <label htmlFor="placeInput" className="graha-chart__location-label">
                 <span className="graha-chart__bilingual">
@@ -328,20 +315,57 @@ export function GrahaChart() {
                 </span>
               </label>
               <div className="graha-chart__place-row">
-                <input
-                  type="text"
-                  id="placeInput"
-                  list="placePresets"
-                  value={placeInput}
-                  onChange={(e) => handlePlaceInputChange(e.target.value)}
-                  onBlur={handlePlaceBlur}
-                  placeholder="Chennai"
-                  autoComplete="off"
-                />
+                <div className="graha-chart__place-autocomplete">
+                  <input
+                    type="text"
+                    id="placeInput"
+                    value={placeInput}
+                    onChange={(e) => handlePlaceInputChange(e.target.value)}
+                    onBlur={handlePlaceBlur}
+                    onKeyDown={handlePlaceKeyDown}
+                    placeholder="Chennai"
+                    autoComplete="off"
+                    role="combobox"
+                    aria-expanded={placeSuggestions.length > 0}
+                    aria-controls="placeSuggestions"
+                    aria-autocomplete="list"
+                  />
+                  {placeSuggestions.length > 0 && (
+                    <ul
+                      id="placeSuggestions"
+                      className="graha-chart__place-suggestions"
+                      role="listbox"
+                    >
+                      {placeSuggestions.map((suggestion, index) => (
+                        <li key={suggestion.id} role="option" aria-selected={index === activeSuggestionIndex}>
+                          <button
+                            type="button"
+                            className={`graha-chart__place-suggestion${index === activeSuggestionIndex ? " is-active" : ""}`}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => selectPlaceSuggestion(suggestion)}
+                          >
+                            {suggestion.placeName}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {isSearchingPlaces && placeSuggestions.length === 0 && placeInput.trim().length >= 2 && (
+                    <div className="graha-chart__place-suggestions graha-chart__place-suggestions--loading" aria-live="polite">
+                      <span className="graha-chart__bilingual">
+                        <span>தேடுகிறது…</span>
+                        <span className="graha-chart__bilingual-en">Searching…</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <button
                   type="button"
                   className="graha-chart__place-location-btn"
-                  onClick={() => void showNowAtCurrentLocation()}
+                  onClick={() => {
+                    placeUserCommittedRef.current = false;
+                    void showNowAtCurrentLocation();
+                  }}
                   disabled={isLocating}
                   title="Use current location and time"
                   aria-label="Use current location and time"
@@ -351,7 +375,7 @@ export function GrahaChart() {
                 <button
                   type="button"
                   className="graha-chart__place-search-btn"
-                  onClick={handlePlaceSearch}
+                  onClick={() => void handlePlaceSearch()}
                   title="Search place"
                   aria-label="Search place"
                 >
@@ -360,47 +384,61 @@ export function GrahaChart() {
               </div>
             </div>
             <div className="graha-chart__form-group graha-chart__form-group--coords">
-              <div className="graha-chart__coords-display">
-                <span className="graha-chart__bilingual">
-                  <span>ஆயத்தொலைவு</span>
-                  <span className="graha-chart__bilingual-en">Coordinates</span>
-                </span>
-                <span className="graha-chart__coords-fields">
-                  <input
-                    type="text"
-                    className={`graha-chart__coords-input${isGeocoding ? " is-loading" : ""}`}
-                    value={latitudeInput}
-                    onChange={(e) => handleLatitudeInputChange(e.target.value)}
-                    onBlur={handleCoordinateBlur}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        commitCoordinateInputs();
-                      }
-                    }}
-                    inputMode="decimal"
-                    maxLength={12}
-                    aria-label="Latitude"
-                    placeholder="Lat"
-                  />
-                  <span className="graha-chart__coords-sep">,</span>
-                  <input
-                    type="text"
-                    className={`graha-chart__coords-input${isGeocoding ? " is-loading" : ""}`}
-                    value={longitudeInput}
-                    onChange={(e) => handleLongitudeInputChange(e.target.value)}
-                    onBlur={handleCoordinateBlur}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        commitCoordinateInputs();
-                      }
-                    }}
-                    inputMode="decimal"
-                    maxLength={12}
-                    aria-label="Longitude"
-                    placeholder="Lon"
-                  />
+              <div className="graha-chart__coords-sunrise-row">
+                <div className="graha-chart__coords-display">
+                  <span className="graha-chart__bilingual">
+                    <span>ஆயத்தொலைவு</span>
+                    <span className="graha-chart__bilingual-en">Coordinates</span>
+                  </span>
+                  <span className="graha-chart__coords-fields">
+                    <input
+                      type="text"
+                      className={`graha-chart__coords-input${isGeocoding ? " is-loading" : ""}`}
+                      value={latitudeInput}
+                      onChange={(e) => handleLatitudeInputChange(e.target.value)}
+                      onBlur={handleCoordinateBlur}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          commitCoordinateInputs();
+                        }
+                      }}
+                      inputMode="decimal"
+                      maxLength={12}
+                      aria-label="Latitude"
+                      placeholder="Lat"
+                    />
+                    <span className="graha-chart__coords-sep">,</span>
+                    <input
+                      type="text"
+                      className={`graha-chart__coords-input${isGeocoding ? " is-loading" : ""}`}
+                      value={longitudeInput}
+                      onChange={(e) => handleLongitudeInputChange(e.target.value)}
+                      onBlur={handleCoordinateBlur}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          commitCoordinateInputs();
+                        }
+                      }}
+                      inputMode="decimal"
+                      maxLength={12}
+                      aria-label="Longitude"
+                      placeholder="Lon"
+                    />
+                  </span>
+                </div>
+                <span className="graha-chart__sunrise-display" aria-live="polite">
+                  <span className="graha-chart__bilingual">
+                    <span>சூரிய உதயம்</span>
+                    <span className="graha-chart__bilingual-en">Sunrise</span>
+                  </span>
+                  <span className="graha-chart__sunrise-value">
+                    {formatSunriseLabel(
+                      chartDateTimeFromLocalInputs(inputDate, "06:00", chartPlace),
+                      chartPlace,
+                    )}
+                  </span>
                 </span>
               </div>
             </div>
@@ -411,11 +449,6 @@ export function GrahaChart() {
               </span>
             </button>
           </div>
-          <datalist id="placePresets">
-            {PLACE_PRESETS.map((preset) => (
-              <option key={preset.placeName} value={preset.placeName} />
-            ))}
-          </datalist>
         </form>
       </header>
 
@@ -501,83 +534,55 @@ export function GrahaChart() {
               );
             })}
 
-            <defs>
-              {Array.from({ length: SEGMENTS }, (_, sectorIndex) => {
-                const startAngle = sectorIndex * DEGREES_PER_SEGMENT;
+            {[...chartPositions]
+              .sort((a, b) => a.longitude - b.longitude)
+              .map((position) => {
+                const layout = layoutPlanetLabelAtLongitude(
+                  position,
+                  center,
+                  lagnamAngle,
+                );
+                const textColors = getSectorTextColors(layout.sectorIndex);
+                const rotation = labelRadialRotation(layout.labelAngle);
+                const lineHeight = layout.fontSize * SECTOR_LABEL_LINE_HEIGHT;
+                const blockOffset =
+                  layout.lines.length > 1
+                    ? -((layout.lines.length - 1) * lineHeight) / 2
+                    : 0;
+
                 return (
-                  <clipPath
-                    key={`sector-clip-${sectorIndex}`}
-                    id={`sector-clip-${sectorIndex}`}
-                  >
-                    <path
-                      d={describeInsetSectorWedge(
-                        center,
-                        innerRadius,
-                        outerRadius,
-                        startAngle,
-                        startAngle + DEGREES_PER_SEGMENT,
-                      )}
-                    />
-                  </clipPath>
+                  <g key={position.graha.id}>
+                    <g transform={`rotate(${rotation}, ${layout.x}, ${layout.y})`}>
+                      <text
+                        x={layout.x}
+                        y={layout.y}
+                        className="graha-chart__graha-label"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        style={{
+                          fontSize: layout.fontSize,
+                          fill: textColors.fill,
+                          stroke: textColors.stroke,
+                        }}
+                      >
+                        {layout.lines.map((line, lineIndex) => (
+                          <tspan
+                            key={lineIndex}
+                            x={layout.x}
+                            dy={
+                              lineIndex === 0
+                                ? blockOffset
+                                : lineHeight
+                            }
+                          >
+                            {line}
+                          </tspan>
+                        ))}
+                      </text>
+                    </g>
+                  </g>
                 );
               })}
-            </defs>
-
-            {sectorPlanetGroups.map(({ sectorIndex, planets }) => {
-              const layout = layoutSectorPlanetLabel(
-                planets,
-                sectorIndex,
-                center,
-                innerRadius,
-                outerRadius,
-                lang,
-              );
-              if (!layout) return null;
-
-              const textColors = getSectorTextColors(sectorIndex);
-              const rotation = labelRadialRotation(layout.labelAngle);
-              const lineHeight = layout.fontSize * SECTOR_LABEL_LINE_HEIGHT;
-              const blockOffset =
-                layout.lines.length > 1
-                  ? -((layout.lines.length - 1) * lineHeight) / 2
-                  : 0;
-
-              return (
-                <g
-                  key={`sector-planets-${sectorIndex}`}
-                  clipPath={`url(#sector-clip-${sectorIndex})`}
-                >
-                  <g transform={`rotate(${rotation}, ${layout.x}, ${layout.y})`}>
-                    <text
-                      x={layout.x}
-                      y={layout.y}
-                      className="graha-chart__graha-label"
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      style={{
-                        fontSize: layout.fontSize,
-                        fill: textColors.fill,
-                        stroke: textColors.stroke,
-                      }}
-                    >
-                      {layout.lines.map((line, lineIndex) => (
-                        <tspan
-                          key={lineIndex}
-                          x={layout.x}
-                          dy={
-                            lineIndex === 0
-                              ? blockOffset
-                              : lineHeight
-                          }
-                        >
-                          {line}
-                        </tspan>
-                      ))}
-                    </text>
-                  </g>
-                </g>
-              );
-            })}
 
             <line
               x1={center}
@@ -699,92 +704,96 @@ export function GrahaChart() {
               <span className="label-box__value">{calcInputsSummary.utcInstantLabel}</span>
             </div>
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th>
-                  <span className="graha-chart__bilingual">
-                    <span>கிரகம்</span>
-                    <span className="graha-chart__bilingual-en">Planet</span>
-                  </span>
-                </th>
-                <th>
-                  <span className="graha-chart__bilingual">
-                    <span>ராசி</span>
-                    <span className="graha-chart__bilingual-en">Rasi</span>
-                  </span>
-                </th>
-                <th>
-                  <span className="graha-chart__bilingual">
-                    <span>நிலை</span>
-                    <span className="graha-chart__bilingual-en">Position</span>
-                  </span>
-                </th>
-                <th>
-                  <span className="graha-chart__bilingual">
-                    <span>பாகை</span>
-                    <span className="graha-chart__bilingual-en">Degree</span>
-                  </span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {tablePositions.map(({ graha, longitude, formatted, sign }) => (
-                <tr key={graha.id}>
-                  <td>
-                    <span
-                      className="graha-chart__table-symbol"
-                      style={{ color: graha.color }}
-                      aria-hidden="true"
-                    >
-                      {graha.symbol}
+          <div className="graha-chart__table-data-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>
+                    <span className="graha-chart__bilingual">
+                      <span>கிரகம்</span>
+                      <span className="graha-chart__bilingual-en">Planet</span>
                     </span>
-                    <span className="graha-chart__table-name">
-                      <span>{graha.nameTamil}</span>
-                      <span className="graha-chart__table-name-en">{graha.nameEnglish}</span>
+                  </th>
+                  <th>
+                    <span className="graha-chart__bilingual">
+                      <span>ராசி</span>
+                      <span className="graha-chart__bilingual-en">Rasi</span>
                     </span>
-                  </td>
-                  <td>
-                    <span className="graha-chart__table-name">
-                      <span>{getTamilRasi(sign as ZodiacSign)}</span>
-                      <span className="graha-chart__table-name-en">{sign}</span>
+                  </th>
+                  <th>
+                    <span className="graha-chart__bilingual">
+                      <span>நிலை</span>
+                      <span className="graha-chart__bilingual-en">Position</span>
                     </span>
-                  </td>
-                  <td>
-                    {isEditingPositions ? (
-                      <input
-                        type="text"
-                        className="graha-chart__table-input"
-                        value={formatted}
-                        onChange={(e) =>
-                          updateDraftPosition(graha.id, "formatted", e.target.value)
-                        }
-                        aria-label={`${graha.nameEnglish} position`}
-                      />
-                    ) : (
-                      formatted
-                    )}
-                  </td>
-                  <td>
-                    {isEditingPositions ? (
-                      <input
-                        type="text"
-                        className="graha-chart__table-input"
-                        value={longitude.toFixed(1)}
-                        onChange={(e) =>
-                          updateDraftPosition(graha.id, "longitude", e.target.value)
-                        }
-                        inputMode="decimal"
-                        aria-label={`${graha.nameEnglish} degree`}
-                      />
-                    ) : (
-                      `${longitude.toFixed(1)}°`
-                    )}
-                  </td>
+                  </th>
+                  <th>
+                    <span className="graha-chart__bilingual">
+                      <span>பாகை</span>
+                      <span className="graha-chart__bilingual-en">Degree</span>
+                    </span>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {tablePositions.map(({ graha, longitude, formatted, sign }) => (
+                  <tr key={graha.id}>
+                    <td>
+                      <span className="graha-chart__table-cell-planet">
+                        <span
+                          className="graha-chart__table-symbol"
+                          style={{ color: graha.color }}
+                          aria-hidden="true"
+                        >
+                          {graha.symbol}
+                        </span>
+                        <span className="graha-chart__table-name">
+                          <span>{graha.nameTamil}</span>
+                          <span className="graha-chart__table-name-en">{graha.nameEnglish}</span>
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      <span className="graha-chart__table-name">
+                        <span>{getTamilRasi(sign as ZodiacSign)}</span>
+                        <span className="graha-chart__table-name-en">{sign}</span>
+                      </span>
+                    </td>
+                    <td>
+                      {isEditingPositions ? (
+                        <input
+                          type="text"
+                          className="graha-chart__table-input"
+                          value={formatted}
+                          onChange={(e) =>
+                            updateDraftPosition(graha.id, "formatted", e.target.value)
+                          }
+                          aria-label={`${graha.nameEnglish} position`}
+                        />
+                      ) : (
+                        formatted
+                      )}
+                    </td>
+                    <td>
+                      {isEditingPositions ? (
+                        <input
+                          type="text"
+                          className="graha-chart__table-input"
+                          value={longitude.toFixed(2)}
+                          onChange={(e) =>
+                            updateDraftPosition(graha.id, "longitude", e.target.value)
+                          }
+                          inputMode="decimal"
+                          aria-label={`${graha.nameEnglish} degree`}
+                        />
+                      ) : (
+                        `${longitude.toFixed(2)}°`
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </aside>
       </div>
     </div>

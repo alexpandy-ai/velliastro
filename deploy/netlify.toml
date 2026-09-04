@@ -1,0 +1,13 @@
+[build]
+  publish = "."
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Harvis static host does not run functions; kept for Netlify deploy of the proxy.
+[[redirects]]
+  from = "/api/bharat/chart"
+  to = "/.netlify/functions/bharat-chart"
+  status = 200
+  force = true

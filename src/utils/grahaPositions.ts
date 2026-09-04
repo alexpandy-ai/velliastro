@@ -195,6 +195,19 @@ export function finalizeGrahaPositions(
   );
 }
 
+/** Fixed visual angle where the ascendant (Lagnam) spoke is drawn on the degree wheel. */
+export const LAGNA_VISUAL_ANGLE = 45;
+
+/** Map sidereal longitude to a fixed-wheel chart angle with Lagnam pinned at 45°. */
+export function longitudeToVisualAngle(
+  eclipticLongitude: number,
+  lagnamLongitude: number,
+): number {
+  return normalizeDegrees(
+    eclipticLongitude - lagnamLongitude + LAGNA_VISUAL_ANGLE,
+  );
+}
+
 /** 0° on the left; degrees increase counter-clockwise. */
 export function polarToChart(
   longitude: number,
@@ -211,8 +224,8 @@ export function polarToChart(
 export const SECTOR_COUNT = 16;
 export const SECTOR_DEGREES = 360 / SECTOR_COUNT;
 export const PLANET_LABEL_RADIUS = 139;
-export const PLANET_MIN_FONT_SIZE = 7;
-export const PLANET_MAX_FONT_SIZE = 8;
+export const PLANET_MIN_FONT_SIZE = 8;
+export const PLANET_MAX_FONT_SIZE = 9;
 export const SECTOR_LABEL_RADIAL_MARGIN = 10;
 export const SECTOR_ANGULAR_MARGIN = 1.5;
 export const SECTOR_LABEL_LINE_HEIGHT = 1.15;
@@ -389,8 +402,13 @@ function fitSectorLabelLayout(
 export function layoutPlanetLabelAtLongitude(
   position: GrahaPosition,
   center: number,
+  lagnamLongitude?: number,
 ): SectorPlanetLabelLayout & { sectorIndex: number } {
-  const angle = normalizeDegrees(position.longitude);
+  const eclipticAngle = normalizeDegrees(position.longitude);
+  const angle =
+    lagnamLongitude === undefined
+      ? eclipticAngle
+      : longitudeToVisualAngle(eclipticAngle, lagnamLongitude);
   const { x, y } = polarToChart(angle, PLANET_LABEL_RADIUS, center);
   const text = formatPlanetLabelPart(position);
   const { fontSize, lines } = fitSectorLabelLayout(text, PLANET_LABEL_RADIUS);
@@ -402,7 +420,7 @@ export function layoutPlanetLabelAtLongitude(
     fontSize,
     text,
     lines,
-    sectorIndex: getSectorIndex(angle),
+    sectorIndex: getSectorIndex(position.longitude),
   };
 }
 
@@ -435,10 +453,15 @@ export function layoutSectorPlanetLabel(
   _innerRadius?: number,
   _outerRadius?: number,
   lang: ChartLang = "ta",
+  lagnamLongitude?: number,
 ): SectorPlanetLabelLayout | null {
   if (planets.length === 0) return null;
 
-  const midAngle = getSectorMidAngle(sectorIndex);
+  const eclipticMid = getSectorMidAngle(sectorIndex);
+  const midAngle =
+    lagnamLongitude === undefined
+      ? eclipticMid
+      : longitudeToVisualAngle(eclipticMid, lagnamLongitude);
   const { x, y } = polarToChart(midAngle, PLANET_LABEL_RADIUS, center);
   const text = formatSectorPlanetLabel(planets, lang);
   const { fontSize, lines } = fitSectorLabelLayout(text, PLANET_LABEL_RADIUS);
@@ -611,9 +634,14 @@ export function getAscendantLongitude(
   return tropicalToSidereal(ascTropical, jd);
 }
 
-/** Chart-wheel angle for the lagnam spoke (= sidereal ascendant longitude). */
+/** Sidereal ascendant longitude (ecliptic degrees, not visual chart angle). */
 export function getLagnamAngle(date: Date, place: ChartPlace): number {
   return getAscendantLongitude(date, place);
+}
+
+/** Visual chart angle for the Lagnam spoke (always LAGNA_VISUAL_ANGLE). */
+export function getLagnamVisualAngle(): number {
+  return LAGNA_VISUAL_ANGLE;
 }
 
 /** @deprecated Use getLagnamAngle with place for location-aware ascendant. */
