@@ -1620,6 +1620,8 @@
         let activeSuggestionIndex = -1;
         let searchRequestId = 0;
         let skipNextPlaceSearch = false;
+        let placeUserCommitted = false;
+        let placeSearchTimer = null;
         const formatCoordinates = (latitude, longitude) => {
           const latDir = latitude >= 0 ? "N" : "S";
           const lonDir = longitude >= 0 ? "E" : "W";
@@ -1833,6 +1835,7 @@
           placeLocationBtn.textContent = "…";
           try {
             const resolved = await resolveCurrentLocationPlace();
+            if (placeUserCommitted) return;
             placeState = resolved;
             skipNextPlaceSearch = true;
             placeInput.value = placeState.placeName;
@@ -1842,12 +1845,7 @@
             timeInput.value = toTimeInputValueForPlace(now, placeState);
             updateCoordsDisplay(false);
             updateSunriseDisplay(dateInput.value);
-            const chartDate = chartDateTimeFromLocalInputs(
-              dateInput.value,
-              timeInput.value,
-              placeState,
-            );
-            renderChart(chartDate, placeState, true);
+            commitPlaceAndRenderChart();
           } catch {
             renderChart(
               chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
@@ -1860,18 +1858,32 @@
             placeLocationBtn.textContent = "⌖";
           }
         };
-        const applySelectedPlace = (resolved) => {
+        const applyResolvedPlaceToForm = (resolved) => {
           placeState = { ...resolved };
           placeInput.value = resolved.placeName;
           updateCoordsDisplay(false);
-          if (chartInitialized) {
-            renderChart(
-              chartDateTimeFromLocalInputs(dateInput.value, timeInput.value, placeState),
-              placeState,
-              true,
-            );
-            updateSunriseDisplay(dateInput.value);
+        };
+        const commitPlaceAndRenderChart = () => {
+          if (placeSearchTimer) clearTimeout(placeSearchTimer);
+          clearPlaceSuggestions();
+          if (!chartInitialized || isEditingPositions) return;
+          const chartDate = chartDateTimeFromLocalInputs(
+            dateInput.value,
+            timeInput.value,
+            placeState,
+          );
+          currentChartDate = chartDate;
+          renderChart(chartDate, placeState, true);
+          updateSunriseDisplay(dateInput.value);
+          if (isPositionsView) {
+            renderReferencePositionsTable(chartDate, placeState);
           }
+        };
+        const applySelectedPlace = (resolved) => {
+          placeUserCommitted = true;
+          skipNextPlaceSearch = true;
+          applyResolvedPlaceToForm(resolved);
+          commitPlaceAndRenderChart();
         };
         const placeSuggestionsEl = () => document.getElementById("placeSuggestions");
         const clearPlaceSuggestions = () => {
@@ -1938,30 +1950,41 @@
           clearPlaceSuggestions();
           return true;
         };
-        const lookupCoordinates = async (query) => {
+        const lookupCoordinates = async (query, { commit = false } = {}) => {
           const trimmed = query.trim();
-          if (!trimmed) return;
+          if (!trimmed) return null;
           updateCoordsDisplay(true);
           const resolved = await geocodePlace(trimmed);
           if (resolved) {
-            applySelectedPlace(resolved);
+            if (commit) placeUserCommitted = true;
+            applyResolvedPlaceToForm(resolved);
+            if (commit) commitPlaceAndRenderChart();
           }
           updateCoordsDisplay(false);
+          return resolved;
         };
         const applyPlaceFromForm = async () => {
+          if (placeSearchTimer) clearTimeout(placeSearchTimer);
           clearPlaceSuggestions();
-          await lookupCoordinates(placeInput.value);
+          placeUserCommitted = true;
+          const trimmed = placeInput.value.trim();
+          if (trimmed) {
+            updateCoordsDisplay(true);
+            const resolved = await geocodePlace(trimmed);
+            if (resolved) applyResolvedPlaceToForm(resolved);
+            updateCoordsDisplay(false);
+          }
           const parsed = parseCoordinateInputs(latInput.value, lonInput.value);
           if (!parsed) {
-            updateCoordsDisplay(false);
             placeState = {
               ...placeState,
-              placeName: placeInput.value.trim() || placeState.placeName,
+              placeName: trimmed || placeState.placeName,
             };
+            updateCoordsDisplay(false);
             return;
           }
           placeState = {
-            placeName: placeInput.value.trim() || placeState.placeName,
+            placeName: trimmed || placeState.placeName,
             latitude: parsed.latitude,
             longitude: parsed.longitude,
           };
@@ -2507,7 +2530,6 @@
           }
         });
 
-        let placeSearchTimer = null;
         const schedulePlaceSearch = (query) => {
           if (placeSearchTimer) clearTimeout(placeSearchTimer);
           const trimmed = query.trim();
@@ -2539,7 +2561,7 @@
             if (event.key === "Enter") {
               event.preventDefault();
               if (placeSearchTimer) clearTimeout(placeSearchTimer);
-              void lookupCoordinates(placeInput.value);
+              void lookupCoordinates(placeInput.value, { commit: true });
             }
             return;
           }
@@ -2569,18 +2591,17 @@
         document.getElementById("placeSearchBtn").addEventListener("click", () => {
           if (placeSearchTimer) clearTimeout(placeSearchTimer);
           if (selectActiveSuggestion()) return;
-          void lookupCoordinates(placeInput.value);
+          void lookupCoordinates(placeInput.value, { commit: true });
         });
         placeLocationBtn.addEventListener("click", () => {
+          placeUserCommitted = false;
           void showNowAtCurrentLocation();
         });
 
         document.getElementById("dateForm").addEventListener("submit", (e) => {
           e.preventDefault();
-          if (placeSearchTimer) clearTimeout(placeSearchTimer);
           void applyPlaceFromForm().then(() => {
-            renderChartFromFormInputs();
-            updateSunriseDisplay(dateInput.value);
+            commitPlaceAndRenderChart();
           });
         });
       } catch (error) {
