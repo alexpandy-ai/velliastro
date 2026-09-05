@@ -1074,9 +1074,71 @@ body {
 }
 
 .graha-chart__form-group--datetime {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.graha-chart__form-group--datetime label {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+.graha-chart__form-group--datetime label .graha-chart__bilingual-en {
+  font-size: 0.62rem;
+}
+
+.graha-chart__form-group--datetime input[type="date"] {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 8rem;
+}
+
+.graha-chart__form-group--datetime input[type="time"] {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 5.5rem;
+  max-width: 7rem;
+}
+
+.graha-chart__form-group--place {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.graha-chart__form-group--place .graha-chart__location-label {
+  flex-shrink: 0;
+}
+
+.graha-chart__form-group--place .graha-chart__place-row {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.graha-chart__form-group--coords {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.graha-chart__form-group--coords .graha-chart__coords-sunrise-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .graha-chart__form-field {
@@ -1141,24 +1203,38 @@ body {
 
 .graha-chart__coords-sunrise-row {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.75rem 1rem;
+  flex-direction: column;
+  gap: 0.35rem;
   width: 100%;
+  min-width: 0;
+}
+
+.graha-chart__coords-row,
+.graha-chart__sunrise-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
 }
 
 .graha-chart__sunrise-display {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: flex-end;
-  gap: 0.45rem;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
   flex: 0 1 auto;
   min-width: 0;
   font-size: 0.88rem;
   color: var(--text-muted);
   padding: 0.15rem 0;
+}
+
+.graha-chart__sunrise-display .graha-chart__bilingual {
+  flex-shrink: 0;
 }
 
 .graha-chart__sunrise-value {
@@ -1254,28 +1330,19 @@ body {
 
 .graha-chart__coords-display {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.5rem;
-  flex: 1 1 14rem;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  flex: 0 1 auto;
   min-width: 0;
   font-size: 0.78rem;
   color: var(--text-muted);
   line-height: 1.2;
 }
 
-@media (max-width: 480px) {
-  .graha-chart__coords-sunrise-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .graha-chart__sunrise-display {
-    justify-content: flex-start;
-  }
-}
-
 .graha-chart__coords-display .graha-chart__bilingual {
+  flex-shrink: 0;
   justify-content: flex-start;
 }
 
@@ -1285,9 +1352,11 @@ body {
 
 .graha-chart__coords-fields {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.35rem;
-  width: 100%;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .graha-chart__coords-input {
@@ -1575,10 +1644,10 @@ body {
 }
 
 .graha-chart__calc-inputs .label-box__row {
-  display: grid;
-  grid-template-columns: minmax(5.5rem, 38%) 1fr;
-  gap: 0.35rem 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
+  gap: 0.5rem;
   padding: 0.2rem 0;
 }
 
@@ -1589,6 +1658,7 @@ body {
 }
 
 .graha-chart__calc-inputs .label-box__key {
+  flex-shrink: 0;
   color: var(--text-muted);
   font-size: 0.72rem;
 }
@@ -1598,7 +1668,11 @@ body {
 }
 
 .graha-chart__calc-inputs .label-box__value {
+  flex: 1 1 0;
+  min-width: 0;
   font-variant-numeric: tabular-nums;
+  white-space: normal;
+  overflow-wrap: break-word;
   word-break: break-word;
 }
 
@@ -1802,8 +1876,13 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .graha-chart__layout {
+  .graha-chart__layout,
+  .graha-chart.lang-ta .graha-chart__layout {
     grid-template-columns: 1fr;
+  }
+
+  .graha-chart__svg {
+    max-width: min(100%, 480px);
   }
 
   .orbit-section {
@@ -1819,7 +1898,71 @@ body {
   }
 }
 
+@media (max-width: 640px) {
+  .graha-chart {
+    padding: 0.75rem 0.75rem 1.5rem;
+  }
+
+  .graha-chart__panel,
+  .graha-chart__table {
+    padding: 1rem;
+  }
+
+  .graha-chart__table-header {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .graha-chart__table-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .graha-chart.lang-ta .graha-chart__table table {
+    font-size: 0.78rem;
+  }
+
+}
+
 @media (max-width: 480px) {
+  .graha-chart__form-group--datetime {
+    gap: 0.25rem 0.4rem;
+  }
+
+  .graha-chart__form-group--datetime label {
+    font-size: 0.78rem;
+  }
+
+  .graha-chart__form-group--datetime input[type="date"] {
+    flex: 2 1 auto;
+    min-width: 9rem;
+    font-size: 0.78rem;
+  }
+
+  .graha-chart__form-group--datetime input[type="time"] {
+    flex: 0 0 auto;
+    min-width: 5rem;
+    max-width: 6rem;
+    padding: 0.5rem 0.35rem;
+    font-size: 0.75rem;
+  }
+
+  .graha-chart__calc-inputs .label-box__row--datetime,
+  .graha-chart__calc-inputs .label-box__row--place,
+  .graha-chart__calc-inputs .label-box__row--coords,
+  .graha-chart__calc-inputs .label-box__row--sunrise {
+    font-size: 0.72rem;
+  }
+
+  .graha-chart__form-group--place .graha-chart__location-label,
+  .graha-chart__form-group--place .graha-chart__place-row input[type="text"] {
+    font-size: 0.78rem;
+  }
+
+  .graha-chart__form-group--coords .graha-chart__coords-display,
+  .graha-chart__form-group--coords .graha-chart__sunrise-display {
+    font-size: 0.78rem;
+  }
+
   .header__title {
     font-size: 1.5rem;
   }

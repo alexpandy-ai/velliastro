@@ -25,7 +25,8 @@ import {
   chartDateTimeFromLocalInputs,
   estimateTimezoneOffsetMinutes,
   formatDateInputForPlace,
-  formatLocalInputDateTimeLabel,
+  formatInputDateLabel,
+  formatInputTimeLabel,
   formatPlaceLabel,
   formatTimeInputForPlace,
   formatTimezoneOffsetLabel,
@@ -160,8 +161,13 @@ export function GrahaChart() {
   );
   const calcInputsSummary = {
     placeName: formatPlaceLabel(placeInput.trim() || place.placeName),
-    dateTimeLabel: formatLocalInputDateTimeLabel(inputDate, inputTime),
+    dateLabel: formatInputDateLabel(inputDate),
+    timeLabel: formatInputTimeLabel(inputTime),
     coordinatesLabel: formatCoordinates(chartPlace.latitude, chartPlace.longitude),
+    sunriseLabel: formatSunriseLabel(
+      chartDateTimeFromLocalInputs(inputDate, "06:00", chartPlace),
+      chartPlace,
+    ),
     timezoneLabel: formatTimezoneOffsetLabel(timezoneOffsetMinutes),
     utcInstantLabel: formatUtcInstantLabel(selectedDate),
   };
@@ -274,36 +280,32 @@ export function GrahaChart() {
         <form className="graha-chart__date-form" onSubmit={handleSubmit}>
           <div className="graha-chart__form-card">
             <div className="graha-chart__form-group graha-chart__form-group--datetime">
-              <div className="graha-chart__form-field">
-                <label htmlFor="dateInput">
-                  <span className="graha-chart__bilingual">
-                    <span>தேதி</span>
-                    <span className="graha-chart__bilingual-en">Select date</span>
-                  </span>
-                </label>
-                <input
-                  type="date"
-                  id="dateInput"
-                  value={inputDate}
-                  onChange={(e) => setInputDate(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="graha-chart__form-field">
-                <label htmlFor="timeInput">
-                  <span className="graha-chart__bilingual">
-                    <span>நேரம்</span>
-                    <span className="graha-chart__bilingual-en">Time</span>
-                  </span>
-                </label>
-                <input
-                  type="time"
-                  id="timeInput"
-                  value={inputTime}
-                  onChange={(e) => setInputTime(e.target.value)}
-                  required
-                />
-              </div>
+              <label htmlFor="dateInput">
+                <span className="graha-chart__bilingual">
+                  <span>தேதி</span>
+                  <span className="graha-chart__bilingual-en">Select date</span>
+                </span>
+              </label>
+              <input
+                type="date"
+                id="dateInput"
+                value={inputDate}
+                onChange={(e) => setInputDate(e.target.value)}
+                required
+              />
+              <label htmlFor="timeInput">
+                <span className="graha-chart__bilingual">
+                  <span>நேரம்</span>
+                  <span className="graha-chart__bilingual-en">Time</span>
+                </span>
+              </label>
+              <input
+                type="time"
+                id="timeInput"
+                value={inputTime}
+                onChange={(e) => setInputTime(e.target.value)}
+                required
+              />
             </div>
             <div className="graha-chart__form-group graha-chart__form-group--place">
               <label htmlFor="placeInput" className="graha-chart__location-label">
@@ -383,61 +385,65 @@ export function GrahaChart() {
             </div>
             <div className="graha-chart__form-group graha-chart__form-group--coords">
               <div className="graha-chart__coords-sunrise-row">
-                <div className="graha-chart__coords-display">
-                  <span className="graha-chart__bilingual">
-                    <span>ஆயத்தொலைவு</span>
-                    <span className="graha-chart__bilingual-en">Coordinates</span>
-                  </span>
-                  <span className="graha-chart__coords-fields">
-                    <input
-                      type="text"
-                      className={`graha-chart__coords-input${isGeocoding ? " is-loading" : ""}`}
-                      value={latitudeInput}
-                      onChange={(e) => handleLatitudeInputChange(e.target.value)}
-                      onBlur={handleCoordinateBlur}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          commitCoordinateInputs();
-                        }
-                      }}
-                      inputMode="decimal"
-                      maxLength={12}
-                      aria-label="Latitude"
-                      placeholder="Lat"
-                    />
-                    <span className="graha-chart__coords-sep">,</span>
-                    <input
-                      type="text"
-                      className={`graha-chart__coords-input${isGeocoding ? " is-loading" : ""}`}
-                      value={longitudeInput}
-                      onChange={(e) => handleLongitudeInputChange(e.target.value)}
-                      onBlur={handleCoordinateBlur}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          commitCoordinateInputs();
-                        }
-                      }}
-                      inputMode="decimal"
-                      maxLength={12}
-                      aria-label="Longitude"
-                      placeholder="Lon"
-                    />
+                <div className="graha-chart__coords-row">
+                  <div className="graha-chart__coords-display">
+                    <span className="graha-chart__bilingual">
+                      <span>ஆயத்தொலைவு</span>
+                      <span className="graha-chart__bilingual-en">Coordinates</span>
+                    </span>
+                    <span className="graha-chart__coords-fields">
+                      <input
+                        type="text"
+                        className={`graha-chart__coords-input${isGeocoding ? " is-loading" : ""}`}
+                        value={latitudeInput}
+                        onChange={(e) => handleLatitudeInputChange(e.target.value)}
+                        onBlur={handleCoordinateBlur}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            commitCoordinateInputs();
+                          }
+                        }}
+                        inputMode="decimal"
+                        maxLength={12}
+                        aria-label="Latitude"
+                        placeholder="Lat"
+                      />
+                      <span className="graha-chart__coords-sep">,</span>
+                      <input
+                        type="text"
+                        className={`graha-chart__coords-input${isGeocoding ? " is-loading" : ""}`}
+                        value={longitudeInput}
+                        onChange={(e) => handleLongitudeInputChange(e.target.value)}
+                        onBlur={handleCoordinateBlur}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            commitCoordinateInputs();
+                          }
+                        }}
+                        inputMode="decimal"
+                        maxLength={12}
+                        aria-label="Longitude"
+                        placeholder="Lon"
+                      />
+                    </span>
+                  </div>
+                </div>
+                <div className="graha-chart__sunrise-row">
+                  <span className="graha-chart__sunrise-display" aria-live="polite">
+                    <span className="graha-chart__bilingual">
+                      <span>சூரிய உதயம்</span>
+                      <span className="graha-chart__bilingual-en">Sunrise</span>
+                    </span>
+                    <span className="graha-chart__sunrise-value">
+                      {formatSunriseLabel(
+                        chartDateTimeFromLocalInputs(inputDate, "06:00", chartPlace),
+                        chartPlace,
+                      )}
+                    </span>
                   </span>
                 </div>
-                <span className="graha-chart__sunrise-display" aria-live="polite">
-                  <span className="graha-chart__bilingual">
-                    <span>சூரிய உதயம்</span>
-                    <span className="graha-chart__bilingual-en">Sunrise</span>
-                  </span>
-                  <span className="graha-chart__sunrise-value">
-                    {formatSunriseLabel(
-                      chartDateTimeFromLocalInputs(inputDate, "06:00", chartPlace),
-                      chartPlace,
-                    )}
-                  </span>
-                </span>
               </div>
             </div>
             <button type="submit" className="graha-chart__submit-btn">
@@ -652,7 +658,7 @@ export function GrahaChart() {
             </div>
           </div>
           <div className="graha-chart__calc-inputs label-box">
-            <div className="label-box__row">
+            <div className="label-box__row label-box__row--place">
               <span className="label-box__key">
                 <span className="graha-chart__bilingual">
                   <span>இடம்</span>
@@ -661,23 +667,39 @@ export function GrahaChart() {
               </span>
               <span className="label-box__value">{calcInputsSummary.placeName}</span>
             </div>
-            <div className="label-box__row">
+            <div className="label-box__row label-box__row--datetime">
               <span className="label-box__key">
                 <span className="graha-chart__bilingual">
-                  <span>தேதி & நேரம்</span>
-                  <span className="graha-chart__bilingual-en">Date & time</span>
+                  <span>தேதி</span>
+                  <span className="graha-chart__bilingual-en">Date</span>
                 </span>
               </span>
-              <span className="label-box__value">{calcInputsSummary.dateTimeLabel}</span>
-            </div>
-            <div className="label-box__row">
+              <span className="label-box__value">{calcInputsSummary.dateLabel}</span>
               <span className="label-box__key">
                 <span className="graha-chart__bilingual">
-                  <span>ஆள்கூறு</span>
+                  <span>நேரம்</span>
+                  <span className="graha-chart__bilingual-en">Time</span>
+                </span>
+              </span>
+              <span className="label-box__value">{calcInputsSummary.timeLabel}</span>
+            </div>
+            <div className="label-box__row label-box__row--coords">
+              <span className="label-box__key">
+                <span className="graha-chart__bilingual">
+                  <span>ஆயத்தொலைவு</span>
                   <span className="graha-chart__bilingual-en">Coordinates</span>
                 </span>
               </span>
               <span className="label-box__value">{calcInputsSummary.coordinatesLabel}</span>
+            </div>
+            <div className="label-box__row label-box__row--sunrise">
+              <span className="label-box__key">
+                <span className="graha-chart__bilingual">
+                  <span>சூரிய உதயம்</span>
+                  <span className="graha-chart__bilingual-en">Sunrise</span>
+                </span>
+              </span>
+              <span className="label-box__value">{calcInputsSummary.sunriseLabel}</span>
             </div>
             <div className="label-box__row">
               <span className="label-box__key">

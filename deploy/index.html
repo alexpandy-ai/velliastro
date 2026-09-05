@@ -115,9 +115,60 @@
         width: 100%;
       }
       .form-group--datetime {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem 0.65rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .form-group--datetime label {
+        flex-shrink: 0;
+        font-size: 0.8rem;
+        color: var(--muted);
+        line-height: 1.2;
+      }
+      .form-group--datetime label .bilingual-en { font-size: 0.62rem; }
+      .form-group--datetime input[type="date"] {
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 8rem;
+      }
+      .form-group--datetime input[type="time"] {
+        flex: 0 0 auto;
+        width: auto;
+        min-width: 5.5rem;
+        max-width: 7rem;
+      }
+      .form-group--place {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem 0.65rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .form-group--place .location-label {
+        flex-shrink: 0;
+      }
+      .form-group--place .place-row {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .form-group--coords {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        min-width: 0;
+      }
+      .form-group--coords .coords-sunrise-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        width: 100%;
+        min-width: 0;
       }
       .form-field {
         display: flex;
@@ -177,23 +228,35 @@
       .submit-btn:active { opacity: 0.8; }
       .coords-sunrise-row {
         display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 0.75rem 1rem;
+        flex-direction: column;
+        gap: 0.35rem;
         width: 100%;
+        min-width: 0;
+      }
+      .coords-row,
+      .sunrise-row {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem 0.65rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        min-width: 0;
       }
       .sunrise-display {
         display: flex;
-        flex-wrap: wrap;
-        align-items: baseline;
-        justify-content: flex-end;
-        gap: 0.45rem;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem 0.65rem;
         flex: 0 1 auto;
         min-width: 0;
         font-size: 0.88rem;
         color: var(--muted);
         padding: 0.15rem 0;
+      }
+      .sunrise-display .bilingual {
+        flex-shrink: 0;
       }
       .sunrise-value {
         font-weight: 600;
@@ -281,31 +344,28 @@
       .place-location-btn:disabled { opacity: 0.55; cursor: wait; }
       .coords-display {
         display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.5rem;
-        flex: 1 1 14rem;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem 0.65rem;
+        flex: 0 1 auto;
         min-width: 0;
         font-size: 0.78rem;
         color: var(--muted);
         line-height: 1.2;
       }
-      @media (max-width: 480px) {
-        .coords-sunrise-row {
-          flex-direction: column;
-          align-items: stretch;
-        }
-        .sunrise-display {
-          justify-content: flex-start;
-        }
+      .coords-display .bilingual {
+        flex-shrink: 0;
+        justify-content: flex-start;
       }
-      .coords-display .bilingual { justify-content: flex-start; }
       .coords-display .bilingual-en { font-size: 0.6rem; }
       .coords-fields {
         display: flex;
+        flex-wrap: nowrap;
         align-items: center;
         gap: 0.35rem;
-        width: 100%;
+        flex: 0 1 auto;
+        min-width: 0;
       }
       .coords-input {
         flex: 1;
@@ -509,10 +569,10 @@
         color: var(--text);
       }
       .label-box__row {
-        display: grid;
-        grid-template-columns: minmax(5.5rem, 38%) 1fr;
-        gap: 0.35rem 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
         align-items: baseline;
+        gap: 0.5rem;
         padding: 0.2rem 0;
       }
       .label-box__row + .label-box__row {
@@ -521,12 +581,17 @@
         padding-top: 0.35rem;
       }
       .label-box__key {
+        flex-shrink: 0;
         color: var(--muted);
         font-size: 0.72rem;
       }
       .label-box__key .bilingual-en { font-size: 0.62rem; }
       .label-box__value {
+        flex: 1 1 0;
+        min-width: 0;
         font-variant-numeric: tabular-nums;
+        white-space: normal;
+        overflow-wrap: break-word;
         word-break: break-word;
       }
       .consistency-note {
@@ -561,7 +626,61 @@
         border-color: var(--accent);
         box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
       }
-      @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+      @media (max-width: 900px) {
+        .layout,
+        html.lang-ta .layout {
+          grid-template-columns: 1fr;
+        }
+        .panel svg,
+        svg#chart {
+          max-width: min(100%, 480px);
+        }
+      }
+      @media (max-width: 640px) {
+        .wrap { padding: 0.75rem 0.75rem 1.5rem; }
+        .panel,
+        .table { padding: 1rem; }
+        .table-header {
+          flex-wrap: wrap;
+          align-items: center;
+        }
+        .table-toolbar { flex-wrap: wrap; }
+        html.lang-ta .table table { font-size: 0.78rem; }
+      }
+      @media (max-width: 480px) {
+        .form-group--datetime {
+          gap: 0.25rem 0.4rem;
+        }
+        .form-group--datetime label {
+          font-size: 0.78rem;
+        }
+        .form-group--datetime input[type="date"] {
+          flex: 2 1 auto;
+          min-width: 9rem;
+          font-size: 0.78rem;
+        }
+        .form-group--datetime input[type="time"] {
+          flex: 0 0 auto;
+          min-width: 5rem;
+          max-width: 6rem;
+          padding: 0.5rem 0.35rem;
+          font-size: 0.75rem;
+        }
+        .label-box__row--datetime,
+        .label-box__row--place,
+        .label-box__row--coords,
+        .label-box__row--sunrise {
+          font-size: 0.72rem;
+        }
+        .form-group--place .location-label,
+        .form-group--place .place-row input[type="text"] {
+          font-size: 0.78rem;
+        }
+        .form-group--coords .coords-display,
+        .form-group--coords .sunrise-display {
+          font-size: 0.78rem;
+        }
+      }
       .lagnam-spoke {
         stroke: #f59e0b;
         stroke-width: 4;
@@ -814,14 +933,10 @@
         <form class="date-form" id="dateForm">
           <div class="form-card">
             <div class="form-group form-group--datetime">
-              <div class="form-field">
-                <label for="dateInput"><span class="bilingual"><span>தேதி</span><span class="bilingual-en">Select date</span></span></label>
-                <input type="date" id="dateInput" required />
-              </div>
-              <div class="form-field">
-                <label for="timeInput"><span class="bilingual"><span>நேரம்</span><span class="bilingual-en">Time</span></span></label>
-                <input type="time" id="timeInput" required />
-              </div>
+              <label for="dateInput"><span class="bilingual"><span>தேதி</span><span class="bilingual-en">Select date</span></span></label>
+              <input type="date" id="dateInput" required />
+              <label for="timeInput"><span class="bilingual"><span>நேரம்</span><span class="bilingual-en">Time</span></span></label>
+              <input type="time" id="timeInput" required />
             </div>
             <div class="form-group form-group--place">
               <label for="placeInput" class="location-label">
@@ -841,24 +956,28 @@
             </div>
             <div class="form-group form-group--coords">
               <div class="coords-sunrise-row">
-                <div class="coords-display" id="coordsDisplay">
-                  <span class="bilingual">
-                    <span>ஆயத்தொலைவு</span>
-                    <span class="bilingual-en">Coordinates</span>
-                  </span>
-                  <span class="coords-fields">
-                    <input type="text" class="coords-input" id="latInput" inputmode="decimal" aria-label="Latitude" placeholder="Lat" maxlength="12" />
-                    <span class="coords-sep">,</span>
-                    <input type="text" class="coords-input" id="lonInput" inputmode="decimal" aria-label="Longitude" placeholder="Lon" maxlength="12" />
+                <div class="coords-row">
+                  <div class="coords-display" id="coordsDisplay">
+                    <span class="bilingual">
+                      <span>ஆயத்தொலைவு</span>
+                      <span class="bilingual-en">Coordinates</span>
+                    </span>
+                    <span class="coords-fields">
+                      <input type="text" class="coords-input" id="latInput" inputmode="decimal" aria-label="Latitude" placeholder="Lat" maxlength="12" />
+                      <span class="coords-sep">,</span>
+                      <input type="text" class="coords-input" id="lonInput" inputmode="decimal" aria-label="Longitude" placeholder="Lon" maxlength="12" />
+                    </span>
+                  </div>
+                </div>
+                <div class="sunrise-row">
+                  <span class="sunrise-display" id="sunriseDisplay" aria-live="polite">
+                    <span class="bilingual">
+                      <span>சூரிய உதயம்</span>
+                      <span class="bilingual-en">Sunrise</span>
+                    </span>
+                    <span class="sunrise-value" id="sunriseValue"></span>
                   </span>
                 </div>
-                <span class="sunrise-display" id="sunriseDisplay" aria-live="polite">
-                  <span class="bilingual">
-                    <span>சூரிய உதயம்</span>
-                    <span class="bilingual-en">Sunrise</span>
-                  </span>
-                  <span class="sunrise-value" id="sunriseValue"></span>
-                </span>
               </div>
             </div>
             <button type="submit" class="submit-btn"><span class="bilingual"><span>சமர்ப்பி</span><span class="bilingual-en">Submit</span></span></button>
@@ -1475,30 +1594,41 @@
           const el = document.getElementById("positionConsistency");
           if (el) el.hidden = true;
         };
-        const calcInputsLabelRow = (taKey, enKey, value) =>
-          `<div class="label-box__row">` +
+        const calcInputsLabelRow = (taKey, enKey, value, modifier = "") =>
+          `<div class="label-box__row${modifier ? ` label-box__row--${modifier}` : ""}">` +
           `<span class="label-box__key"><span class="bilingual"><span>${taKey}</span><span class="bilingual-en">${enKey}</span></span></span>` +
           `<span class="label-box__value">${escapeHtml(value)}</span>` +
+          `</div>`;
+        const calcInputsDateTimeRow = (dateLabel, timeLabel) =>
+          `<div class="label-box__row label-box__row--datetime">` +
+          `<span class="label-box__key"><span class="bilingual"><span>தேதி</span><span class="bilingual-en">Date</span></span></span>` +
+          `<span class="label-box__value">${escapeHtml(dateLabel)}</span>` +
+          `<span class="label-box__key"><span class="bilingual"><span>நேரம்</span><span class="bilingual-en">Time</span></span></span>` +
+          `<span class="label-box__value">${escapeHtml(timeLabel)}</span>` +
           `</div>`;
         const updateCalcInputsLabelBox = (place = placeState, utcDate = currentChartDate) => {
           const el = document.getElementById("calcInputsLabel");
           if (!el) return;
           const rawPlaceName = place.placeName || placeInput.value.trim() || "—";
           const placeName = formatPlaceLabel(rawPlaceName);
-          const dateTimeLabel = formatLocalInputDateTimeLabel(
-            dateInput.value,
-            timeInput.value,
-          );
+          const dateLabel = formatInputDateLabel(dateInput.value);
+          const timeLabel = formatInputTimeLabel(timeInput.value);
           const coordinatesLabel = formatCoordinates(place.latitude, place.longitude);
+          const sunrise = getSunriseTime(
+            chartDateTimeFromLocalInputs(dateInput.value, "06:00", place),
+            place,
+          );
+          const sunriseLabel = sunrise ? formatSunriseTime(sunrise, place) : "—";
           const timezoneLabel = formatTimezoneOffsetLabel(
             estimateTimezoneOffsetMinutes(place.longitude, place.latitude),
           );
           const utcInstantLabel = formatUtcInstantLabel(utcDate);
           el.hidden = false;
           el.innerHTML =
-            calcInputsLabelRow("இடம்", "Place", placeName) +
-            calcInputsLabelRow("தேதி & நேரம்", "Date & time", dateTimeLabel) +
-            calcInputsLabelRow("ஆள்கூறு", "Coordinates", coordinatesLabel) +
+            calcInputsLabelRow("இடம்", "Place", placeName, "place") +
+            calcInputsDateTimeRow(dateLabel, timeLabel) +
+            calcInputsLabelRow("ஆயத்தொலைவு", "Coordinates", coordinatesLabel, "coords") +
+            calcInputsLabelRow("சூரிய உதயம்", "Sunrise", sunriseLabel, "sunrise") +
             calcInputsLabelRow("நேர மண்டலம்", "Timezone", timezoneLabel) +
             calcInputsLabelRow("UTC", "UTC instant", utcInstantLabel);
         };
