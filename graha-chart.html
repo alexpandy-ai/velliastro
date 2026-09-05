@@ -115,9 +115,26 @@
         width: 100%;
       }
       .form-group--datetime {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem 0.65rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .form-group--datetime label {
+        flex-shrink: 0;
+        font-size: 0.8rem;
+        color: var(--muted);
+        line-height: 1.2;
+      }
+      .form-group--datetime label .bilingual-en { font-size: 0.62rem; }
+      .form-group--datetime input[type="date"],
+      .form-group--datetime input[type="time"] {
+        flex: 0 1 auto;
+        width: auto;
+        min-width: 7.5rem;
       }
       .form-field {
         display: flex;
@@ -532,6 +549,17 @@
         font-variant-numeric: tabular-nums;
         word-break: break-word;
       }
+      .label-box__row--datetime {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .label-box__row--datetime .label-box__value {
+        flex: 0 1 auto;
+        white-space: nowrap;
+      }
+      .label-box__row--datetime .label-box__key + .label-box__value {
+        margin-right: 0.35rem;
+      }
       .consistency-note {
         margin: 0.35rem 0 0;
         font-size: 0.75rem;
@@ -586,7 +614,14 @@
         html.lang-ta .table table { font-size: 0.78rem; }
       }
       @media (max-width: 480px) {
-        .form-group--datetime { grid-template-columns: 1fr; }
+        .form-group--datetime label,
+        .form-group--datetime input[type="date"],
+        .form-group--datetime input[type="time"] {
+          font-size: 0.78rem;
+        }
+        .label-box__row--datetime {
+          font-size: 0.72rem;
+        }
       }
       .lagnam-spoke {
         stroke: #f59e0b;
@@ -840,14 +875,10 @@
         <form class="date-form" id="dateForm">
           <div class="form-card">
             <div class="form-group form-group--datetime">
-              <div class="form-field">
-                <label for="dateInput"><span class="bilingual"><span>தேதி</span><span class="bilingual-en">Select date</span></span></label>
-                <input type="date" id="dateInput" required />
-              </div>
-              <div class="form-field">
-                <label for="timeInput"><span class="bilingual"><span>நேரம்</span><span class="bilingual-en">Time</span></span></label>
-                <input type="time" id="timeInput" required />
-              </div>
+              <label for="dateInput"><span class="bilingual"><span>தேதி</span><span class="bilingual-en">Select date</span></span></label>
+              <input type="date" id="dateInput" required />
+              <label for="timeInput"><span class="bilingual"><span>நேரம்</span><span class="bilingual-en">Time</span></span></label>
+              <input type="time" id="timeInput" required />
             </div>
             <div class="form-group form-group--place">
               <label for="placeInput" class="location-label">
@@ -1506,6 +1537,13 @@
           `<span class="label-box__key"><span class="bilingual"><span>${taKey}</span><span class="bilingual-en">${enKey}</span></span></span>` +
           `<span class="label-box__value">${escapeHtml(value)}</span>` +
           `</div>`;
+        const calcInputsDateTimeRow = (dateLabel, timeLabel) =>
+          `<div class="label-box__row label-box__row--datetime">` +
+          `<span class="label-box__key"><span class="bilingual"><span>தேதி</span><span class="bilingual-en">Date</span></span></span>` +
+          `<span class="label-box__value">${escapeHtml(dateLabel)}</span>` +
+          `<span class="label-box__key"><span class="bilingual"><span>நேரம்</span><span class="bilingual-en">Time</span></span></span>` +
+          `<span class="label-box__value">${escapeHtml(timeLabel)}</span>` +
+          `</div>`;
         const updateCalcInputsLabelBox = (place = placeState, utcDate = currentChartDate) => {
           const el = document.getElementById("calcInputsLabel");
           if (!el) return;
@@ -1521,8 +1559,7 @@
           el.hidden = false;
           el.innerHTML =
             calcInputsLabelRow("இடம்", "Place", placeName) +
-            calcInputsLabelRow("தேதி", "Date", dateLabel) +
-            calcInputsLabelRow("நேரம்", "Time", timeLabel) +
+            calcInputsDateTimeRow(dateLabel, timeLabel) +
             calcInputsLabelRow("ஆள்கூறு", "Coordinates", coordinatesLabel) +
             calcInputsLabelRow("நேர மண்டலம்", "Timezone", timezoneLabel) +
             calcInputsLabelRow("UTC", "UTC instant", utcInstantLabel);
