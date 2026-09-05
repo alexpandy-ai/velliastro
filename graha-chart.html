@@ -130,11 +130,16 @@
         line-height: 1.2;
       }
       .form-group--datetime label .bilingual-en { font-size: 0.62rem; }
-      .form-group--datetime input[type="date"],
-      .form-group--datetime input[type="time"] {
-        flex: 0 1 auto;
+      .form-group--datetime input[type="date"] {
+        flex: 1 1 auto;
         width: auto;
-        min-width: 7.5rem;
+        min-width: 8rem;
+      }
+      .form-group--datetime input[type="time"] {
+        flex: 0 0 auto;
+        width: auto;
+        min-width: 5.5rem;
+        max-width: 7rem;
       }
       .form-group--place {
         display: flex;
@@ -643,10 +648,23 @@
         html.lang-ta .table table { font-size: 0.78rem; }
       }
       @media (max-width: 480px) {
-        .form-group--datetime label,
-        .form-group--datetime input[type="date"],
-        .form-group--datetime input[type="time"] {
+        .form-group--datetime {
+          gap: 0.25rem 0.4rem;
+        }
+        .form-group--datetime label {
           font-size: 0.78rem;
+        }
+        .form-group--datetime input[type="date"] {
+          flex: 2 1 auto;
+          min-width: 9rem;
+          font-size: 0.78rem;
+        }
+        .form-group--datetime input[type="time"] {
+          flex: 0 0 auto;
+          min-width: 5rem;
+          max-width: 6rem;
+          padding: 0.5rem 0.35rem;
+          font-size: 0.75rem;
         }
         .label-box__row--datetime,
         .label-box__row--place,
