@@ -147,8 +147,9 @@
         flex-wrap: nowrap;
         align-items: center;
         gap: 0.35rem 0.65rem;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        position: relative;
+        z-index: 20;
+        overflow: visible;
       }
       .form-group--place .location-label {
         flex-shrink: 0;
@@ -277,7 +278,7 @@
       .place-row input[type="text"] { width: 100%; }
       .place-suggestions {
         position: absolute;
-        z-index: 30;
+        z-index: 40;
         top: calc(100% + 0.25rem);
         left: 0;
         right: 0;
@@ -1918,8 +1919,19 @@
           }).map((preset) => ({ ...preset, id: `preset:${preset.placeName}` }));
         };
         const formatPlaceFromProperties = (props) => {
-          const primary = (props.name || props.city || props.district || props.county || "").trim();
-          if (!primary) return "";
+          const type = props.type || "other";
+          const isPoi =
+            type === "house" ||
+            type === "street" ||
+            props.osm_key === "amenity" ||
+            props.osm_key === "highway";
+          const primary = (
+            isPoi
+              ? props.city || props.district || props.county || props.locality || props.name
+              : props.name || props.city || props.district || props.county
+          );
+          const trimmedPrimary = String(primary || "").trim();
+          if (!trimmedPrimary) return "";
           const parts = [];
           const seen = new Set();
           const add = (value) => {
@@ -1930,7 +1942,7 @@
             seen.add(key);
             parts.push(trimmed);
           };
-          add(primary);
+          add(trimmedPrimary);
           add(props.state);
           add(props.country);
           return parts.join(", ");
@@ -2043,10 +2055,16 @@
             url.searchParams.set("lat", String(latitude));
             url.searchParams.set("lon", String(longitude));
             url.searchParams.set("lang", "en");
+            url.searchParams.set("limit", "5");
             const features = await fetchPhotonFeatures(url);
             if (features.length) {
-              const label = formatPlaceFromProperties(features[0].properties || {});
-              if (label) return label;
+              const ranked = features
+                .slice()
+                .sort((a, b) => rankPhotonFeature(a, "") - rankPhotonFeature(b, ""));
+              for (const feature of ranked) {
+                const label = formatPlaceFromProperties(feature.properties || {});
+                if (label) return label;
+              }
             }
           } catch {
             // fall through
