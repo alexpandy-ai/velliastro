@@ -136,6 +136,22 @@
         width: auto;
         min-width: 7.5rem;
       }
+      .form-group--place {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem 0.65rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .form-group--place .location-label {
+        flex-shrink: 0;
+      }
+      .form-group--place .place-row {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
       .form-field {
         display: flex;
         flex-direction: column;
@@ -560,6 +576,17 @@
       .label-box__row--datetime .label-box__key + .label-box__value {
         margin-right: 0.35rem;
       }
+      .label-box__row--place {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .label-box__row--place .label-box__value {
+        flex: 0 1 auto;
+        white-space: nowrap;
+      }
+      .label-box__row--place .label-box__key + .label-box__value {
+        margin-right: 0.35rem;
+      }
       .consistency-note {
         margin: 0.35rem 0 0;
         font-size: 0.75rem;
@@ -619,8 +646,13 @@
         .form-group--datetime input[type="time"] {
           font-size: 0.78rem;
         }
-        .label-box__row--datetime {
+        .label-box__row--datetime,
+        .label-box__row--place {
           font-size: 0.72rem;
+        }
+        .form-group--place .location-label,
+        .form-group--place .place-row input[type="text"] {
+          font-size: 0.78rem;
         }
       }
       .lagnam-spoke {
@@ -1532,8 +1564,8 @@
           const el = document.getElementById("positionConsistency");
           if (el) el.hidden = true;
         };
-        const calcInputsLabelRow = (taKey, enKey, value) =>
-          `<div class="label-box__row">` +
+        const calcInputsLabelRow = (taKey, enKey, value, modifier = "") =>
+          `<div class="label-box__row${modifier ? ` label-box__row--${modifier}` : ""}">` +
           `<span class="label-box__key"><span class="bilingual"><span>${taKey}</span><span class="bilingual-en">${enKey}</span></span></span>` +
           `<span class="label-box__value">${escapeHtml(value)}</span>` +
           `</div>`;
@@ -1558,7 +1590,7 @@
           const utcInstantLabel = formatUtcInstantLabel(utcDate);
           el.hidden = false;
           el.innerHTML =
-            calcInputsLabelRow("இடம்", "Place", placeName) +
+            calcInputsLabelRow("இடம்", "Place", placeName, "place") +
             calcInputsDateTimeRow(dateLabel, timeLabel) +
             calcInputsLabelRow("ஆள்கூறு", "Coordinates", coordinatesLabel) +
             calcInputsLabelRow("நேர மண்டலம்", "Timezone", timezoneLabel) +
