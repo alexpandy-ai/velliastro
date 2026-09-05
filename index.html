@@ -152,6 +152,24 @@
         flex: 1 1 auto;
         min-width: 0;
       }
+      .form-group--coords {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem 0.65rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .form-group--coords .coords-sunrise-row {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem 0.65rem;
+        flex: 1 1 auto;
+        min-width: 0;
+      }
       .form-field {
         display: flex;
         flex-direction: column;
@@ -210,23 +228,27 @@
       .submit-btn:active { opacity: 0.8; }
       .coords-sunrise-row {
         display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 0.75rem 1rem;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem 0.65rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
         width: 100%;
       }
       .sunrise-display {
         display: flex;
-        flex-wrap: wrap;
-        align-items: baseline;
-        justify-content: flex-end;
-        gap: 0.45rem;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem 0.65rem;
         flex: 0 1 auto;
         min-width: 0;
         font-size: 0.88rem;
         color: var(--muted);
         padding: 0.15rem 0;
+      }
+      .sunrise-display .bilingual {
+        flex-shrink: 0;
       }
       .sunrise-value {
         font-weight: 600;
@@ -314,31 +336,28 @@
       .place-location-btn:disabled { opacity: 0.55; cursor: wait; }
       .coords-display {
         display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.5rem;
-        flex: 1 1 14rem;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.35rem 0.65rem;
+        flex: 0 1 auto;
         min-width: 0;
         font-size: 0.78rem;
         color: var(--muted);
         line-height: 1.2;
       }
-      @media (max-width: 480px) {
-        .coords-sunrise-row {
-          flex-direction: column;
-          align-items: stretch;
-        }
-        .sunrise-display {
-          justify-content: flex-start;
-        }
+      .coords-display .bilingual {
+        flex-shrink: 0;
+        justify-content: flex-start;
       }
-      .coords-display .bilingual { justify-content: flex-start; }
       .coords-display .bilingual-en { font-size: 0.6rem; }
       .coords-fields {
         display: flex;
+        flex-wrap: nowrap;
         align-items: center;
         gap: 0.35rem;
-        width: 100%;
+        flex: 0 1 auto;
+        min-width: 0;
       }
       .coords-input {
         flex: 1;
@@ -587,6 +606,17 @@
       .label-box__row--place .label-box__key + .label-box__value {
         margin-right: 0.35rem;
       }
+      .label-box__row--coords-sunrise {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .label-box__row--coords-sunrise .label-box__value {
+        flex: 0 1 auto;
+        white-space: nowrap;
+      }
+      .label-box__row--coords-sunrise .label-box__key + .label-box__value {
+        margin-right: 0.35rem;
+      }
       .consistency-note {
         margin: 0.35rem 0 0;
         font-size: 0.75rem;
@@ -647,11 +677,16 @@
           font-size: 0.78rem;
         }
         .label-box__row--datetime,
-        .label-box__row--place {
+        .label-box__row--place,
+        .label-box__row--coords-sunrise {
           font-size: 0.72rem;
         }
         .form-group--place .location-label,
         .form-group--place .place-row input[type="text"] {
+          font-size: 0.78rem;
+        }
+        .form-group--coords .coords-display,
+        .form-group--coords .sunrise-display {
           font-size: 0.78rem;
         }
       }
@@ -1576,6 +1611,13 @@
           `<span class="label-box__key"><span class="bilingual"><span>நேரம்</span><span class="bilingual-en">Time</span></span></span>` +
           `<span class="label-box__value">${escapeHtml(timeLabel)}</span>` +
           `</div>`;
+        const calcInputsCoordsSunriseRow = (coordinatesLabel, sunriseLabel) =>
+          `<div class="label-box__row label-box__row--coords-sunrise">` +
+          `<span class="label-box__key"><span class="bilingual"><span>ஆயத்தொலைவு</span><span class="bilingual-en">Coordinates</span></span></span>` +
+          `<span class="label-box__value">${escapeHtml(coordinatesLabel)}</span>` +
+          `<span class="label-box__key"><span class="bilingual"><span>சூரிய உதயம்</span><span class="bilingual-en">Sunrise</span></span></span>` +
+          `<span class="label-box__value">${escapeHtml(sunriseLabel)}</span>` +
+          `</div>`;
         const updateCalcInputsLabelBox = (place = placeState, utcDate = currentChartDate) => {
           const el = document.getElementById("calcInputsLabel");
           if (!el) return;
@@ -1584,6 +1626,11 @@
           const dateLabel = formatInputDateLabel(dateInput.value);
           const timeLabel = formatInputTimeLabel(timeInput.value);
           const coordinatesLabel = formatCoordinates(place.latitude, place.longitude);
+          const sunrise = getSunriseTime(
+            chartDateTimeFromLocalInputs(dateInput.value, "06:00", place),
+            place,
+          );
+          const sunriseLabel = sunrise ? formatSunriseTime(sunrise, place) : "—";
           const timezoneLabel = formatTimezoneOffsetLabel(
             estimateTimezoneOffsetMinutes(place.longitude, place.latitude),
           );
@@ -1592,7 +1639,7 @@
           el.innerHTML =
             calcInputsLabelRow("இடம்", "Place", placeName, "place") +
             calcInputsDateTimeRow(dateLabel, timeLabel) +
-            calcInputsLabelRow("ஆள்கூறு", "Coordinates", coordinatesLabel) +
+            calcInputsCoordsSunriseRow(coordinatesLabel, sunriseLabel) +
             calcInputsLabelRow("நேர மண்டலம்", "Timezone", timezoneLabel) +
             calcInputsLabelRow("UTC", "UTC instant", utcInstantLabel);
         };
