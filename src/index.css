@@ -1113,8 +1113,9 @@ body {
   flex-wrap: nowrap;
   align-items: center;
   gap: 0.35rem 0.65rem;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  position: relative;
+  z-index: 20;
+  overflow: visible;
 }
 
 .graha-chart__form-group--place .graha-chart__location-label {
@@ -1262,7 +1263,7 @@ body {
 
 .graha-chart__place-suggestions {
   position: absolute;
-  z-index: 30;
+  z-index: 40;
   top: calc(100% + 0.25rem);
   left: 0;
   right: 0;

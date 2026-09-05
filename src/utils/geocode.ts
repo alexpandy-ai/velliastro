@@ -44,6 +44,8 @@ const PHOTON_REVERSE_URL = "https://photon.komoot.io/reverse";
 type PhotonProperties = {
   osm_id?: number;
   osm_type?: string;
+  osm_key?: string;
+  osm_value?: string;
   type?: string;
   name?: string;
   city?: string;
@@ -134,13 +136,19 @@ export function isValidCoordinateInputs(
 
 /** Build a concise City, State, Country label from Photon/OSM properties. */
 export function formatPlaceFromProperties(props: PhotonProperties): string {
-  const primary =
-    props.name?.trim() ||
-    props.city?.trim() ||
-    props.district?.trim() ||
-    props.county?.trim() ||
-    "";
-  if (!primary) return "";
+  const type = props.type ?? "other";
+  const isPoi =
+    type === "house" ||
+    type === "street" ||
+    props.osm_key === "amenity" ||
+    props.osm_key === "highway";
+  const primary = (
+    isPoi
+      ? props.city || props.district || props.county || props.locality || props.name
+      : props.name || props.city || props.district || props.county
+  );
+  const trimmedPrimary = primary?.trim() ?? "";
+  if (!trimmedPrimary) return "";
 
   const parts: string[] = [];
   const seen = new Set<string>();
@@ -153,7 +161,7 @@ export function formatPlaceFromProperties(props: PhotonProperties): string {
     parts.push(trimmed);
   };
 
-  add(primary);
+  add(trimmedPrimary);
   add(props.state);
   add(props.country);
   return parts.join(", ");
@@ -298,11 +306,17 @@ export async function reverseGeocodeCoordinates(
     url.searchParams.set("lat", String(latitude));
     url.searchParams.set("lon", String(longitude));
     url.searchParams.set("lang", "en");
+    url.searchParams.set("limit", "5");
 
     const features = await fetchPhotonFeatures(url);
     if (features.length) {
-      const label = formatPlaceFromProperties(features[0].properties);
-      if (label) return label;
+      const ranked = features
+        .slice()
+        .sort((a, b) => rankPhotonFeature(a, "") - rankPhotonFeature(b, ""));
+      for (const feature of ranked) {
+        const label = formatPlaceFromProperties(feature.properties);
+        if (label) return label;
+      }
     }
   } catch {
     // fall through
