@@ -565,7 +565,7 @@
       }
       .label-box__row {
         display: flex;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         align-items: baseline;
         gap: 0.5rem;
         padding: 0.2rem 0;
@@ -582,46 +582,12 @@
       }
       .label-box__key .bilingual-en { font-size: 0.62rem; }
       .label-box__value {
-        flex: 1;
+        flex: 1 1 0;
         min-width: 0;
         font-variant-numeric: tabular-nums;
+        white-space: normal;
+        overflow-wrap: break-word;
         word-break: break-word;
-      }
-      .label-box__row--datetime {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      .label-box__row--datetime .label-box__value {
-        flex: 0 1 auto;
-        white-space: nowrap;
-      }
-      .label-box__row--datetime .label-box__key + .label-box__value {
-        margin-right: 0.35rem;
-      }
-      .label-box__row--place {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      .label-box__row--place .label-box__value {
-        flex: 0 1 auto;
-        white-space: nowrap;
-      }
-      .label-box__row--place .label-box__key + .label-box__value {
-        margin-right: 0.35rem;
-      }
-      .label-box__row--coords,
-      .label-box__row--sunrise {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      .label-box__row--coords .label-box__value,
-      .label-box__row--sunrise .label-box__value {
-        flex: 0 1 auto;
-        white-space: nowrap;
-      }
-      .label-box__row--coords .label-box__key + .label-box__value,
-      .label-box__row--sunrise .label-box__key + .label-box__value {
-        margin-right: 0.35rem;
       }
       .consistency-note {
         margin: 0.35rem 0 0;
