@@ -509,10 +509,10 @@
         color: var(--text);
       }
       .label-box__row {
-        display: grid;
-        grid-template-columns: minmax(5.5rem, 38%) 1fr;
-        gap: 0.35rem 0.5rem;
+        display: flex;
+        flex-wrap: nowrap;
         align-items: baseline;
+        gap: 0.5rem;
         padding: 0.2rem 0;
       }
       .label-box__row + .label-box__row {
@@ -521,11 +521,14 @@
         padding-top: 0.35rem;
       }
       .label-box__key {
+        flex-shrink: 0;
         color: var(--muted);
         font-size: 0.72rem;
       }
       .label-box__key .bilingual-en { font-size: 0.62rem; }
       .label-box__value {
+        flex: 1;
+        min-width: 0;
         font-variant-numeric: tabular-nums;
         word-break: break-word;
       }
@@ -581,10 +584,6 @@
         }
         .table-toolbar { flex-wrap: wrap; }
         html.lang-ta .table table { font-size: 0.78rem; }
-        .label-box__row {
-          grid-template-columns: 1fr;
-          gap: 0.15rem;
-        }
       }
       @media (max-width: 480px) {
         .form-group--datetime { grid-template-columns: 1fr; }
@@ -1512,10 +1511,8 @@
           if (!el) return;
           const rawPlaceName = place.placeName || placeInput.value.trim() || "—";
           const placeName = formatPlaceLabel(rawPlaceName);
-          const dateTimeLabel = formatLocalInputDateTimeLabel(
-            dateInput.value,
-            timeInput.value,
-          );
+          const dateLabel = formatInputDateLabel(dateInput.value);
+          const timeLabel = formatInputTimeLabel(timeInput.value);
           const coordinatesLabel = formatCoordinates(place.latitude, place.longitude);
           const timezoneLabel = formatTimezoneOffsetLabel(
             estimateTimezoneOffsetMinutes(place.longitude, place.latitude),
@@ -1524,7 +1521,8 @@
           el.hidden = false;
           el.innerHTML =
             calcInputsLabelRow("இடம்", "Place", placeName) +
-            calcInputsLabelRow("தேதி & நேரம்", "Date & time", dateTimeLabel) +
+            calcInputsLabelRow("தேதி", "Date", dateLabel) +
+            calcInputsLabelRow("நேரம்", "Time", timeLabel) +
             calcInputsLabelRow("ஆள்கூறு", "Coordinates", coordinatesLabel) +
             calcInputsLabelRow("நேர மண்டலம்", "Timezone", timezoneLabel) +
             calcInputsLabelRow("UTC", "UTC instant", utcInstantLabel);
