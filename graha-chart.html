@@ -1097,6 +1097,17 @@
           { id:"rahu", tamil:"ராகு", english:"Rahu", short:"ரா", letter:"ர", color:"#6b5b7a", symbol:"☊", period:-6793.5, L0:125.04 },
           { id:"ketu", tamil:"கேது", english:"Ketu", short:"கே", letter:"க", color:"#9a7b5c", symbol:"☋", period:null, L0:null },
         ];
+        const BHOOMI_GRAHA = {
+          id: "bhoomi",
+          tamil: "பூமி",
+          english: "Earth",
+          short: "பூ",
+          letter: "ப",
+          color: "#4a90d9",
+          symbol: "♁",
+          period: null,
+          L0: null,
+        };
         const norm = (v) => ((v % 360) + 360) % 360;
         const JD_J2000 = 2451545.0;
         const DEG_TO_RAD = Math.PI / 180;
@@ -1679,6 +1690,11 @@
           const d = norm(L), i = Math.floor(d / 30), deg = d % 30, m = Math.floor((deg % 1) * 60);
           return { sign: SIGNS[i], formatted: `${Math.floor(deg)}°${String(m).padStart(2,"0")}'` };
         };
+        const buildBhoomiPosition = (date) => {
+          const longitude = lon(BHOOMI_GRAHA, date);
+          return { ...BHOOMI_GRAHA, longitude, ...zodiac(longitude) };
+        };
+        const wheelPositionsWithBhoomi = (positions, date) => [...positions, buildBhoomiPosition(date)];
         const parseFormattedPositionInSign = (formatted) => {
           const trimmed = formatted.trim();
           const dmsMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*°\s*(\d{1,2})?'?$/);
@@ -2490,7 +2506,7 @@
             const degRot = labelRadialInwardRotation(a);
             svg += `<text x="${degLbl.x}" y="${degLbl.y}" fill="#6d28d9" font-size="9" font-weight="600" letter-spacing="0.02em" text-anchor="middle" dominant-baseline="middle" transform="rotate(${degRot}, ${degLbl.x}, ${degLbl.y})"><tspan x="${degLbl.x}" dy="-0.55em">${formatDegreeLabel(a)}</tspan><tspan x="${degLbl.x}" dy="1.1em">${formatStartTime(i)}</tspan></text>`;
           }
-          svg += renderPlanetLabels(positions, c, sectorFillColors);
+          svg += renderPlanetLabels(wheelPositionsWithBhoomi(positions, date), c, sectorFillColors);
           const lagnamOuter = polar(lagnamAngle, outer, c);
           const lagnamLbl = polar(lagnamAngle, LAGNAM_LABEL_RADIUS, c);
           const lagnamRot = labelRadialRotation(lagnamAngle);
