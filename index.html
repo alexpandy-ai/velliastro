@@ -1244,11 +1244,7 @@
         const siderealLonForFrame = (g, date, frame, place) => {
           const jd = dateToJulianDate(date);
           if (g.id === "bhoomi" || g.id === "earth") {
-            if (frame === "geocentric") return siderealLon(g, date);
-            if (frame === "topocentric") {
-              const sunTropical = getTopocentricTropical("surya", date, place);
-              return sunTropical == null ? null : tropicalToSidereal(norm(sunTropical + 180), jd);
-            }
+            if (frame === "geocentric" || frame === "topocentric") return null;
             const tropical = getHeliocentricTropical("bhoomi", date);
             return tropical == null ? null : tropicalToSidereal(tropical, jd);
           }
