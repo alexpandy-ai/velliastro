@@ -900,12 +900,243 @@
       html.lang-ta .ref-positions-table .ref-col-name-en { display: none; }
       html.lang-en .ref-positions-table .ref-col-name-ta { display: none; }
       html.view-positions .date-form,
+      html.view-geocentric .date-form,
       html.view-positions .layout,
+      html.view-geocentric .layout,
       html.view-positions .ref-positions-close { display: none; }
-      html.view-positions .header { margin-bottom: 0.75rem; }
-      html.view-positions .header-top-bar { margin-bottom: 0.5rem; }
-      html.view-positions .brand-title { font-size: clamp(1.65rem, 5.5vw, 2.15rem); }
+      html.view-positions .header,
+      html.view-geocentric .header { margin-bottom: 0.75rem; }
+      html.view-positions .header-top-bar,
+      html.view-geocentric .header-top-bar { margin-bottom: 0.5rem; }
+      html.view-positions .brand-title,
+      html.view-geocentric .brand-title { font-size: clamp(1.65rem, 5.5vw, 2.15rem); }
       html.view-positions .ref-positions-panel { margin-top: 0; }
+      html.view-positions .geocentric-panel { display: none; }
+      html.view-geocentric .ref-positions-panel { display: none; }
+      html.view-geocentric .geocentric-panel { margin-top: 0; }
+      .geocentric-panel {
+        margin: 0 0 1.25rem;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 1.25rem;
+        padding: 1rem 1.15rem 1.15rem;
+        box-shadow: 0 4px 16px rgba(26, 26, 46, 0.08);
+      }
+      .geocentric-panel__header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 0.75rem 1rem;
+        margin-bottom: 0.65rem;
+      }
+      .geocentric-panel__header h2 { margin: 0.15rem 0 0; font-size: clamp(1.1rem, 3.5vw, 1.35rem); }
+      .geocentric-eyebrow {
+        font-size: 0.65rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--brand-gold);
+      }
+      .geocentric-meta {
+        font-size: 0.72rem;
+        color: var(--muted);
+        margin: 0.35rem 0 0;
+        line-height: 1.45;
+      }
+      .geocentric-system-toggle {
+        display: inline-flex;
+        padding: 3px;
+        border: 1px solid var(--border);
+        border-radius: 0.65rem;
+        background: var(--bg);
+      }
+      .geocentric-system-toggle button {
+        border: 0;
+        background: transparent;
+        padding: 0.45rem 0.65rem;
+        border-radius: 0.5rem;
+        font-family: inherit;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .geocentric-system-toggle button.active {
+        color: #fff;
+        background: var(--brand-purple);
+      }
+      .geocentric-status {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin: 0 0 0.75rem;
+      }
+      .geocentric-status.is-error { color: #c2410c; }
+      .geocentric-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.72fr);
+        gap: 0.85rem;
+        align-items: stretch;
+      }
+      .geocentric-chart-card,
+      .geocentric-inspector {
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        background: var(--bg);
+      }
+      .geocentric-chart-card { padding: 0.85rem; overflow: hidden; }
+      .geocentric-chart-key {
+        text-align: center;
+        font-size: 0.62rem;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-bottom: 0.35rem;
+      }
+      .geocentric-chart-key span { color: var(--brand-gold); font-weight: 600; }
+      #geocentricChart {
+        width: 100%;
+        max-height: 620px;
+        display: block;
+        overflow: visible;
+      }
+      .geo-backdrop { fill: #f8faff; }
+      .geo-zodiac-sector { fill: rgba(91, 33, 182, 0.04); stroke: none; }
+      .geo-zodiac-sector.alt { fill: rgba(217, 119, 6, 0.05); }
+      .geo-zodiac-symbol { text-anchor: middle; dominant-baseline: middle; font-size: 18px; fill: #8b90a8; }
+      .geo-sign-spoke { stroke: var(--border); stroke-width: 1; }
+      .geo-orbit { fill: none; stroke: #c8cde0; stroke-width: 1; }
+      .geo-orbit-outer { stroke: #8b90a8; stroke-width: 1.2; }
+      .geo-orbit-inner { stroke-dasharray: 3 5; }
+      .geo-degree-tick { stroke: #b8bdd4; stroke-width: 0.8; }
+      .geo-degree-tick.major { stroke: #5b6380; stroke-width: 1.1; }
+      .geo-degree-label { text-anchor: middle; dominant-baseline: middle; font-size: 8px; fill: #8b90a8; }
+      .geo-centre circle { fill: #fff; stroke: var(--border); stroke-width: 1; }
+      .geo-centre-glyph { text-anchor: middle; font-size: 22px; fill: var(--brand-purple); }
+      .geo-centre-title { text-anchor: middle; font-size: 9px; font-weight: 600; letter-spacing: 0.14em; fill: var(--text); }
+      .geo-centre-sub { text-anchor: middle; font-size: 7px; letter-spacing: 0.1em; fill: var(--muted); }
+      .geo-body-marker { cursor: pointer; outline: none; }
+      .geo-position-line { stroke: var(--body-color); stroke-width: 0.9; opacity: 0.22; }
+      .geo-label-leader { stroke: #c8cde0; stroke-width: 0.8; stroke-dasharray: 2 3; }
+      .geo-marker-halo { fill: var(--card); stroke: transparent; stroke-width: 3; }
+      .geo-marker-dot { fill: var(--body-color); stroke: #fff; stroke-width: 2; }
+      .geo-body-marker:hover .geo-marker-dot,
+      .geo-body-marker:focus .geo-marker-dot,
+      .geo-body-marker.selected .geo-marker-dot { r: 10; }
+      .geo-body-marker.selected .geo-marker-halo { stroke: var(--brand-gold); }
+      .geo-body-chip rect { fill: rgba(255,255,255,0.94); stroke: var(--border); stroke-width: 1; }
+      .geo-body-chip text { text-anchor: middle; font-size: 8px; font-weight: 500; fill: var(--text); }
+      .geo-body-marker:hover .geo-body-chip rect,
+      .geo-body-marker.selected .geo-body-chip rect { stroke: var(--brand-gold); stroke-width: 1.4; }
+      .geo-body-glyph { font-size: 11px; }
+      .geo-earth-glyph { dominant-baseline: middle; text-anchor: middle; font-size: 14px; fill: #fff; pointer-events: none; }
+      .geo-earth-label { font-size: 8px; font-weight: 600; fill: var(--brand-purple); }
+      .geocentric-earth-note {
+        border-top: 1px solid var(--border);
+        padding: 0.75rem 0.25rem 0.15rem;
+        display: flex;
+        gap: 0.65rem;
+        align-items: center;
+        color: var(--muted);
+        font-size: 0.72rem;
+        line-height: 1.45;
+      }
+      .geocentric-earth-icon {
+        width: 1.75rem;
+        height: 1.75rem;
+        flex: 0 0 1.75rem;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(91, 33, 182, 0.1);
+        color: var(--brand-purple);
+        font-size: 1rem;
+      }
+      .geocentric-inspector {
+        padding: 0.85rem;
+        display: flex;
+        flex-direction: column;
+        min-height: 520px;
+      }
+      .geocentric-selected {
+        background: var(--text);
+        color: #fff;
+        border-radius: 0.85rem;
+        padding: 0.85rem;
+      }
+      .geo-selected-topline { display: flex; align-items: center; gap: 0.55rem; font-weight: 600; font-size: 0.85rem; }
+      .geo-selected-topline small { display: block; color: #aeb8b9; font-size: 0.62rem; font-weight: 400; margin-top: 0.1rem; }
+      .geo-selected-symbol { font-size: 1.35rem; color: var(--body-color); }
+      .geo-motion {
+        margin-left: auto;
+        padding: 0.2rem 0.45rem;
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 999px;
+        color: #c9d2d2;
+        font-size: 0.58rem;
+        text-transform: uppercase;
+      }
+      .geo-motion.retrograde { color: #f3b38f; }
+      .geo-motion.reference { color: #81c9bc; }
+      .geo-selected-degree { margin-top: 0.85rem; font-size: clamp(2rem, 5vw, 2.75rem); font-weight: 500; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+      .geo-selected-sign { margin-top: 0.35rem; color: #c9d2d2; font-size: 0.78rem; }
+      .geocentric-selected dl { margin: 0.85rem 0 0; padding-top: 0.65rem; border-top: 1px solid rgba(255,255,255,0.13); display: grid; gap: 0.45rem; }
+      .geocentric-selected dl div { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.62rem; }
+      .geocentric-selected dt { color: #9da9aa; }
+      .geocentric-selected dd { margin: 0; text-align: right; }
+      .geocentric-list-heading {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.85rem 0.15rem 0.35rem;
+        color: var(--muted);
+        font-size: 0.58rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .geocentric-body-list { overflow: auto; max-height: 360px; padding-right: 0.1rem; }
+      .geo-body-row {
+        width: 100%;
+        border: 0;
+        border-top: 1px solid var(--border);
+        background: transparent;
+        display: grid;
+        grid-template-columns: 1.75rem 1fr auto 1.5rem;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.55rem 0.25rem;
+        cursor: pointer;
+        text-align: left;
+        border-radius: 0.45rem;
+        font-family: inherit;
+        color: inherit;
+      }
+      .geo-body-row:hover,
+      .geo-body-row.active { background: #fff; }
+      .geo-body-row.active { box-shadow: inset 3px 0 0 var(--brand-gold); }
+      .geo-row-symbol { font-size: 1rem; text-align: center; color: var(--body-color); }
+      .geo-row-name { font-size: 0.75rem; font-weight: 600; display: flex; flex-direction: column; }
+      .geo-row-name small { font-size: 0.58rem; color: var(--muted); font-weight: 400; }
+      .geo-body-row strong { font-size: 0.72rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+      .geo-motion-arrow { color: var(--muted); font-size: 0.58rem; text-align: center; }
+      .geocentric-calc-note {
+        margin: auto 0 0;
+        padding: 0.65rem 0.15rem 0.1rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.62rem;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+      html.lang-ta .geo-name-en,
+      html.lang-ta .geo-label-en,
+      html.lang-ta .geocentric-name-en { display: none; }
+      html.lang-en .geo-name-ta,
+      html.lang-en .geo-label-ta,
+      html.lang-en .geocentric-name-ta { display: none; }
+      @media (max-width: 900px) {
+        .geocentric-layout { grid-template-columns: 1fr; }
+        .geocentric-inspector { min-height: auto; }
+        .geocentric-body-list { max-height: 320px; }
+      }
     </style>
   </head>
   <body>
@@ -920,6 +1151,9 @@
               </button>
               <button type="button" id="menuPositionsBtn" class="list-menu-item">
                 <span class="bilingual"><span>நிலைகள்</span><span class="bilingual-en">Positions</span></span>
+              </button>
+              <button type="button" id="menuGeocentricBtn" class="list-menu-item">
+                <span class="bilingual"><span>புவிமைய நிலை</span><span class="bilingual-en">Geo Centric Position</span></span>
               </button>
             </div>
           </div>
@@ -1009,6 +1243,56 @@
           </table>
         </div>
       </section>
+      <section id="geocentricPanel" class="geocentric-panel" hidden aria-labelledby="geocentricTitle">
+        <div class="geocentric-panel__header">
+          <div>
+            <p class="geocentric-eyebrow">
+              <span class="geo-label-ta">புவி மைய · சைதிர வட்டம்</span>
+              <span class="geo-label-en">Earth-centred ecliptic</span>
+            </p>
+            <h2 id="geocentricTitle">
+              <span class="geo-label-ta">புவிமைய நிலை</span>
+              <span class="geo-label-en">Geo Centric Position</span>
+            </h2>
+            <p id="geocentricMeta" class="geocentric-meta"></p>
+          </div>
+          <div class="geocentric-system-toggle" role="group" aria-label="Longitude system">
+            <button type="button" data-geo-system="sidereal" class="active">Sidereal · Lahiri</button>
+            <button type="button" data-geo-system="tropical">Tropical</button>
+          </div>
+        </div>
+        <div id="geocentricStatus" class="geocentric-status" aria-live="polite"></div>
+        <div class="geocentric-layout">
+          <div class="geocentric-chart-card">
+            <div class="geocentric-chart-key">
+              <span>0°</span>
+              <span class="geo-label-ta"> வலது · ↺ எதிர் திசையில் அதிகரிக்கும்</span>
+              <span class="geo-label-en"> starts right · ↺ increases counter-clockwise</span>
+            </div>
+            <svg id="geocentricChart" viewBox="0 0 600 600" role="img" aria-labelledby="geocentricSvgTitle geocentricSvgDesc">
+              <title id="geocentricSvgTitle">Geocentric longitude chart</title>
+              <desc id="geocentricSvgDesc">Circular 0–360° chart with planetary geocentric longitudes</desc>
+            </svg>
+            <div class="geocentric-earth-note">
+              <span class="geocentric-earth-icon" aria-hidden="true">⊕</span>
+              <span>
+                <span class="geo-label-ta"><strong>பூமி பார்வை மையம்.</strong> 0° குறியீடு வட்ட விளக்கத்திற்கானது; உண்மையான புவிமைய தீர்க்கரேகை அல்ல.</span>
+                <span class="geo-label-en"><strong>Earth is the viewpoint.</strong> The 0° marker is a chart reference, not a physical geocentric longitude.</span>
+              </span>
+            </div>
+          </div>
+          <aside class="geocentric-inspector" aria-label="Body inspector">
+            <div id="geocentricSelected" class="geocentric-selected"></div>
+            <div class="geocentric-list-heading">
+              <span class="geo-label-ta">அனைத்து கிரகங்கள்</span>
+              <span class="geo-label-en">All bodies</span>
+              <span id="geocentricSystemLabel">SIDEREAL</span>
+            </div>
+            <div id="geocentricBodyList" class="geocentric-body-list"></div>
+            <p id="geocentricCalcNote" class="geocentric-calc-note"></p>
+          </aside>
+        </div>
+      </section>
       <div class="layout">
         <section class="panel"><svg id="chart" viewBox="0 0 560 560"></svg></section>
         <aside class="table">
@@ -1072,6 +1356,7 @@
           return rotation;
         };
         const SIGNS = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+        const ZODIAC_SYMBOLS = ["♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓"];
         const RASI_TAMIL = {
           Aries: "மேஷம்",
           Taurus: "ரிஷபம்",
@@ -2163,6 +2448,9 @@
           if (isPositionsView) {
             renderReferencePositionsTable(chartDate, placeState);
           }
+          if (isGeocentricView) {
+            renderGeocentricView(chartDate, placeState);
+          }
         };
         const applySelectedPlace = (resolved) => {
           placeUserCommitted = true;
@@ -2596,8 +2884,10 @@
         const langTabTa = document.getElementById("langTabTa");
         const langTabEn = document.getElementById("langTabEn");
         let chartInitialized = false;
-        const positionsParams = new URLSearchParams(window.location.search);
-        const isPositionsView = positionsParams.get("view") === "positions";
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewMode = urlParams.get("view");
+        const isPositionsView = viewMode === "positions";
+        const isGeocentricView = viewMode === "geocentric";
 
         const setLanguage = (lang, rerender = true) => {
           currentLang = lang;
@@ -2613,6 +2903,8 @@
           if (rerender && chartInitialized) {
             if (isPositionsView) {
               renderReferencePositionsTable(currentChartDate, placeState);
+            } else if (isGeocentricView) {
+              renderGeocentricView(currentChartDate, placeState);
             } else {
               renderChart(currentChartDate, placeState, false);
             }
@@ -2627,6 +2919,7 @@
         const listMenu = document.getElementById("listMenu");
         const menuHomeBtn = document.getElementById("menuHomeBtn");
         const menuPositionsBtn = document.getElementById("menuPositionsBtn");
+        const menuGeocentricBtn = document.getElementById("menuGeocentricBtn");
         const refPositionsPanel = document.getElementById("refPositionsPanel");
         const refPositionsHead = document.getElementById("refPositionsHead");
         const refPositionsBody = document.getElementById("refPositionsBody");
@@ -2671,6 +2964,312 @@
           }).join("");
         };
 
+        const geocentricPanel = document.getElementById("geocentricPanel");
+        const geocentricChart = document.getElementById("geocentricChart");
+        const geocentricSelected = document.getElementById("geocentricSelected");
+        const geocentricBodyList = document.getElementById("geocentricBodyList");
+        const geocentricStatus = document.getElementById("geocentricStatus");
+        const geocentricMeta = document.getElementById("geocentricMeta");
+        const geocentricSystemLabel = document.getElementById("geocentricSystemLabel");
+        const geocentricCalcNote = document.getElementById("geocentricCalcNote");
+        const geocentricSystemButtons = [...document.querySelectorAll("[data-geo-system]")];
+        let geocentricSystem = "sidereal";
+        let geocentricSelectedId = "surya";
+        let geocentricResult = null;
+
+        const geoPolar = (angleDeg, radius, center = 300) => {
+          const rad = (angleDeg * Math.PI) / 180;
+          return { x: center + radius * Math.cos(rad), y: center - radius * Math.sin(rad) };
+        };
+
+        const geoArcSector = (startDeg, endDeg, innerR, outerR, center = 300) => {
+          const sO = geoPolar(startDeg, outerR, center);
+          const eO = geoPolar(endDeg, outerR, center);
+          const sI = geoPolar(endDeg, innerR, center);
+          const eI = geoPolar(startDeg, innerR, center);
+          return `M ${sO.x} ${sO.y} A ${outerR} ${outerR} 0 0 0 ${eO.x} ${eO.y} L ${sI.x} ${sI.y} A ${innerR} ${innerR} 0 0 1 ${eI.x} ${eI.y} Z`;
+        };
+
+        const geoAngleSep = (a, b) => {
+          const d = Math.abs(norm(a) - norm(b));
+          return Math.min(d, 360 - d);
+        };
+
+        const signedGeoSpeed = (lon1, lon2, days) => {
+          let d = norm(lon2) - norm(lon1);
+          if (d > 180) d -= 360;
+          if (d < -180) d += 360;
+          return d / days;
+        };
+
+        const zodiacFromGeoLon = (lon) => {
+          const B = norm(lon);
+          const idx = Math.floor(B / 30);
+          return { name: SIGNS[idx], symbol: ZODIAC_SYMBOLS[idx], degrees: B - idx * 30 };
+        };
+
+        const formatGeoLon = (lon, digits = 2) => `${norm(lon).toFixed(digits)}°`;
+
+        const geocentricEcliptic = (grahaId, date) => {
+          const A = window.Astronomy;
+          if (!A) return null;
+          if (grahaId === "surya") {
+            const s = A.SunPosition(date);
+            return { lon: s.elon, lat: 0, dist: s.dist || 1 };
+          }
+          if (grahaId === "chandra") {
+            const m = A.EclipticGeoMoon(date);
+            return { lon: m.lon, lat: m.lat, dist: m.dist };
+          }
+          if (grahaId === "rahu") {
+            const jd = dateToJulianDate(date);
+            return { lon: getRahuTropical(jd), lat: 0, dist: null };
+          }
+          if (grahaId === "ketu") {
+            const rahu = geocentricEcliptic("rahu", date);
+            return rahu ? { lon: norm(rahu.lon + 180), lat: rahu.lat ? -rahu.lat : 0, dist: rahu.dist } : null;
+          }
+          const bodyName = GRAHA_BODY[grahaId];
+          if (!bodyName) return null;
+          const ecl = A.Ecliptic(A.GeoVector(A.Body[bodyName], date, true));
+          return { lon: ecl.elon, lat: ecl.elat, dist: ecl.dist };
+        };
+
+        const computeGeocentricBodies = (date, system) => {
+          const jd = dateToJulianDate(date);
+          const later = new Date(date.getTime() + 3600000);
+          const bodies = GRAHAS.map((g) => {
+            const pos = geocentricEcliptic(g.id, date);
+            const posLater = geocentricEcliptic(g.id, later);
+            let motion = "Direct";
+            if (pos && posLater) {
+              const speed = signedGeoSpeed(pos.lon, posLater.lon, 1 / 24);
+              if (speed < -1e-5) motion = "Retrograde";
+            }
+            const tropical = pos ? pos.lon : 0;
+            const longitude = system === "sidereal" ? tropicalToSidereal(tropical, jd) : norm(tropical);
+            return {
+              id: g.id,
+              name: g.english,
+              tamil: g.tamil,
+              symbol: g.symbol,
+              color: g.color,
+              longitude,
+              latitude: pos?.lat ?? 0,
+              distance: pos?.dist ?? 0,
+              motion,
+              qualifier: "Apparent centre",
+            };
+          });
+          bodies.push({
+            id: "earth",
+            name: "Earth",
+            tamil: BHOOMI_GRAHA.tamil,
+            symbol: "⊕",
+            color: "#5b21b6",
+            longitude: 0,
+            latitude: 0,
+            distance: 0,
+            motion: "Reference",
+            qualifier: "Circumference reference",
+          });
+          return { jd, ayanamsa: getLahiriAyanamsa(jd), bodies };
+        };
+
+        const geocentricLabelRadii = (bodies) => {
+          const sorted = [...bodies].filter((b) => b.id !== "earth").sort((a, b) => a.longitude - b.longitude);
+          const radii = new Map();
+          const slots = [158, 132, 106];
+          sorted.forEach((body, index) => {
+            let overlap = 0;
+            for (let i = index - 1; i >= 0 && !(geoAngleSep(body.longitude, sorted[i].longitude) > 13); i -= 1) {
+              overlap += 1;
+            }
+            if (index === sorted.length - 1 && sorted.length > 1 && geoAngleSep(body.longitude, sorted[0].longitude) < 13) {
+              overlap += 1;
+            }
+            radii.set(body.id, slots[overlap % slots.length]);
+          });
+          return radii;
+        };
+
+        const selectGeocentricBody = (id) => {
+          geocentricSelectedId = id;
+          if (geocentricResult) {
+            renderGeocentricChart(geocentricResult.bodies);
+            renderGeocentricInspector(geocentricResult.bodies);
+          }
+        };
+
+        const renderGeocentricChart = (bodies) => {
+          const labelRadii = geocentricLabelRadii(bodies);
+          const zodiacHtml = SIGNS.map((name, i) => {
+            const start = i * 30;
+            const mid = geoPolar(start + 15, 214);
+            return `<path class="geo-zodiac-sector ${i % 2 ? "alternate" : ""}" d="${geoArcSector(start, start + 30, 192, 238)}"></path>
+              <text class="geo-zodiac-symbol" x="${mid.x}" y="${mid.y}" aria-label="${name}">${ZODIAC_SYMBOLS[i]}</text>`;
+          }).join("");
+          const spokesHtml = Array.from({ length: 12 }, (_, i) => {
+            const a = geoPolar(i * 30, 92);
+            const b = geoPolar(i * 30, 238);
+            return `<line class="geo-sign-spoke" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"></line>`;
+          }).join("");
+          const ticksHtml = Array.from({ length: 72 }, (_, i) => {
+            const deg = i * 5;
+            const major = deg % 30 === 0;
+            const mid = deg % 10 === 0;
+            const outer = major ? 238 : mid ? 242 : 246;
+            const a = geoPolar(deg, outer);
+            const b = geoPolar(deg, 254);
+            return `<line class="geo-degree-tick ${major ? "major" : ""}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"></line>`;
+          }).join("");
+          const degreeLabelsHtml = Array.from({ length: 12 }, (_, i) => {
+            const deg = i * 30;
+            const p = geoPolar(deg, 271);
+            return `<text class="geo-degree-label" x="${p.x}" y="${p.y}">${deg}°</text>`;
+          }).join("");
+          const bodiesHtml = bodies.map((body) => {
+            if (body.id === "earth") {
+              const p = geoPolar(0, 238);
+              return `<g class="geo-body-marker earth-marker" data-id="earth" role="button" tabindex="0" aria-label="Earth reference, 0 degrees">
+                <circle class="geo-marker-halo" cx="${p.x}" cy="${p.y}" r="14"></circle>
+                <circle class="geo-marker-dot" cx="${p.x}" cy="${p.y}" r="8" style="--body-color:${body.color}"></circle>
+                <text class="geo-earth-glyph" x="${p.x}" y="${p.y}">⊕</text>
+                <text class="geo-earth-label" x="${p.x - 8}" y="${p.y + 28}" text-anchor="end">Earth · 0° ref</text>
+              </g>`;
+            }
+            const dot = geoPolar(body.longitude, 181);
+            const labelR = labelRadii.get(body.id) || 132;
+            const chip = geoPolar(body.longitude, labelR);
+            const spokeInner = geoPolar(body.longitude, 92);
+            const chipW = Math.max(74, body.name.length * 7 + 50);
+            const displayName = currentLang === "ta" ? body.tamil : body.name;
+            return `<g class="geo-body-marker${geocentricSelectedId === body.id ? " selected" : ""}" data-id="${body.id}" role="button" tabindex="0" aria-label="${displayName}, ${formatGeoLon(body.longitude)}">
+              <line class="geo-position-line" x1="${spokeInner.x}" y1="${spokeInner.y}" x2="${dot.x}" y2="${dot.y}" style="--body-color:${body.color}"></line>
+              <circle class="geo-marker-halo" cx="${dot.x}" cy="${dot.y}" r="13"></circle>
+              <circle class="geo-marker-dot" cx="${dot.x}" cy="${dot.y}" r="7" style="--body-color:${body.color}"></circle>
+              <line class="geo-label-leader" x1="${dot.x}" y1="${dot.y}" x2="${chip.x}" y2="${chip.y}"></line>
+              <g class="geo-body-chip" transform="translate(${chip.x - chipW / 2} ${chip.y - 14})">
+                <rect width="${chipW}" height="28" rx="14"></rect>
+                <text x="${chipW / 2}" y="18"><tspan class="geo-body-glyph">${body.symbol}</tspan> ${displayName} · ${body.longitude.toFixed(1)}°</text>
+              </g>
+            </g>`;
+          }).join("");
+          geocentricChart.innerHTML = `
+            <title id="geocentricSvgTitle">Geocentric longitude chart</title>
+            <desc id="geocentricSvgDesc">Circular 0–360° chart with planetary geocentric longitudes</desc>
+            <circle class="geo-backdrop" cx="300" cy="300" r="286"></circle>
+            ${zodiacHtml}
+            ${spokesHtml}
+            <circle class="geo-orbit geo-orbit-outer" cx="300" cy="300" r="238"></circle>
+            <circle class="geo-orbit" cx="300" cy="300" r="181"></circle>
+            <circle class="geo-orbit geo-orbit-inner" cx="300" cy="300" r="92"></circle>
+            ${ticksHtml}
+            ${degreeLabelsHtml}
+            <g class="geo-centre">
+              <circle cx="300" cy="300" r="64"></circle>
+              <text class="geo-centre-glyph" x="300" y="291">⊕</text>
+              <text class="geo-centre-title" x="300" y="318">EARTH VIEW</text>
+              <text class="geo-centre-subtitle" x="300" y="338">GEOCENTRIC</text>
+            </g>
+            ${bodiesHtml}
+          `;
+          geocentricChart.querySelectorAll(".geo-body-marker").forEach((marker) => {
+            marker.addEventListener("click", () => selectGeocentricBody(marker.dataset.id));
+            marker.addEventListener("keydown", (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                selectGeocentricBody(marker.dataset.id);
+              }
+            });
+          });
+        };
+
+        const renderGeocentricInspector = (bodies) => {
+          const selected = bodies.find((b) => b.id === geocentricSelectedId) || bodies[0];
+          const zodiac = zodiacFromGeoLon(selected.longitude);
+          const distanceLabel =
+            selected.id === "earth"
+              ? currentLang === "ta"
+                ? "பார்வை மையம்"
+                : "At viewpoint"
+              : selected.distance < 0.1
+                ? `${(selected.distance * 149597870.7).toFixed(0)}k km`
+                : `${selected.distance.toFixed(3)} AU`;
+          const motionClass = selected.motion.toLowerCase();
+          geocentricSelected.innerHTML = `
+            <div class="geocentric-selected-topline">
+              <span class="geocentric-selected-symbol" style="--body-color:${selected.color}">${selected.symbol}</span>
+              <span>
+                <span class="geocentric-name-ta">${selected.tamil}</span>
+                <span class="geocentric-name-en">${selected.name}</span>
+              </span>
+              <span class="geocentric-motion ${motionClass}">${selected.motion}</span>
+            </div>
+            <div class="geocentric-selected-degree">${formatGeoLon(selected.longitude)}</div>
+            <div class="geocentric-selected-sign">${zodiac.symbol} ${zodiac.degrees.toFixed(2)}° ${zodiac.name}</div>
+            <dl>
+              <div><dt>${currentLang === "ta" ? "சாயம்" : "Ecliptic latitude"}</dt><dd>${selected.id === "earth" ? "—" : `${selected.latitude >= 0 ? "+" : ""}${selected.latitude.toFixed(3)}°`}</dd></div>
+              <div><dt>${currentLang === "ta" ? "தூரம்" : "Distance"}</dt><dd>${distanceLabel}</dd></div>
+              <div><dt>${currentLang === "ta" ? "பொருள்" : "Meaning"}</dt><dd>${selected.qualifier || (currentLang === "ta" ? "புவிமைய நிலை" : "Apparent centre")}</dd></div>
+            </dl>
+          `;
+          const sorted = [...bodies].sort((a, b) => a.longitude - b.longitude || a.name.localeCompare(b.name));
+          geocentricBodyList.innerHTML = sorted
+            .map((body) => {
+              const z = zodiacFromGeoLon(body.longitude);
+              const rowName = currentLang === "ta" ? body.tamil : body.name;
+              const motionArrow = body.motion === "Retrograde" ? "℞" : body.motion === "Reference" ? "REF" : "→";
+              return `<button type="button" class="geocentric-body-row ${body.id === geocentricSelectedId ? "active" : ""}" data-id="${body.id}">
+                <span class="geocentric-row-symbol" style="--body-color:${body.color}">${body.symbol}</span>
+                <span class="geocentric-row-name">${rowName}<small>${z.symbol} ${z.name}</small></span>
+                <strong>${formatGeoLon(body.longitude)}</strong>
+                <span class="geocentric-motion-arrow" title="${body.motion}">${motionArrow}</span>
+              </button>`;
+            })
+            .join("");
+          geocentricBodyList.querySelectorAll(".geocentric-body-row").forEach((row) => {
+            row.addEventListener("click", () => selectGeocentricBody(row.dataset.id));
+          });
+        };
+
+        const renderGeocentricView = (date, place) => {
+          if (!isGeocentricView) return;
+          if (!window.Astronomy) {
+            geocentricStatus.textContent =
+              currentLang === "ta"
+                ? "Swiss Ephemeris engine ஏற்றப்படவில்லை."
+                : "Swiss Ephemeris engine failed to load.";
+            geocentricStatus.classList.add("is-error");
+            return;
+          }
+          geocentricStatus.classList.remove("is-error");
+          geocentricResult = computeGeocentricBodies(date, geocentricSystem);
+          const placeLabel = formatPlaceLabel(place.placeName) || formatCoordinates(place.latitude, place.longitude);
+          geocentricStatus.textContent = `${formatUtcInstantLabel(date)} · ${placeLabel}`;
+          geocentricMeta.textContent =
+            currentLang === "ta"
+              ? "ஒரு தருணத்தில் அனைத்து கிரகங்களின் 0–360° புவிமைய தீர்க்கரேகையை ஆராயுங்கள்."
+              : "Inspect every body's exact 0–360° geocentric longitude for a chosen moment.";
+          geocentricSystemLabel.textContent = geocentricSystem.toUpperCase();
+          geocentricCalcNote.textContent =
+            geocentricSystem === "sidereal"
+              ? `Lahiri ayanamsa ${geocentricResult.ayanamsa.toFixed(4)}° · astronomy-engine · apparent geocentric`
+              : `Tropical · true ecliptic of date · Lahiri offset ${geocentricResult.ayanamsa.toFixed(4)}°`;
+          renderGeocentricChart(geocentricResult.bodies);
+          renderGeocentricInspector(geocentricResult.bodies);
+        };
+
+        geocentricSystemButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            geocentricSystem = button.dataset.geoSystem;
+            geocentricSystemButtons.forEach((btn) => btn.classList.toggle("active", btn === button));
+            if (chartInitialized && isGeocentricView) {
+              renderGeocentricView(currentChartDate, placeState);
+            }
+          });
+        });
+
         const buildChartQueryParams = () => {
           const params = new URLSearchParams();
           params.set("date", dateInput.value);
@@ -2697,6 +3296,13 @@
           return url.toString();
         };
 
+        const buildGeocentricTabUrl = () => {
+          const url = new URL(window.location.href);
+          url.search = buildChartQueryParams().toString();
+          url.searchParams.set("view", "geocentric");
+          return url.toString();
+        };
+
         menuBtn.addEventListener("click", (event) => {
           event.stopPropagation();
           const willOpen = listMenu.hidden;
@@ -2706,7 +3312,7 @@
 
         menuHomeBtn.addEventListener("click", () => {
           closeListMenu();
-          if (isPositionsView) {
+          if (isPositionsView || isGeocentricView) {
             window.location.href = buildHomeUrl();
           }
         });
@@ -2714,6 +3320,11 @@
         menuPositionsBtn.addEventListener("click", () => {
           closeListMenu();
           window.open(buildPositionsTabUrl(), "_blank", "noopener");
+        });
+
+        menuGeocentricBtn.addEventListener("click", () => {
+          closeListMenu();
+          window.open(buildGeocentricTabUrl(), "_blank", "noopener");
         });
 
         document.addEventListener("click", (event) => {
@@ -2761,10 +3372,25 @@
           return Boolean(paramDate || paramTime || (paramLat != null && paramLon != null));
         };
 
-        if (isPositionsView) {
+        if (isGeocentricView) {
+          document.documentElement.classList.add("view-geocentric");
+          geocentricPanel.hidden = false;
+          applyChartParamsFromUrl(urlParams);
+          if (!dateInput.value) dateInput.value = toInputValue(today);
+          if (!timeInput.value) timeInput.value = toTimeInputValue(today);
+          const chartDate = chartDateTimeFromLocalInputs(
+            dateInput.value,
+            timeInput.value,
+            placeState,
+          );
+          currentChartDate = chartDate;
+          chartInitialized = true;
+          renderGeocentricView(chartDate, placeState);
+          document.title = "velliAstro · Geo Centric Position";
+        } else if (isPositionsView) {
           document.documentElement.classList.add("view-positions");
           refPositionsPanel.hidden = false;
-          applyChartParamsFromUrl(positionsParams);
+          applyChartParamsFromUrl(urlParams);
           const chartDate = chartDateTimeFromLocalInputs(
             dateInput.value,
             timeInput.value,
@@ -2775,7 +3401,7 @@
           renderReferencePositionsTable(chartDate, placeState);
           document.title = "velliAstro · Positions";
         } else {
-          const hasUrlParams = applyChartParamsFromUrl(positionsParams);
+          const hasUrlParams = applyChartParamsFromUrl(urlParams);
           placeInput.value = placeState.placeName;
           updateCoordsDisplay(false);
           updateSunriseDisplay(dateInput.value);
